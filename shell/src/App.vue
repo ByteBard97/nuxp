@@ -16,6 +16,7 @@ import DebugPanel from '@/components/DebugPanel.vue';
 import DocumentStatus from '@/components/DocumentStatus.vue';
 import { useConnectionStore } from '@/stores/connection';
 import { useDocumentStore } from '@/stores/document';
+import { startEventLoop, stopEventLoop } from '@/sdk/bridge';
 
 // Router
 const route = useRoute();
@@ -53,11 +54,14 @@ watch(
 onMounted(() => {
   // Start automatic health checks
   connectionStore.startAutoCheck();
+  // Start event polling
+  startEventLoop();
 });
 
 onUnmounted(() => {
   // Clean up
   connectionStore.stopAutoCheck();
+  stopEventLoop();
 });
 </script>
 

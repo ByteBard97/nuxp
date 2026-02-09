@@ -12,6 +12,7 @@
 
 import { sdkConfig, getApiUrl } from './config';
 import { mockCallCpp, isMockModeEnabled } from './mockBridge';
+import { eventBus } from './events';
 
 /**
  * Error thrown when a C++ plugin call fails
@@ -259,3 +260,71 @@ export async function isPluginAvailable(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Event Loop State
+ */
+let isPolling = false;
+
+/**
+ * Start the event polling loop
+ *
+ * Polls the /events endpoint for updates from Illustrator.
+ * Dispatches received events to the eventBus.
+ */
+export async function startEventLoop() {
+  // Don't start if already polling or in mock mode
+  if (isPolling || sdkConfig.useMock || isMockModeEnabled()) {
+    return;
+  }
+
+  isPolling = true;
+  console.log('[Bridge] Starting event loop...');
+
+  while (isPolling) {
+    try {
+      const url = getApiUrl('/events');
+
+      // Server waits up to 1s, so we set a slighly larger timeout
+      const controller = createTimeoutController(2000);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.events)) {
+          // Dispatch each event
+          for (const evt of data.events) {
+            if (evt.type) {
+              eventBus.emit(evt.type, evt.data);
+            }
+          }
+        }
+      } else {
+        // If server returns error (e.g. 500), wait a bit before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (error) {
+      // Network error (e.g. fetch failed) or timeout - wait and retry
+      if (isPolling) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+  }
+
+  console.log('[Bridge] Event loop stopped');
+}
+
+/**
+ * Stop the event polling loop
+ */
+export function stopEventLoop() {
+  isPolling = false;
+}
+

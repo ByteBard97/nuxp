@@ -646,7 +646,9 @@ export class TypeScriptGenerator {
  * Auto-generated from Adobe Illustrator SDK
  */
 
+import { callCpp } from '@/sdk/bridge';
 {{#hasStructs}}
+
 // Struct type definitions
 {{#structs}}
 
@@ -659,28 +661,9 @@ export interface {{name}} {
 {{/fields}}
 }
 {{/structs}}
-
 {{/hasStructs}}
-const ENDPOINT_BASE = "http://localhost:3000";
 
-/**
- * Makes an HTTP POST request to the plugin endpoint
- * @param method - The method name to call
- * @param params - The parameters to pass
- * @returns The parsed JSON response
- */
-async function callPlugin(method: string, params: Record<string, unknown>): Promise<unknown> {
-    const response = await fetch(\`\${ENDPOINT_BASE}/{{suiteName}}/\${method}\`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params)
-    });
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: "Plugin call failed" }));
-        throw new Error((error as { message?: string }).message || "Plugin call failed");
-    }
-    return response.json();
-}
+const SUITE_NAME = '{{suiteName}}';
 {{#functions}}
 
 /**
@@ -694,14 +677,14 @@ async function callPlugin(method: string, params: Record<string, unknown>): Prom
  */
 export async function {{name}}({{paramList}}): Promise<{{returnType}}> {
 {{^hasReturn}}
-    await callPlugin("{{name}}", { {{callParams}} });
+    await callCpp(SUITE_NAME, '{{name}}', { {{callParams}} });
 {{/hasReturn}}
 {{#hasSingleOutput}}
-    const result = await callPlugin("{{name}}", { {{callParams}} }) as { {{singleOutputName}}: {{returnType}} };
+    const result = await callCpp<{ {{singleOutputName}}: {{returnType}} }>(SUITE_NAME, '{{name}}', { {{callParams}} });
     return result.{{singleOutputName}};
 {{/hasSingleOutput}}
 {{#hasMultipleOutputs}}
-    const result = await callPlugin("{{name}}", { {{callParams}} }) as {{returnType}};
+    const result = await callCpp<{{returnType}}>(SUITE_NAME, '{{name}}', { {{callParams}} });
     return result;
 {{/hasMultipleOutputs}}
 }

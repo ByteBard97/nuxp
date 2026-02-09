@@ -267,15 +267,15 @@ async function main(): Promise<void> {
         await generateTypeScriptIndex(tsOutputDir);
     }
 
-    // Generate CMake include file for C++ sources
-    if (!options.tsOnly && totalCppFiles > 0) {
-        await generateCMakeInclude(cppOutputDir);
-    }
-
-    // Generate CentralDispatcher.h for C++ routing
+    // Generate CentralDispatcher.h for C++ routing (before CMake include so it's listed)
     if (!options.tsOnly && generatedSuiteNames.length > 0) {
         await generateCentralDispatcher(cppOutputDir, generatedSuiteNames);
         logger.debug('Generated CentralDispatcher.h');
+    }
+
+    // Generate CMake include file for C++ sources (after CentralDispatcher so it's included)
+    if (!options.tsOnly && totalCppFiles > 0) {
+        await generateCMakeInclude(cppOutputDir);
     }
 }
 

@@ -18,16 +18,22 @@ node_modules/
 # OS
 .DS_Store
 
-# SDK headers (checked in for reproducibility)
-# plugin/sdk/VERSION contains the SDK version (e.g. "Adobe Illustrator 2026 SDK")
+# Adobe SDK headers (proprietary - must be downloaded from Adobe)
+# See docs/getting-started.md for setup instructions
+plugin/sdk/*
+!plugin/sdk/.gitkeep
 
 # Generated code endpoint markers (but we KEEP the generated code itself if checked in? 
 # The REPO_STRUCTURE.md said "Do NOT check in generated code")
 # Let's follow REPO_STRUCTURE.md exactly.
 
-# Generated code
+# Generated code (regenerate with ./scripts/generate.sh)
 plugin/src/endpoints/generated/*
 !plugin/src/endpoints/generated/.generated
+shell/src/sdk/generated/*
+!shell/src/sdk/generated/.generated
 client/src/sdk/generated/*
 !client/src/sdk/generated/.generated
 docs/api/generated/
+shell/src-tauri/target/
+shell/src-tauri/gen/

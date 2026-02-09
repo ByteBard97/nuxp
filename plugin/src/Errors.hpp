@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AITypes.h"
+#include "SPErrorCodes.h"
 
 #include <string>
 

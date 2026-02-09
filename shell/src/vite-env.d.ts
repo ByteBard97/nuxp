@@ -8,6 +8,7 @@ declare module '*.vue' {
 
 interface ImportMetaEnv {
   readonly VITE_PLUGIN_URL: string;
+  readonly VITE_USE_MOCK: string;
 }
 
 interface ImportMeta {

@@ -46,28 +46,16 @@ std::string AIErrToString(AIErr error) {
             return "Not implemented";
         case kSPUserCanceledError:
             return "User canceled";
-        case kSPOperationInterrupted:
-            return "Operation interrupted";
         case kSPOutOfMemoryError:
             return "Out of memory";
-        case kSPBufferTooSmallError:
-            return "Buffer too small";
         case kSPBadParameterError:
             return "Bad parameter";
-        case kSPBlockDebugError:
-            return "Block debug error";
-        case kSPBlockInUseError:
-            return "Block in use";
         case kSPPluginNotFound:
             return "Plugin not found";
-        case kSPCorruptPStringError:
-            return "Corrupt Pascal string";
         case kSPPluginCachesFlushResponse:
             return "Plugin caches flush response";
-        case kSPPluginCouldntLoad:
-            return "Plugin could not load";
-        case kSPCantChangeProperty:
-            return "Cannot change property";
+        case kSPSuiteNotFoundError:
+            return "Suite not found";
         default:
             break;
     }
