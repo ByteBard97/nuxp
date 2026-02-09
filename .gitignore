@@ -1,0 +1,26 @@
+# Build outputs
+plugin/build/
+shell/build/
+shell/target/
+client/dist/
+codegen/output/
+
+# Dependencies
+node_modules/
+
+# OS
+.DS_Store
+
+# SDK headers (checked in for reproducibility)
+# plugin/sdk/VERSION contains the SDK version (e.g. "Adobe Illustrator 2026 SDK")
+
+# Generated code endpoint markers (but we KEEP the generated code itself if checked in? 
+# The REPO_STRUCTURE.md said "Do NOT check in generated code")
+# Let's follow REPO_STRUCTURE.md exactly.
+
+# Generated code
+plugin/src/endpoints/generated/*
+!plugin/src/endpoints/generated/.generated
+client/src/sdk/generated/*
+!client/src/sdk/generated/.generated
+docs/api/generated/

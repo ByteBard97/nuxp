@@ -1,0 +1,1466 @@
+#ifndef __AIPreferenceKeys__
+#define __AIPreferenceKeys__
+
+/*
+ *        Name:	AIPreferenceKeys.h
+ *     Purpose:	To define shared preference keys, defaults, and other
+ *              relevant information.
+ *       Notes: When sharing preferences between plugins and the main app,
+ *              either a) use a null prefix, or b) access the preferences from
+ *              the main app via the AIPreference suite.
+ *
+ * ADOBE SYSTEMS INCORPORATED
+ * Copyright 2001-2014 Adobe Systems Incorporated.
+ * All rights reserved.
+ *
+ * NOTICE:  Adobe permits you to use, modify, and distribute this file 
+ * in accordance with the terms of the Adobe license agreement 
+ * accompanying it. If you have received this file from a source other 
+ * than Adobe, then your use, modification, or distribution of it 
+ * requires the prior written permission of Adobe.
+ *
+ */
+
+
+#include "AIBasicTypes.h"
+
+
+/** Preference prefix: Use low-resolution proxy for linked EPS files  */
+#define kUseLowResProxyPrefix nullptr
+/** Preference suffix: Use low-resolution proxy for linked EPS files  */
+#define kUseLowResProxySuffix ((const char *)"useLowResProxy")
+/** Preference default: Use low-resolution proxy for linked EPS files  */
+const bool kUseLowResProxyDefault= false;
+
+/** Preference prefix: Use System Default app for Editing linked Image files  */
+#define kUseSysDefEditLinkPrefix nullptr
+/** Preference suffix: Use System Default app for Editing linked Image files  */
+#define kUseSysDefEditLinkSuffix ((const char *)"useSysDefEdit")
+/** Preference default: Use System Default app for Editing linked Image files  */
+const bool kUseSysDefEditLinkDefault= false;
+
+/** Preference prefix: Display Bitmaps as Anti-Aliased images in Pixel Preview  */
+#define kDisplayBitmapsAsAntiAliasedPixelPreviewPrefix nullptr
+/** Preference suffix: Display Bitmaps as Anti-Aliased images in Pixel Preview  */
+#define kDisplayBitmapsAsAntiAliasedPixelPreviewSuffix ((const char *)"DisplayBitmapsAsAntiAliasedPixelPreview")
+/** Preference default: Display Bitmaps as Anti-Aliased images in Pixel Preview  */
+const bool kDisplayBitmapsAsAntiAliasedPixelPreviewDefault= false;
+
+
+
+/** Preference prefix: EPS rasterization resolution for linked EPS/DCS files */
+#define kEPSResolutionPrefix nullptr
+/** Preference suffix: EPS rasterization resolution for linked EPS/DCS files */
+#define kEPSResolutionSuffix	((const char *)"EPSResolution")
+/** Preference default: EPS rasterization resolution for linked EPS/DCS files */
+const ai::int32 kEPSResolutionDefault = 300;
+
+/** Preference prefix: Update linked file options */
+#define kFileClipboardPrefix ((const char *)"FileClipboard")
+/** Preference suffix: Update linked file options */
+#define kLinkOptionsSuffix ((const char *)"linkoptions")
+/** Preference options: Update linked file options */
+enum UpdateLinkOptions {AUTO, MANUAL, ASKWHENMODIFIED};
+/** Preference default: Update linked file options */
+const UpdateLinkOptions kLinkOptionsDefault= ASKWHENMODIFIED;
+
+/** Preference prefix: Enable OPI feature for linked EPS files */
+#define kEnableOPIPrefix nullptr
+/** Preference suffix: Enable OPI feature for linked EPS files */
+#define kEnableOPISuffix	((const char *)"enableOPI")
+/** Preference default: Enable OPI feature for linked EPS files */
+const bool kEnableOPIDefault = false;
+
+#if defined(MAC_ENV)
+/** Preference suffix: Clipboard, copy SVG code */
+#define kcopySVGCodeSuffix		"copySVGCode"
+/** Preference default: Clipboard, copy SVG code */
+const bool kcopySVGCodeDefault = true;
+#else
+/** Preference suffix: Clipboard, copy SVG code */
+#define kcopySVGCodeSuffix		"copyAsSVGCode"
+/** Preference default: Clipboard, copy SVG code */
+const bool kcopySVGCodeDefault = false;
+#endif
+/** Preference suffix: Clipboard, copy SVG code*/
+#define kcopySVGCBFormatSuffix		"copySVGCBFormat"
+/** Preference suffix: Clipboard, copy as PDF*/
+#define kcopyAsPDFSuffix		"copyAsPDF"
+/** Preference suffix: Clipboard, copy as SVG*/
+#define kcopyAsSVGSuffix		"copyAsSVG"
+/** Preference suffix: Clipboard, copy as Illustrator clipboard */
+#define kcopyAsAICBSuffix		"copyAsAICB"
+/** Preference suffix: Clipboard, append extension */
+#define kappendExtensionSuffix	"appendExtension"
+/** Preference suffix: Clipboard, lowercase */
+#define klowerCaseSuffix		"lowerCase"
+/** Preference suffix: Clipboard, flatten */
+#define kflattenSuffix			"flatten"
+/** Preference suffix: Clipboard options */
+#define kAICBOptionSuffix	    "AICBOption"
+/** Preference suffix: Clipboard, paste without formatting*/
+#define kPasteWithoutFormattingSuffix        "pasteWithoutFormatting"
+
+
+/** Preferences: Illustrator clipboard option values */
+enum  AICBOptions {PRESERVE_PATH, PRESERVE_APPEARANCE_OVERPRINT};
+/** Preference default:Clipboard options */
+const AICBOptions kAICBOptionsDefault= PRESERVE_APPEARANCE_OVERPRINT;
+
+/** @ingroup PreferenceKeys
+	Version Cue preference */
+#define kUseVersionCue			"useVersionCue"
+
+/** @ingroup PreferenceKeys
+	Whether screen display uses a black preserving color transformation
+	for converting CMYK to RGB or gray. The black preserving transform maps CMYK
+	0,0,0,1 to the darkest black available. Not colorimetrically accurate,
+	but sometimes preferable for viewing CMYK black line art and text. The
+	default value is given by \c #kAIPrefDefaultOnscreenBlackPres. */
+#define kAIPrefKeyOnscreenBlackPres			((const char*) "blackPreservation/Onscreen")
+/** @ingroup PreferenceKeys
+	Default value for \c #kAIPrefKeyOnscreenBlackPres. */
+#define kAIPrefDefaultOnscreenBlackPres		true
+
+/** @ingroup PreferenceKeys
+	Whether printing and exporting uses a black preserving color transformation
+	for converting CMYK to RGB or gray. The black preserving transform maps CMYK
+	0,0,0,1 to the darkest black available. Not colorimetrically accurate,
+	but sometimes preferable for viewing CMYK black line art and text. The
+	default value is given by \c #kAIPrefDefaultExportBlackPres. */
+#define kAIPrefKeyExportBlackPres			((const char*) "blackPreservation/Export")
+/** @ingroup PreferenceKeys
+	Default value for \c #kAIPrefKeyExportBlackPres. */
+#define kAIPrefDefaultExportBlackPres		true
+
+/** @ingroup PreferenceKeys
+	Sets the guide style (solid or dashed).
+	The default value is given by \c #kAIPrefDefaultGuideStyle.  */
+#define kAIPrefKeyGuideStyle ((const char*)"Guide/Style")
+/** @ingroup PreferenceKeys
+	The \c #kAIPrefKeyGuideStyle value for solid guides. */
+#define kAIPrefGuideStyleSolid 0
+/** @ingroup PreferenceKeys
+	The \c #kAIPrefKeyGuideStyle value for dashed guides. */
+#define kAIPrefGuideStyleDashed 1
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyGuideStyle. */
+#define kAIPrefDefaultGuideStyle kAIPrefGuideStyleSolid
+
+/** @ingroup PreferenceKeys
+	Sets the red component of the Guide color.
+	The default value is given by \c #kAIPrefDefaultGuideColorRed.  */
+#define kAIPrefKeyGuideColorRed ((const char*)"Guide/Color/red")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyGuideColorRed. */
+#define kAIPrefDefaultGuideColorRed		(0x4A3D/65535.0f)
+
+/** @ingroup PreferenceKeys
+	Sets the green component of the Guide color.
+	The default value is given by \c #kAIPrefDefaultGuideColorGreen.  */
+#define kAIPrefKeyGuideColorGreen ((const char*)"Guide/Color/green")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyGuideColorGreen. */
+#define kAIPrefDefaultGuideColorGreen		(1.0f)
+
+/** @ingroup PreferenceKeys
+	Sets the blue component of the Guide color.
+	The default value is given by \c #kAIPrefDefaultGuideColorBlue.  */
+#define kAIPrefKeyGuideColorBlue ((const char*)"Guide/Color/blue")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyGuideColorBlue. */
+#define kAIPrefDefaultGuideColorBlue		(1.0f)
+
+/** @ingroup PreferenceKeys for Smart Guides (Snapomatic Plug-in) */
+
+/** Determines whether or not to show Tool Guides. Used in AI 19.2 or greater */
+#define kAISnappingPrefShowToolGuides			((const char*)"smartGuides/showToolGuides")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAISnappingPrefShowToolGuides. */
+const bool kAISnappingPrefShowToolGuidesDefault = false;
+
+/** @ingroup PreferenceKeys
+	Determines the tolerance for snapping to angles while rotating a live shape. Used in AI 19.2 or greater */
+#define kAISnappingPrefAngularTolerance			((const char*)"smartGuides/angularTolerance")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAISnappingPrefAngularTolerance. */
+const ai::int32 kAISnappingPrefAngularToleranceDefault = 2;
+
+/**	Sets the red component of the SmartGuide color.
+	The default value is given by \c #kAIPrefDefaultSmartGuideColorRed.  */
+#define kAIPrefKeySmartGuideColorRed ((const char*)"snapomatic/Color/red_19_2")
+/** @ingroup PreferenceKeys for Smart Guides
+	The default value for \c #kAIPrefKeySmartGuideColorRed. */
+#define kAIPrefDefaultSmartGuideColorRed		(1.0f)
+
+/**	Sets the accessibility compliant red component of the SmartGuide color.
+	The default value is given by \c #kAIPrefDefaultSmartGuideColorRedAcc.  */
+#define kAIPrefKeySmartGuideColorRedAcc ((const char*)"snapomatic/Color/red_acc")
+/** @ingroup PreferenceKeys for Smart Guides
+	The default value for \c #kAIPrefKeySmartGuideColorRedAcc. */
+#define kAIPrefDefaultSmartGuideColorRedAcc		((201)/255.0f)
+
+/** @ingroup PreferenceKeys for Smart Guides
+	Sets the green component of the SmartGuide color.
+	The default value is given by \c #kAIPrefDefaultGuideColorGreen.  */
+#define kAIPrefKeySmartGuideColorGreen ((const char*)"snapomatic/Color/green_19_2")
+/** @ingroup PreferenceKeys for Smart Guides (Snapomatic Plug-in)
+	The default value for \c #kAIPrefKeySmartGuideColorGreen. */
+#define kAIPrefDefaultSmartGuideColorGreen		(0x4A3D/65535.0f)
+
+/** @ingroup PreferenceKeys for Smart Guides
+	Sets the accessibility compliant green component of the SmartGuide color.
+	The default value is given by \c #kAIPrefDefaultGuideColorGreenAcc.  */
+#define kAIPrefKeySmartGuideColorGreenAcc ((const char*)"snapomatic/Color/green_acc")
+/** @ingroup PreferenceKeys for Smart Guides (Snapomatic Plug-in)
+	The default value for \c #kAIPrefKeySmartGuideColorGreenAcc. */
+#define kAIPrefDefaultSmartGuideColorGreenAcc		(0.0f)
+
+/** @ingroup PreferenceKeys for Smart Guides
+	Sets the blue component of the SmartGuide color.
+	The default value is given by \c #kAIPrefDefaultSmartGuideColorBlue.  */
+#define kAIPrefKeySmartGuideColorBlue ((const char*)"snapomatic/Color/blue_19_2")
+/** @ingroup PreferenceKeys for Smart Guides (Snapomatic Plug-in)
+	The default value for \c #kAIPrefKeySmartGuideColorBlue. */
+#define kAIPrefDefaultSmartGuideColorBlue		(1.0f)
+
+/** @ingroup PreferenceKeys for Smart Guides
+	Sets the accessibility compliant blue component of the SmartGuide color.
+	The default value is given by \c #kAIPrefDefaultSmartGuideColorBlue.  */
+#define kAIPrefKeySmartGuideColorBlueAcc ((const char*)"snapomatic/Color/blue_acc")
+/** @ingroup PreferenceKeys for Smart Guides (Snapomatic Plug-in)
+	The default value for \c #kAIPrefKeySmartGuideColorBlueAcc. */
+#define kAIPrefDefaultSmartGuideColorBlueAcc		((201)/255.0f)
+
+/**	Sets the red component of the GlyphGuide color.
+	The default value is given by \c #kAIPrefDefaultGlyphGuideColorRed.  */
+#define kAIPrefKeyGlyphGuideColorRed ((const char*)"snapomatic/GlyphColor/red")
+/** @ingroup PreferenceKeys for Glyph Guides
+	The default value for \c #kAIPrefKeyGlyphGuideColorRed. */
+#define kAIPrefDefaultGlyphGuideColorRed		((110)/255.0f)
+
+/** @ingroup PreferenceKeys for Glyph Guides
+	Sets the green component of the GlyphGuide color.
+	The default value is given by \c #kAIPrefDefaultGuideColorGreen.  */
+#define kAIPrefKeyGlyphGuideColorGreen ((const char*)"snapomatic/GlyphColor/green")
+/** @ingroup PreferenceKeys for Glyph Guides (Snapomatic Plug-in)
+	The default value for \c #kAIPrefKeyGlyphGuideColorGreen. */
+#define kAIPrefDefaultGlyphGuideColorGreen		((205)/255.0f)
+
+/** @ingroup PreferenceKeys for Glyph Guides
+	Sets the blue component of the GlyphGuide color.
+	The default value is given by \c #kAIPrefDefaultGlyphGuideColorBlue.  */
+#define kAIPrefKeyGlyphGuideColorBlue ((const char*)"snapomatic/GlyphColor/blue")
+/** @ingroup PreferenceKeys for Glyph Guides (Snapomatic Plug-in)
+	The default value for \c #kAIPrefKeyGlyphGuideColorBlue. */
+#define kAIPrefDefaultGlyphGuideColorBlue		((75)/255.0f)
+
+/**    Sets the red component of the ConstructionGuide color.
+    The default value is given by \c #kAIPrefDefaultConstructionGuideColorRed.  */
+#define kAIPrefKeyConstructionGuideColorRed ((const char*)"snapomatic/ConstructionGuideColor/red")
+/** @ingroup PreferenceKeys for Construction Guides
+    The default value for \c #kAIPrefKeyConstructionGuideColorRed. */
+#define kAIPrefDefaultConstructionGuideColorRed        ((46)/255.0f)
+
+/**    Sets the green component of the ConstructionGuide color.
+    The default value is given by \c #kAIPrefDefaultConstructionGuideColorGreen.  */
+#define kAIPrefKeyConstructionGuideColorGreen ((const char*)"snapomatic/ConstructionGuideColor/green")
+/** @ingroup PreferenceKeys for Construction Guides
+    The default value for \c #kAIPrefKeyConstructionGuideColorGreen. */
+#define kAIPrefDefaultConstructionGuideColorGreen        ((49)/255.0f)
+
+/**    Sets the blue component of the ConstructionGuide color.
+    The default value is given by \c #kAIPrefDefaultConstructionGuideColorBlue.  */
+#define kAIPrefKeyConstructionGuideColorBlue ((const char*)"snapomatic/ConstructionGuideColor/blue")
+/** @ingroup PreferenceKeys for Construction Guides
+    The default value for \c #kAIPrefKeyConstructionGuideColorBlue. */
+#define kAIPrefDefaultConstructionGuideColorBlue        ((146)/255.0f)
+
+/** @ingroup PreferenceKeys
+	Determines whether to show smart Guide labels */
+#define kAISnappingPrefShowLabels			((const char*)"smartGuides/showLabels")
+/** @ingroup PreferenceKeys
+	Determines whether to show Construction guides */
+#define kAISnappingPrefShowConstructionGuides			((const char*)"smartGuides/showConstructionGuides")
+/** @ingroup PreferenceKeys
+	Determines whether Object Highlighting is turned on*/
+#define kAISnappingPrefObjectHighlighting			((const char*)"smartGuides/showObjectHighlighting")
+/** @ingroup PrefereceKeys
+ The default value for \c #kAISnappingPrefObjectHighlighting.*/
+constexpr bool kAIPrefDefaultShowObjectHighlighting = true;
+/** @ingroup PreferenceKeys
+	Determines whether to show Readouts */
+#define kAISnappingPrefShowReadouts			((const char*)"smartGuides/showReadouts")
+/** @ingroup PreferenceKeys
+	Determines whether to show alignment Guides */
+#define kAISnappingPrefShowAlignmentGuides			((const char*)"smartGuides/showAlignmentGuides")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAISnappingPrefShowAlignmentGuides. */
+#define kAIPrefDefaultShowALignmentGuides           true
+/** @ingroup PreferenceKeys
+	Determines whether to show equalSpacing Guides */
+#define kAISnappingPrefSpacingGuides			((const char*)"smartGuides/showSpacingGuides")
+
+/** @ingroup PreferenceKeys
+    Determines whether to invoke distance measure Guides */
+#define kAIPrefInvokeDistanceGuides  ((const char*)"smartGuides/invokeDistanceGuides")
+/** @ingroup PreferenceKeys
+    Default value for \c #kAIPrefInvokeDistanceGuides. */
+#define kAIPrefDefaultInvokeDistanceGuides          true
+
+/** @ingroup PreferenceKeys
+    Determines whether to snap to active artboard content only */
+#define kAIPrefSnapToActiveArtboardContent  ((const char*)"smartGuides/snapToActiveArtboardContent")
+/** @ingroup PreferenceKeys
+    Default value for \c #kAIPrefSnapToActiveArtboardContent. */
+#define kAIPrefDefaultSnapToActiveArtboardContent          false
+
+/** @ingroup PreferenceKeys
+	Determines whether to snap to isolation objects only */
+#define kAIPrefSnapToIsolatedObjects  ((const char*)"smartGuides/snapToIsolatedObjects")
+/** @ingroup PreferenceKeys
+	Default value for \c #kAIPrefSnapToIsolatedObjects. */
+#define kAIPrefDefaultSnapToIsolatedObjects          false
+
+/** @ingroup PreferenceKeys
+	Determines whether to show Rotational guides */
+#define kAISnappingPrefShowRotationalGuides			((const char*)"smartGuides/showRotationalGuides")
+/** @ingroup PreferenceKeys
+	Sets the Smart Guides Tolerance*/
+#define kAISnappingPrefSmartGuidesTolerance			((const char*)"smartGuides/tolerance")
+/** @ingroup PreferenceKeys
+    The default value for \c #kAISnappingPrefSmartGuidesTolerance. */
+const ai::int32 kAISnappingPrefSmartGuidesToleranceDefault = 4;
+/** @ingroup PreferenceKeys
+    Sets the constrain angle */
+#define kAIGeneralPrefConstrainAngle            ((const char*)"constrain/angle")
+/** @ingroup PreferenceKeys
+    The default value for \c #kAIGeneralPrefConstrainAngle. */
+const AIReal kAIGeneralPrefConstrainAngleDefault = 0;
+/** @ingroup PreferenceKeys
+	Sets the Smart Guides Sensitivity*/
+#define kAISnappingPrefSmartGuidesSensitivity			((const char*)"smartGuides/sensitivity")
+enum class SmartGuideSensitivityOptions {kLow = 1, kMedium, kHigh};
+/** @ingroup PreferenceKeys
+	The default value for \c #kAISnappingPrefSmartGuidesSensitivity. */
+const ai::int32 kAISnappingPrefSmartGuidesSensitivityDefault = static_cast<ai::int32>(SmartGuideSensitivityOptions::kLow);
+/** @ingroup PreferenceKeys
+	Sets the Rotational Snapping Arc Tolerance */
+#define kAISnappingPrefRotationalSnapArcTolerance			((const char*)"smartGuides/rotationalSnapArcTolerance")
+/** @ingroup PreferenceKeys
+	Determines whether smart Guides is enabled */
+#define kAISnappingPrefShowSmartGuides			((const char*)"smartGuides/isEnabled")
+#define kAISnappingPrefShowSmartGuidesDefault	true
+	/** @ingroup PreferenceKeys
+	Determines whether snap to point is enabled */
+#define kAISnappingPrefSnapToPoint			((const char*)"snapToPoint")
+    /** @ingroup PreferenceKeys
+     Default value for \c #kAISnappingPrefSnapToPoint. */
+#define kAIPrefDefaultSnapToPoint           true
+	/** @ingroup PreferenceKeys
+	Snap to point Tolerance */
+#define kAISnapToPointTolerance			((const char*)"snappingTolerance")
+
+/** @ingroup PreferenceKeys
+	Enable Rich tool tips */
+#define kAIShowRichToolTips				((const char*)"showRichToolTips")
+/** @ingroup PreferenceKeys
+	Enable Tool tips */
+#define kAIShowToolTips					((const char*)"showToolTips")
+
+/** @ingroup PreferenceKeys
+    Enable  Snap to Glyph*/
+#define kAIPrefSnapToGlyph  ((const char*)"snapToGlyph")
+#define kAIPrefSnapToGlyphDefault   true
+
+/** @ingroup PreferenceKeys
+	Enable  Snap to Glyph*/
+#define kAIPrefSnapToTangentPerpendicularParallel  ((const char*)"snapToTangentPerpendicularParallel")
+#define kAIPrefSnapToTangentPerpendicularParallelDefault   true
+
+/** @ingroup PreferenceKeys
+	Show Snap to Glyph Expanded State*/
+#define kAIPrefShowSnapToGlyphOpt	((const char*)"showSnapToGlyphOpt")
+
+/** @ingroup PreferenceKeys
+    Enable  Text Anchor Point Snapping*/
+#define kAIPrefTextAnchorPointSnapping  ((const char*)"textAnchorPointSnapping")
+#define kAIPrefTextAnchorPointSnappingDefault   true
+
+/** @ingroup PreferenceKeys
+	Enable  Text Line ( Important Line ) Snapping*/
+#define kAIPrefTextLineSnapping  ((const char*)"textLineSnapping")
+#define kAIPrefTextLineSnappingDefault   true
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping with baseline which is a primary line,
+baseline and closed bounds of lines*/
+#define kAIPrefTextBaselineSnapping  ((const char*)"textBaselineLineSnapping")
+#define kAIPrefTextBaselineSnappingDefault   true
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping with xheight which is also a primary line,
+baseline and closed bounds of lines*/
+#define kAIPrefTextXHeightSnapping  ((const char*)"textXHeightSnapping")
+#define kAIPrefTextXHeightSnappingDefault   true
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping with line tight bounds which is also a primary line,
+baseline and closed bounds of lines*/
+#define kAIPrefTextLineBoundSnapping  ((const char*)"textLineBoundsSnapping")
+#define kAIPrefTextLineBoundSnappingDefault   true
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping with Japanese glyph Centre bounds */
+#define kAIPrefJTextCenterSnapping  ((const char*)"japTextCentreSnapping")
+#define kAIPrefJTextCenterSnappingDefault   true
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping with Japanese TextEmBox Line */
+#define kAIPrefJTextEMBoxSnapping  ((const char*)"japTextEMBoxLineSnapping")
+#define kAIPrefJTextEMBoxSnappingDefault   true
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping only with first line in multiple lines text object.,
+baseline and closed bounds of lines*/
+#define kAIPrefTextFirstLineSnapping  ((const char*)"textFirstLineSnapping")
+#define kAIPrefTextFirstLineSnappingDefault   false
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping with all possible lines,
+baseline and closed bounds of lines*/
+#define kAIPrefTextAllVisualLinesSnapping  ((const char*)"textAllVisualLinesSnapping")
+#define kAIPrefTextAllVisualLinesSnappingDefault   false
+
+/** @ingroup PreferenceKeys
+Enable  Text Snapping with important lines, currently important lines include visual lines near
+baseline, x-height etc.,
+baseline and closed bounds of lines*/
+#define kAIPrefTextImportantVisualLinesSnapping  ((const char*)"textImportantVisualLinesSnapping")
+#define kAIPrefTextImportantVisualLinesSnappingDefault   false
+
+/** @ingroup PreferenceKeys
+ Enable  Angular Guides*/
+#define kAIPrefShowAngularGuides  ((const char*)"angularGuides")
+#define kAIPrefShowAngularGuidesDefault   true
+
+/** @ingroup PreferenceKeys
+	Show font Height Options*/
+#define kAIPrefShowFontHeightOption  ((const char*)"fontHeightOption")
+#define kAIPrefShowFontHeightOptionDefault false
+
+/** @ingroup PreferenceKeys
+ 	Snap To Pixel Explicit User Action*/
+#define kAIPrefSnapToPixelAction  ((const char*)"snapToPixelOnUserAction")
+#define kAIPrefSnapToPixelActionDefault   false
+
+/** @ingroup PreferenceKeys
+Determines whether force snap to grid is enabled */
+#define kAIForceSnapToGrid            ((const char*)"forceSnapToGrid")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAIForceSnapToGrid. */
+#define kAIPrefDefaultForceSnapToGrid           true
+
+
+/** @ingroup PreferenceKeys
+	Whether to show the slice numbers or not.
+	The default value is given by \c #kAIPrefDefaultShowSliceNumbers.  */
+#define kAIPrefKeyShowSliceNumbers ((const char*)"plugin/AdobeSlicingPlugin/showSliceNumbers")
+/** @ingroup PreferenceKeys
+	Default value for \c #kAIPrefKeyShowSliceNumbers. */
+#define kAIPrefDefaultShowSliceNumbers			true
+
+/** @ingroup PreferenceKeys for Slicing feedback
+	Sets the red component of the Slicing feedback color.
+	The default value is given by \c #kAIPrefDefaultSlicingFeedbackColorRed.  */
+#define kAIPrefKeySlicingFeedbackColorRed ((const char*)"plugin/AdobeSlicingPlugin/feedback/red")
+/** @ingroup PreferenceKeys for Slicing feedback
+	The default value for \c #kAIPrefKeySlicingFeedbackColorRed. */
+#define kAIPrefDefaultSlicingFeedbackColorRed	(0xFFFF)
+
+/** @ingroup PreferenceKeys for Slicing feedback
+	Sets the green component of the Slicing feedback color.
+	The default value is given by \c #kAIPrefDefaultSlicingFeedbackColorGreen.  */
+#define kAIPrefKeySlicingFeedbackColorGreen ((const char*)"plugin/AdobeSlicingPlugin/feedback/green")
+/** @ingroup PreferenceKeys for Slicing feedback
+	The default value for \c #kAIPrefKeySlicingFeedbackColorGreen. */
+#define kAIPrefDefaultSlicingFeedbackColorGreen	(0x4A3D)
+
+/** @ingroup PreferenceKeys for Slicing feedback
+	Sets the blue component of the Slicing feedback color.
+	The default value is given by \c #kAIPrefDefaultSlicingFeedbackColorBlue.  */
+#define kAIPrefKeySlicingFeedbackColorBlue ((const char*)"plugin/AdobeSlicingPlugin/feedback/blue")
+/** @ingroup PreferenceKeys for Slicing feedback
+	The default value for \c #kAIPrefKeySlicingFeedbackColorBlue. */
+#define kAIPrefDefaultSlicingFeedbackColorBlue	(0x4A3D)
+
+/** @ingroup PreferenceKeys
+	Sets the greeking threshold for text drawing. Text rendered at a point size less than 
+	or equal to the greeking threshold is rendered greeked.
+	The default value is given by \c #kAIPrefDefaultTextGreekingThreshold.  */
+#define kAIPrefKeyTextGreekingThreshold ((const char*)"text/greekingThreshold")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+#define kAIPrefDefaultTextGreekingThreshold		(6.0f)
+
+/** @ingroup PreferenceKeys
+Check if the Font Menu needs to Show English Name.
+The default value is given by \c #kAIPrefDefaultTextFontEnglishName.  */
+#define kAIPrefKeyTextFontEnglishName ((const char*)"text/useEnglishFontNames")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+const bool kAIPrefDefaultTextFontEnglishName = false;
+
+/** @ingroup PreferenceKeys
+Check the size of the font preview image size in font menu
+The default value is given by \c #kAIPrefDefaultTextFontFaceSize.  */
+#define kAIPrefKeyTextFontFaceSize ((const char*)"text/fontMenu/faceSizeMultiplier")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+const  ai::int32 kAIPrefDefaultTextFontFaceSize = 1;
+
+/** @ingroup PreferenceKeys
+Check the size of the font preview image size in font menu
+The default value is given by \c #kAIPrefDefaultTextFontFaceSize.  */
+#define kAIPrefKeyTextSampleTextOpt ((const char*)"text/fontflyout/SampleTextOpt")
+
+/** @ingroup PreferenceKeys
+Check if the Font Menu needs to Show Preview
+The default value is given by \c #kAIPrefDefaultTextFontShowInFace.  */
+#define kAIPrefKeyTextFontShowInFace ((const char*)"text/fontMenu/showInFace")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+const bool kAIPrefDefaultTextFontShowInFace = true;
+
+/** @ingroup PreferenceKeys
+Check if the Font Menu needs to Typekit Japanese Fonts in Find More Section
+The default value is given by \c #kAIPrefDefaultJapaneseFontPreview.  */
+#define kAIPrefKeyTextJapaneseFontPreview ((const char*)"text/fontMenu/japaneseFontPreview")
+/** @ingroup PreferenceKeys*/
+const bool kAIPrefDefaultJapaneseFontPreview = false;
+
+/** @ingroup PreferenceKeys
+Check if the Font Menu needs to be ordered in terms of language scripts
+The default value is given by \c #kAIPrefDefaultTextFontShowInFace.  */
+#define kAIPrefKeyTextFontGroupByLang ((const char*)"text/groupTypeMenuByLanguage")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+const bool kAIPrefDefaultTextFontGroupByLang = true;
+
+/** @ingroup PreferenceKeys
+Check if the Font Menu needs to Show Preview
+The default value is given by \c #kAIPrefDefaultTextFontShowInFace.  */
+#define kAIPrefKeyTextFontSubMenuInFace ((const char*)"text/fontMenu/showSubMenusInFace")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+const bool kAIPrefDefaultTextFontSubMenuInFace = false;
+/** @ingroup PreferenceKeys
+Check if the Font Menu needs to Show Onboarding
+The default value is given by \c #kAIPrefDefaultFontNeedsExploreModeOnbaording.  */
+#define kAIPrefKeyFontNeedsExploreModeOnboarding ((const char*)"text/fontMenu/needsExploreModeOnboarding")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefDefaultFontNeedsExploreModeOnbaording. */
+const bool kAIPrefDefaultFontNeedsExploreModeOnboarding = true;
+
+/** @ingroup PreferenceKeys
+Check if the Font change needs to Show Onboarding
+The default value is given by \c #kAIPrefDefaultShowUNSNotificationOnbaording.  */
+#define kAIPrefKeyShowUNSNotificationOnboarding ((const char*)"text/fontMenu/showUNSNotification")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefDefaultShowUNSNotificationOnbaording. */
+const bool kAIPrefDefaultShowUNSNotificationOnboarding = false;
+
+
+/** @ingroup PreferenceKeys
+Check if the Discover More needs to Show bluedot Onboarding
+The default value is given by \c #kAIPrefDefaultDiscoverMoreOnbaording.  */
+#define kAIPrefKeyDiscoverMoreFontsOnboarding ((const char*)"text/discoverMoreBluedotOnboarding")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefDefaultDiscoverMoreOnbaording. */
+const bool kAIPrefDefaultDiscoverMoreOnbaording = false;
+
+/** @ingroup PreferenceKeys
+Check if the Collections needs to Show bluedot Onboarding
+The default value is given by \c #kAIPrefDefaultCollectionOnboarding.  */
+#define kAIPrefKeyCollectionFontsOnboarding ((const char*)"text/collectionsBluedotOnboarding")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefDefaultCollectionOnboarding. */
+const bool kAIPrefDefaultCollectionOnboarding = false;
+
+
+/** @ingroup PreferenceKeys
+Check if the Font Menu needs to Show Onboarding
+The default value is given by \c #kAIPrefDefaultFontNeedsExploreModeOnbaording.  */
+#define kAIPrefKeyDontShowAutoActivateOnboarding ((const char*)"text/dontshowAutoActivateOnboarding")
+
+/** @ingroup PreferenceKeys
+Check the count for Font Menu Shown Onboarding
+The default value is given by \c #kAIPrefDefaultFontExplrModeOnbrdngShownCount.  */
+#define kAIPrefKeyAutoActivateOnbrdngCount ((const char*)"text/activateOnbrdngShownCount")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefDefaultFontExplrModeOnbrdngShownCount. */
+const ai::int32 kAIPrefDefaultAutoActivateOnbrdngCount = 0;
+
+/** @ingroup PreferenceKeys
+ Check if the Font Menu needs to Show Explore Tab
+ The default value is given by \c #kAIPrefDefaultFontNeedsExploreModeOnbaording.  */
+#define kAIPrefKeyShowFontExploreTab ((const char*)"showFindMoreTabV2")
+/** @ingroup PreferenceKeys
+ The default value for \c #kAIPrefDefaultFontNeedsExploreModeOnbaording. */
+const bool kAIPrefDefaultShowFontExploreTab = true;
+
+/** @ingroup PreferenceKeys
+Check the count for Font Menu Shown Onboarding
+The default value is given by \c #kAIPrefDefaultFontExplrModeOnbrdngShownCount.  */
+#define kAIPrefKeyFontExplrModeOnbrdngShownCount ((const char*)"text/fontMenu/exploreModeOnbrdngShownCount")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefDefaultFontExplrModeOnbrdngShownCount. */
+const ai::int32 kAIPrefDefaultFontExplrModeOnbrdngShownCount = 0;
+
+/** @ingroup PreferenceKeys
+	Sets the legacy gradient-mesh object conversion options when opening a legacy
+	document (from an Illustrator version before CS 3). */
+#define kAIPrefKeyLegacyGradientMeshConversionOptions ((const char*) "open/legacyGradientMeshConversion")
+/** @ingroup PreferenceKeys
+	Key values for \c #kAIPrefKeyLegacyGradientMeshConversionOptions. */
+enum  LegacyGradientMeshConversionOptions {MESH_UNKNOWN, MESH_PRESERVE_SPOT, MESH_PRESERVE_APPEARANCE};
+
+/** @ingroup PreferenceKeys
+	Sets the tolerance preference for selection. Integer, a number of pixels. */
+#define kAIPrefKeySelectionTolerance ((const char*) "selectionTolerance")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeySelectionTolerance. */
+#define  kAIPrefDefaultSelectionTolerance (3)
+
+/** @ingroup PreferenceKeys
+	Sets the tolerance preference for selection in touch workspace. Integer, a number of pixels. */
+#define kAIPrefKeyTWSSelectionTolerance ((const char*) "tws/SelectionTolerance")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyTWSSelectionTolerance. */
+#define  kAIPrefDefaultTWSSelectionTolerance (10)
+
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefDefaultCornerAngleLimit. */
+#define  kAIPrefDefaultCornerAngleLimit (177.0)
+
+/** @ingroup PreferenceKeys
+Determines whether strokes and effects will be scaled or not. */
+#define kAIPrefKeyScaleStrokesAndEffects			((const char*)"scaleLineWeight")
+/** @ingroup PreferenceKeys
+	Determines whether or not anchor points will be highlighted on mouseover. */
+#define kAIPrefKeyHighlightAnchorOnMouseover		((const char*)"highlightAnchorOnMouseOver")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyHighlightAnchorOnMouseover. */
+const bool kAIPrefKeyHighlightAnchorOnMouseoverDefault = true;
+
+/** @ingroup PreferenceKeys
+	Whether to show the legacy artboard conversion options when opening a legacy
+	document (from an Illustrator version before CS 4). */
+#define kShowArtboardConversionDialogKey 			((const char*) "LegacyArtboardOptions/ShowDialog")
+/** @ingroup PreferenceKeys
+	Sets the legacy artboard conversion options " Legacy Artboard" when opening a legacy
+	document (from an Illustrator version before CS 4). */
+#define kAIArtboardConversionDialogArtboardKey 		((const char*) "LegacyArtboardOptions/artboard")
+/** @ingroup PreferenceKeys
+	Sets the legacy artboard conversion options " Crop Area" when opening a legacy
+	document (from an Illustrator version before CS 4). */
+#define kAIArtboardConversionDialogCropAreaKey 		((const char*) "LegacyArtboardOptions/cropAreas")
+/** @ingroup PreferenceKeys
+	Sets the legacy artboard conversion options " Print tiles" when opening a legacy
+	document (from an Illustrator version before CS 4). */
+#define kAIArtboardConversionDialogTilesKey 			((const char*) "LegacyArtboardOptions/pageTiles")
+/** @ingroup PreferenceKeys
+	Sets the legacy artboard conversion options "Artwork Bounds" when opening a legacy
+	document (from an Illustrator version before CS 4). */
+#define kAIArtboardConversionDialogArtworkBoundsKey 	((const char*) "LegacyArtboardOptions/artworkBounds")
+
+/** @ingroup PreferenceKeys
+	Turns the Pixel Grid On/Off
+	The default value is given by \c #kAIPrefDefaultShowPixelGrid.  */
+#define kAIPrefKeyShowPixelGrid ((const char*)"Guide/ShowPixelGrid")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyGuideColorRed. */
+#define kAIPrefDefaultShowPixelGrid		TRUE
+
+/** @ingroup PreferenceKeys
+	Determines whether or not link info will be shown in links panel */
+#define kAIPrefKeyShowLinkInfo		((const char*)"showLinkInfo")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefKeyShowLinkInfo. */
+const bool kAIPrefKeyShowLinkInfoDefault = false;
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - preferences and workspaces.
+	The default value is given by \c #kAIPrefDefaultCreativeCloudPreferences.  */
+#define kAIPrefCreativeCloudPreferences ((const char*)"CreativeCloud/preferences")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudPreferences. */
+#define kAIPrefDefaultCreativeCloudPreferences		TRUE
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Swatches
+	The default value is given by \c #kAIPrefDefaultCreativeCloudSwatches.  */
+#define kAIPrefCreativeCloudSwatches ((const char*)"CreativeCloud/Swatches")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudSwatches. */
+#define kAIPrefDefaultCreativeCloudSwatches		TRUE
+
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Presets
+	The default value is given by \c #kAIPrefDefaultCreativeCloudPresets.  */
+#define kAIPrefCreativeCloudPresets ((const char*)"CreativeCloud/Presets")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudPresets. */
+#define kAIPrefDefaultCreativeCloudPresets		TRUE
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Symbols
+	The default value is given by \c #kAIPrefDefaultCreativeCloudSymbols.  */
+#define kAIPrefCreativeCloudSymbols ((const char*)"CreativeCloud/Symbols")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudSymbols. */
+#define kAIPrefDefaultCreativeCloudSymbols		TRUE
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Brushes
+	The default value is given by \c #kAIPrefDefaultCreativeCloudBrushes.  */
+#define kAIPrefCreativeCloudBrushes ((const char*)"CreativeCloud/Brushes")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudBrushes. */
+#define kAIPrefDefaultCreativeCloudBrushes		TRUE
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Graphic Styles
+	The default value is given by \c #kAIPrefDefaultCreativeCloudGraphicStyles.  */
+#define kAIPrefCreativeCloudGraphicStyles ((const char*)"CreativeCloud/GraphicStyles")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudGraphicStyles. */
+#define kAIPrefDefaultCreativeCloudGraphicStyles		TRUE
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Workspaces
+	The default value is given by \c #kAIPrefDefaultCreativeCloudWorkspaces.  */
+#define kAIPrefCreativeCloudWorkspaces ((const char*)"CreativeCloud/Workspaces")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudWorkspaces. */
+#define kAIPrefDefaultCreativeCloudWorkspaces		TRUE
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Keyboard shortcuts
+	The default value is given by \c #kAIPrefDefaultCreativeCloudKBS.  */
+#define kAIPrefCreativeCloudKBS ((const char*)"CreativeCloud/KBS")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudKeyboard shortcuts. */
+#define kAIPrefDefaultCreativeCloudKBS		TRUE
+
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Asian Settings
+	The default value is given by \c #kAIPrefDefaultCreativeCloudAsianSettings.  */
+#define kAIPrefCreativeCloudAsianSettings ((const char*)"CreativeCloud/AsianSettings")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudAsianSettings. */
+#define kAIPrefDefaultCreativeCloudAsianSettings		TRUE
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Conflict Handling Action
+	The default value is given by \c #kAIPrefDefaultCreativeCloudConflictHandling.  */
+#define kAIPrefCreativeCloudConflictHandling ((const char*)"CreativeCloud/ConflictHandling")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudConflictHandling. */
+#define kAIPrefDefaultCreativeCloudConflictHandling		AIPreferenceUtil::kAskMe
+
+/** @ingroup PreferenceKeys
+	creative cloud pref - Sync Popup state
+	The default value is given by \c #kAIPrefDefaultCreativeCloudSyncPopup.  */
+#define kAIPrefCreativeCloudSyncPopup ((const char*)"CreativeCloud/SyncPopup")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefCreativeCloudSyncPopup. */
+#define kAIPrefDefaultCreativeCloudSyncPopup		AIPreferenceUtil::kAllSettings
+
+/** @ingroup PreferenceKeys
+	Live Shape pref - Constrain dimensions
+	The default value is given by \c #kAIPrefDefaultLiveShapesConstrainDimensions.  */
+#define kAIPrefLiveShapesConstrainDimensions		((const char*)"LiveShapes/constrainDimensions")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefLiveShapesConstrainDimensions. */
+#define kAIPrefDefaultLiveShapesConstrainDimensions		TRUE
+
+/** @ingroup PreferenceKeys
+	Live Shape pref - Constrain radii
+	The default value is given by \c #kAIPrefDefaultLiveShapesConstrainRadii.  */
+#define kAIPrefLiveShapesConstrainRadii		((const char*)"LiveShapes/constrainRadii")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefLiveShapeConstrainRadii. */
+#define kAIPrefDefaultLiveShapesConstrainRadii		TRUE
+
+/** @ingroup PreferenceKeys
+	Live Shape pref - Constrain angles in pie
+	The default value is given by \c #kAIPrefDefaultLiveShapesConstrainPieAngles.  */
+#define kAIPrefLiveShapesConstrainPieAngles	((const char*)"LiveShapes/constrainPieAngles")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefLiveShapesConstrainPieAngles. */
+#define kAIPrefDefaultLiveShapesConstrainPieAngles		FALSE
+
+/** @ingroup PreferenceKeys
+	Live Shape pref - Auto show shape properties UI on shape creation
+	The default value is given by \c #kAIPrefDefaultLiveShapesAutoShowPropertiesUI.  */
+#define kAIPrefLiveShapesAutoShowPropertiesUI		((const char*)"LiveShapes/autoShowPropertiesUIOnCreatingShape")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefLiveShapeAutoShowPropertiesUI. */
+#define kAIPrefDefaultLiveShapesAutoShowPropertiesUI		FALSE
+
+/** @ingroup PreferenceKeys
+	Live Shape pref - Hide shape widgets for shape tool
+	The default value is given by \c #kAIPrefDefaultLiveShapesHideWidgetsForShapeTool.  */
+#define kAIPrefLiveShapesHideWidgetsForShapeTools		((const char*)"LiveShapes/hideWidgetsForShapeTools")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefLiveShapesHideWidgetsForShapeTool. */
+#define kAIPrefDefaultLiveShapesHideWidgetsForShapeTools	FALSE
+
+/** @ingroup PreferenceKeys
+	Policy for preserving corners: governs the way corners are modified while transformations, e.g. scaling radii, maintaining corner radii value
+	The default value is given by \c #kAIPrefDefaultPreserveCornersPolicy.  */
+#define kAIPrefPreserveCornersPolicy					((const char*)"policyForPreservingCorners")
+/** @ingroup PreferenceKeys
+	Key values for \c #kAIPrefPreserveCornersPolicy. */
+enum CornerPreservePolicy { kAIPrefScaleCornersRadii = 1, kAIPrefMaintainCornersRadii };
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefPreserveCornersPolicy. */
+const CornerPreservePolicy kAIPrefDefaultPreserveCornersPolicy = kAIPrefMaintainCornersRadii;
+
+/** Preference:  Preserve constrain for transform each horizontal and vertical scaling*/
+constexpr const char* kAITransformEachConstrainPrefSuffix{ "TransformEachConstrain" };
+constexpr bool kAITransformEachConstrainPrefDefault = false;
+
+/** @ingroup PreferenceKeys
+ Performance pref - GPU Support detected*/
+#define kAIPrefPerformanceGPUSupported ((const char*)"Performance/GPUSupported")
+/** @ingroup PreferenceKeys
+	Performance pref - Enable GPU rendering*/
+#define kAIPrefPerformanceEnableGPU ((const char*)"Performance/EnableGPU_Ver19_2")
+/** @ingroup PreferenceKeys
+	Performance pref - Turn off GPU due to crash*/
+#define kAIPrefPerformanceTurnOffGPUDueToCrash ((const char*)"Performance/TurnOffGPUDueToCrash")
+
+/** @ingroup PreferenceKeys
+	Performance pref - Enable Animated Zoom*/
+#define kAIPrefPerformanceAnimZoom ((const char*)"Performance/AnimZoom")
+
+/** @ingroup PreferenceKeys
+	Performance pref - Enable Flick  Pan*/
+#define kAIPrefPerformanceFlickPan ((const char*)"Performance/FlickPan")
+
+/** @ingroup PreferenceKeys
+    Performance pref - Auto Switch Engine*/
+#define kAIPrefPerformanceAutoSwitchEngine ((const char*)"Performance/AutoSwitchEngine")
+
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefPerformanceEnableThinFilledPaths. */
+#define kAIPrefDefaultPerformanceEnableThinFilledPaths		false
+
+/** @ingroup PreferenceKeys
+ Auto Spell Check Pref - Enable Dynamic Spelling*/
+#define kAIPrefDynamicSpelling  ((const char*)"dynamicspelling")
+#define kAIPrefDynamicSpellingDefault   false
+
+/** @ingroup PreferenceKeys
+ Auto Spell Check Pref - Ignnore Repeaed Words*/
+#define kAISpellIgnoreRepeatedWordPref ((const char*)"IgnoreRepeatedWord")
+#define kAISpellIgnoreRepeatedWordPrefDefault false
+
+/** @ingroup PreferenceKeys
+ Auto Spell Check Pref - Ignore word with unncapitalized start of sentece*/
+#define kAISpellIgnoreUncapSentenceStartPref ((const char*)"IgnoreUncapSentenceStart")
+#define kAISpellIgnoreUncapSentenceStartPrefDefault false
+
+/** @ingroup PreferenceKeys
+ Auto Spell Check Pref - Ignore word with all uppercase*/
+#define kAISpellIgnoreWordAllCapPref ((const char*)"IgnoreWordAllCap")
+#define kAISpellIgnoreWordAllCapPrefDefault false
+
+/** @ingroup PreferenceKeys
+ Auto Spell Check Pref - Ignore word with roman numerals*/
+#define kAISpellIgnoreRomanNumeralPref ((const char*)"IgnoreRomanNumeral")
+#define kAISpellIgnoreRomanNumeralPrefDefault false
+
+/** @ingroup PreferenceKeys
+ Auto Spell Check Pref - Ignore Word with numbers*/
+#define kAISpellIgnoreWordWithNumberPref ((const char*)"IgnoreWordWithNumber")
+#define kAISpellIgnoreWordWithNumberPrefDefault false
+
+/** @ingroup PreferenceKeys
+ JumpStart Pref*/
+#define kAIShowJumpStartPref ((const char*)"ShowJumpStart")
+#define kAIShowJumpStartPrefDefault true
+
+
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefPerformanceDisplaySetting. */
+#define kAIPrefDefaultPerformanceDisplaySetting		(0)
+
+/** @ingroup PreferenceKeys
+	Crash Recovery pref - Automatically Save CheckBox Value*/
+#define kAIPrefCrashRecoveryAutomaticallySave ((const char*)"CrashRecovery/AutomaticallySave")
+
+/** @ingroup PreferenceKeys
+	Crash Recovery pref - Minimum enforced time between two consecutive incremental save operations*/
+#define kAIPrefCrashRecoveryIdleLoopTimeInterval ((const char*)"CrashRecovery/IdleLoopTimeInterval")
+
+/** @ingroup PreferenceKeys
+	Auto Instant Save pref - Minimum enforced time between two consecutive auto instant save operations*/
+#define kAIPrefAutoInstantSaveIdleLoopTimeInterval ((const char*)"AutoInstantSave/IdleLoopTimeInterval")
+
+/** @ingroup PreferenceKeys
+	Crash Recovery pref - Folder location where incremental files are saved*/
+#define kAIPrefCrashRecoveryFolderLocation	((const char*)"CrashRecovery/RecoveryFolderLocation")
+
+/** @ingroup PreferenceKeys
+	Crash Recovery pref - Turn off for Complex file Checkbox value*/
+#define kAIPrefCrashRecoveryTurnOffForComplexDocument	((const char*)"CrashRecovery/TurnOffForComplexDocument")
+
+/** @ingroup PreferenceKeys
+	Scale Illustrator UI */
+#define kAIPrefScaleUI ((const char*)"UIPreferences/scaleUI")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefScaleUI. */
+#define kAIPrefDefaultScaleUI		true
+
+/** @ingroup PreferenceKeys
+	Scale Cursors */
+#define kAIPrefScaleCursor ((const char*)"UIPreferences/scaleCursor")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefScaleCursor. */
+#define kAIPrefDefaultScaleCursor		true
+
+/** @ingroup PreferenceKeys
+	App Scale Factor */
+#define kAIPrefAppScaleFactor ((const char*)"UIPreferences/appScaleFactor")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefAppScaleFactor. */
+#define kAIPrefDefaultAppScaleFactor		(1.0f)
+
+#define kAIPrefIsDefaultScaleShown		((const char*)"UIPreferences/defaultScaleFactorLaunch")
+/** @ingroup PreferenceKeys
+	Large Tab size preference */
+#define kAIPrefWorkspaceTabsSize ((const char*)"UIPreferences/workspaceTabsSize")
+/** @ingroup PreferenceKeys
+	Key values for \c #kAIPrefWorkspaceTabsSize. */
+enum WorkspaceTabSize { kAIPrefTabSize_Small = 1, kAIPrefTabSize_Large };
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefWorkspaceTabsSize. */
+const WorkspaceTabSize kAIPrefDefaultTabSize = kAIPrefTabSize_Large;
+
+/** @ingroup PreferenceKeys
+	Scale Illustrator UI to higher supported or lower supported scale factor. Value 0 means snap to lower supported scale factor while 1 means snap to higher one. */
+#define kAIPrefSnapUIScaleFactor ((const char*)"UIPreferences/snapUIScaleFactor")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefSnapUIScaleFactor. */
+#define kAIPrefDefaultSnapUIScaleFactor		1
+
+/** @ingroup PreferenceKeys
+	Touch Pref - Switch to Touch Workspace on Detaching Keyboard
+	The default value is given by \c #kAIPrefDefaultTWSKeyboardDetach.  */
+#define	kAIPrefTWSKeyboardDetach ((const char*)"TouchPreferenceUI/TWSKeyboardDetach")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefTWSKeyboardDetach. */
+#define kAIPrefDefaultTWSKeyboardDetach		true
+/** @ingroup PreferenceKeys
+	Touch Pref - Use Precise Cursors
+	The default value is given by \c #kAIPrefDefaultPreciseCursors.  */
+#define kAIPrefPreciseCursors ((const char*)"TouchPreferenceUI/PreciseCursor")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefPreciseCursors. */
+#define kAIPrefDefaultPreciseCursors	true
+/** @ingroup PreferenceKeys
+Determines whether or not to enable constrain scaling in Shaper in TWS. */
+#define kAIPrefShaperConstrainScale			((const char*)"shaper/constrainScaling")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefShaperConstrainScale. */
+#define kAIPrefShaperConstrainScaleDefault  false
+/** @ingroup PreferenceKeys
+	Touch Pref - Soft Message Default Duration
+	The default value is given by \c #kAIPrefDefault/SoftMessageDuration.  */
+#define kAIPrefSoftMessageDuration ((const char*)"TouchPreferenceUI/SoftMessageDuration")
+	/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefSoftMessageDuration. */
+#define kAIPrefDefaultSoftMessageDuration (4.0f)
+
+/** @ingroup PreferenceKeys
+ExpFeatures Pref - Enable Creative Cloud Charts
+The default value is given by \c #kAIPrefDefaultEnableCCCharts.  */
+#define kAIPrefEnableCCCharts ((const char*)"ExpFeaturesPreferenceUI/EnableCCCharts")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefEnableCCCharts. */
+#define kAIPrefDefaultEnableCCCharts	false
+
+/** @ingroup PreferenceKeys
+	Making New Rectangular Area Text Auto Sizable by default */
+#define kAIPrefTextBoxAutoSizing ((const char*)"text/autoSizing")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefTextBoxAutoSizing. */
+#define kAIPrefTextBoxAutoSizingDefaultValue	false
+
+
+/** @ingroup PreferenceKeys
+ Making Alternate Glyph Widget on screen visible */
+#define kAIPrefTextEnableAltGlyph ((const char*)"text/enableAlternateGlyph")
+/** @ingroup PreferenceKeys
+ The default value for \c #kAIPrefTextEnableAlternateGlyph. */
+#define kAIPrefTextEnableAltGlyphDefaultValue    true
+
+/** @ingroup PreferenceKeys
+	Enable Precise Bounding Box for Point Text */
+#define kAIPrefTextEnablePreciseBBox ((const char*)"text/enablePreciseBBox")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefTextEnablePreciseBBox. */
+#define kAIPrefTextEnablePreciseBBoxDefaultValue	false
+
+/** @ingroup PreferenceKeys
+    Enable auto detection of bullets and numberingt */
+#define kAIPrefTextEnableListAutoDetection ((const char*)"text/enableListAutoDetection")
+/** @ingroup PreferenceKeys
+    The default value for \c #kAIPrefTextEnableListAutoDetection. */
+#define kAIPrefTextEnableListAutoDetectionDefaultValue    true
+
+/** @ingroup PreferenceKeys
+Fill the newly created text object with the place holder text */
+#define kAIPrefFillWithDefaultText		((const char*)"text/fillWithDefaultText")
+#define kAIPrefFillWithDefaultTextJP	((const char*)"text/fillWithDefaultTextJP")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefFillWithDefaultText. */
+#define kAIPrefFillWithDefaultTextDefaultValue	 true
+#define kAIPrefFillWithDefaultTextJPDefaultValue false
+		
+/** @ingroup PreferenceKeys
+Determines whether or not to show What's New Dialog */
+#define kAIPrefAutoActivateMissingFont		((const char*)"AutoActivateMissingFont")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefShowMissingFontDlg. */
+const bool kAIPrefAutoActivateMissingFontDefault = false;
+
+/* Determines whether or not to show What's New Dialog */
+#define kAIPrefDontShowMissingFontDlg		((const char*)"DontShowMissingFontDialogPreference")
+/** @ingroup PreferenceKeys
+	The default value for \c #kAIPrefShowMissingFontDlg. */
+const bool kAIPrefDontShowMissingFontDlgDefault = false;
+
+/** @ingroup PreferenceKeys
+Determines whether or not UIDs are automatically assigned to art objects, in the document being created */
+#define kAIPrefAutoAssignUIDsForDocCreated		((const char*)"AutoAssignUIDsForDocCreatedPreference")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefAutoAssignUIDsForDocCreated. */
+const bool kAIPrefAutoAssignUIDsForDocCreatedDefault = false;
+
+/** @ingroup PreferenceKeys
+Determines whether or not UIDs are automatically assigned to art objects, in the document being opened */
+#define kAIPrefAutoAssignUIDsForDocOpened		((const char*)"AutoAssignUIDsForDocOpenedPreference")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefAutoAssignUIDsForDocOpened. */
+const bool kAIPrefAutoAssignUIDsForDocOpenedDefault = false;
+
+/** @ingroup PreferenceKeys
+Determines whether or not to hide corner widgets based on Angle */
+#define kAIPrefHideCornerWidgetBasedOnAngle		((const char*)"liveCorners/hideCornerWidgetBasedOnAngle")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefHideCornerWidgetBasedOnAngle. */
+const bool kAIPrefHideCornerWidgetBasedOnAngleDefault = true;
+
+#define kAIPrefMoveLockedAndHiddenArt           ((const char*)"moveLockedAndHiddenArt")
+
+/** @ingroup PreferenceKeys
+Sets the Corner Angle Limit for Hiding Corner Widgets */
+#define kAIPrefCornerAngleLimit					((const char*)"liveCorners/cornerAngleLimit")
+
+/** @ingroup PreferenceKeys
+Determines whether or not to show bounding box */
+#define kAIPrefShowBoundingBox					((const char*)"showBoundingBox")
+
+#define kShowNewDocDialogKey					((const char*)"Hello/NewDoc")
+/** @ingroup PreferenceKeys
+The default value for \c #kShowCmdNDialogKey. */
+const bool kAIPrefShowNewDocDialogDefault = false;
+
+#define kShowHomeScreenWSKey					((const char*)"Hello/ShowHomeScreenWS")
+/** @ingroup PreferenceKeys
+The default value for \c #kShowHomeScreenWSKey. */
+const bool kAIPrefShowHomeScreenWSDefault = true;
+
+/** Preference prefix: Number of Default Recent File  */
+#define kAIRecentFileNumberPrefix nullptr
+/** Preference suffix: Number of Default Recent File  */
+#define kAIRecentFileNumberSuffix ((const char *)"RecentFileNumber")
+/** Preference default:Number of Default Recent File */
+const unsigned int kAIRecentFileNumberDefault = 20;
+
+/** Preference prefix: Disable Self Snapping  */
+#define kAISnappingPrefDisableSelfSnappingPrefix ((const char *)"snapping")
+/** Preference suffix: Disable Self Snapping  */
+#define kAISnappingPrefDisableSelfSnappingSuffix ((const char *)"disableSelfSnapping")
+/** Preference default: Disable Self Snapping*/
+#define kPrefDefaultDisableSelfSnapping         true
+
+/** @ingroup PreferenceKeys
+    Determines whether to show snapping */
+#define kAISnappingPrefShowSnapping            ((const char*)"showSnapping")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAISnappingPrefKillSnapping. */
+#define kAIPrefDefaultShowSnapping           true
+
+/** @ingroup PreferenceKeys
+    Determines whether to show alignment guides endpoint */
+#define kAISnappingPrefAlignmentGuidesEndpoint           ((const char*)"alignmentGuides/endpoint")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAISnappingPrefAlignmentGuidesEndpoint. */
+#define kAIPrefDefaultAlignmentGuidesEndpoint           true
+
+/** @ingroup PreferenceKeys
+    Determines whether to show alignment guides midpoint */
+#define kAISnappingPrefAlignmentGuidesMidpoint            ((const char*)"alignmentGuides/midpoint")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAISnappingPrefAlignmentGuidesMidpoint. */
+#define kAIPrefDefaultAlignmentGuidesMidpoint           true
+
+/** @ingroup PreferenceKeys
+    Determines whether to show alignment guides centerpoint */
+#define kAISnappingPrefAlignmentGuidesCenter            ((const char*)"alignmentGuides/centerpoint")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAISnappingPrefAlignmentGuidesCenter. */
+#define kAIPrefDefaultAlignmentGuidesCenter           true
+
+/** @ingroup PreferenceKeys
+    Determines whether to invoke artboard Guides */
+#define kAISnappingPrefShowArtboardGuides               ((const char*)"alignmentGuides/showArtboardGuides")
+/** @ingroup PreferenceKeys
+    Default value for \c #kAISnappingPrefShowArtboardGuides. */
+#define kAIPrefDefaultShowArtboardGuides          true
+
+/** @ingroup PreferenceKeys
+    Determines whether to invoke Snap To Guide */
+#define kAISnappingPrefShowSnapToGuide               ((const char*)"alignmentGuides/showSnapToGuide")
+/** @ingroup PreferenceKeys
+    Default value for \c #kAISnappingPrefShowSnapToGuide. */
+#define kAIPrefDefaultShowSnapToGuide                 true
+
+
+/** @ingroup PreferenceKeys
+    Determines whether to show visual guides for Snap To Grid  */
+#define kAISnappingPrefShowVisualGuidesGrid            ((const char*)"showVisualGuidesForSnapToGrid")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAISnappingPrefShowVisualGuidesGrid. */
+#define kAIPrefDefaultShowVisualGuidesGrid           true
+
+
+/** @ingroup PreferenceKeys
+	Determines whether to show cursor snapping */
+#define kAISnappingPrefShowCursorSnapping			((const char*)"smartGuides/cursorSnapping")
+/** @ingroup PreferenceKeys
+ Default value for \c #kAISnappingPrefShowCursorSnapping. */
+#define kAIPrefDefaultShowCursorSnapping           false
+
+/** @ingroup PreferenceKeys
+Live Shape pref - Determines whether shapes created by Shape Tools(Rectangle, Polygon, Ellipse, Line) are live.
+The default value is given by \c #kAIPrefDefaultCreateLiveShapes.  */
+#define kAIPrefCreateLiveShapes					((const char*)"LiveShapes/createLiveShapes")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefCreateLiveShapes. */
+#define kAIPrefDefaultCreateLiveShapes			TRUE
+
+/** @ingroup PreferenceKeys
+Linked files pref - Determines if the UNC(Universal Naming Convention) path needs to be used or the default
+path of file needs to be used. Only makes sense for Windows. \c #kAIPrefUseUNCPath.  */
+#define kAIPrefWindowsUseUNCPath					((const char*)"FilePath/WindowsUseUNCPath")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefUseUNCPath. */
+#define kAIPrefDefaultWindowsUseUNCPath			FALSE
+
+/** Preference default:Number of Default Recent Presets */
+const unsigned int kRecentPresetsNumberDefault = 20;
+
+/** @ingroup PreferenceKeys
+Search pref for searchbox on application bar	*/
+#define kApplicationBarSearchOption		((const char*) "layout/0/ApplicationBarOption")
+
+/** Preference prefix: Number of Default Recent Fonts  */
+#define kAIRecentFontNumberPrefix nullptr
+/** Preference suffix: Number of Default Recent Fonts  */
+#define kAIRecentFontNumberSuffix ((const char *)"text/recentFontMenu/showNEntries")
+/** Preference default:Number of Default Recent File */
+const unsigned int kAIRecentFontNumberDefault = 10;
+
+/** @ingroup PreferenceKeys
+Preference prefix: Number of Default Recent Fonts  */
+#define kAIPrefKeyMissingGlyphPrefix nullptr
+/** Prefix to Check the Missing Glyph Protection preference .
+The default value is given by \c #kAIPrefDefaultTextFontLock.  */
+#define kAIPrefKeyTextMissingGlyphSuffix ((const char*)"text/doFontLocking")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+const bool kAIPrefDefaultTextMissingGlyph = true;
+
+/** @ingroup PreferenceKeys
+ Check if the Sync Warning is required to be shown to the user.
+ The default value is given by \c #kAIPrefDefaultWarningShowInCharPanel.  */
+#define kAISyncFontWarningPref ((const char*)"text/Warning/ShowInCharPanel")
+/** @ingroup PreferenceKeys
+ The default value for \c #kAIPrefKeyTextGreekingThreshold. */
+const bool kAISyncFontWarningPrefDefault = false;
+
+
+/** @ingroup PreferenceKeys
+To check whether link object can have a resource path on network or not.
+The default value is given by \c #kAIPrefDefaultDisabledNetworkLinkedObject. */
+#define kAIPrefDisabledNetworkLinkedObject ((const char*)"PlacedObject/DisabledNetworkLinkedObject")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIPrefDisabledNetworkLinkedObject. */
+const bool kAIPrefDefaultDisabledNetworkLinkedObject = false;
+
+/** @ingroup PreferenceKeys
+Whether to ignore the error or not, when "bad EPS error" is encountered while updated a link object.
+The default value is given by \c #kAIIgnoreBadEPSErrorInUpdatingLinkedObjectPrefDefault. */
+#define kAIIgnoreBadEPSErrorInUpdatingLinkedObjectPref ((const char*)"PlacedObject/IgnoreBadEPSErrorInUpdatingLinkedObject")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIIgnoreBadEPSErrorInUpdatingLinkedObjectPref. */
+const bool kAIIgnoreBadEPSErrorInUpdatingLinkedObjectPrefDefault = false;
+
+/** Preference suffix: Default Parent Folder path for File Export/Save  */
+#define kDefaultExportSaveParentPath ((const char*) "defaultPath")
+
+/** Preference suffix: Default format for File Save  */
+#define kAILastUsedSaveAsFormat ((const char*) "LastUsedSaveAsFormat")
+
+/** Preference suffix: Default format for File Save  */
+#define kAILastUsedExportFormat ((const char*) "LastUsedExportFormat")
+
+/** Preference suffix: Default MAB settings for File Save  */
+#define kAILastUsedSaveAsMAB ((const char*) "SaveAs_settings_for")
+
+/** Preference suffix: Default MAB settings for File Save  */
+#define kAILastUsedExportMAB ((const char*) "Export_settings_for")
+
+/** Preference suffix: Default range text for File Save  */
+#define kAILastUsedSaveAsRangeText ((const char*) "SaveAs_RangeText_for")
+
+/** Preference suffix: Default range text for File Save  */
+#define kAILastUsedExportRangeText ((const char*) "Export_RangeText_for")
+
+
+/** @ingroup PreferenceKeys
+Shows the actual document view.
+The default value is given by \c #kAIPrefDefaultEnableActualView.  */
+#define kAIEnableActualView ((const char*) "EnableActualViewPreview")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIEnableActualView.*/
+const bool kAIPrefDefaultEnableActualView = true;
+
+/** @ingroup PreferenceKeys
+Shows the Recent Fonts.
+The default value is given by \c #kAIPrefShowRecentFonts.  */
+#define kAIShowRecentFonts ((const char*) "Show/HideRecentFonts")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIShowRecentFonts.*/
+const bool kAIPrefShowRecentFonts = true;
+
+/** @ingroup PreferenceKeys
+Shows the actual document view.
+The default value is given by \c #kAIPrefDefaultEnableActualView.  */
+#define kAIEnableActualTextSpaceAlign ((const char*) "EnableActualPointTextSpaceAlign")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIEnableActualTextSpaceAlign.*/
+const bool kAIPrefDefaultEnableActualTextSpaceAlign = false;
+
+/** @ingroup PreferenceKeys
+Shows the actual document view.
+The default value is given by \c #kAIPrefDefaultEnableActualView.  */
+#define kAIEnableActualAreaTextSpaceAlign ((const char*) "EnableActualAreaTextSpaceAlign")
+/** @ingroup PreferenceKeys
+The default value for \c #kAIEnableActualTextSpaceAlign.*/
+const bool kAIPrefDefaultEnableActualAreaTextSpaceAlign = false;
+
+/** @ingroup PreferenceKeys
+ Show the area type options preview on canvas in Area type option Dialog
+ The default value is given by \c #kAreaTypeDialogPreviewPrefDefault.  */
+#define kAreaTypeDialogPreviewPref ((const char*) "AreatypeOptionsPreview")
+/** @ingroup PreferenceKeys
+ The default value for \c #kAreaTypeDialogPreviewPref.*/
+const bool kAreaTypeDialogPreviewPrefDefault = true;
+
+
+/** @ingroup PreferenceKeys
+To check whether content aware default is to be enabled or not.*/
+
+#if (defined (_WIN64) || defined(MAC_ENV))
+const bool kAIEnableContentAwareDefaultValue= true;
+#else
+const bool kAIEnableContentAwareDefaultValue = false;
+#endif
+
+#define kAIEnableContentAwareDefaults ((const char*) "EnableContentAwareDefaults")
+
+/** @ingroup PreferenceKeys
+ Allows show/hide rulers across all documents. User won't have to select "Show Ruler" for each document.
+ The default value is given by \c #kAIPrefDefaultUseGlobalRulers.*/
+#define kAIPrefUseGlobalRulers ((const char*) "useGlobalRulers")
+
+/** @ingroup PreferenceKeys
+ Current setting for show/hide ruler, kAIPrefUseGlobalRulers will show/hide rulers across all documents based on this preference*/
+#define kAIPrefGlobalRulersVisible ((const char*) "globalRulersVisible")
+
+/** @ingroup PrefereceKeys
+ The default value for \c #kAIPrefUseGlobalRulers.*/
+constexpr bool kAIPrefDefaultUseGlobalRulers = false;
+
+/** @ingroup PreferenceKeys
+Enables Lock icon to be shown on clicking locked objects */
+#define kAIPrefShowLockIcon ((const char*) "showLockIcon")
+
+/** @ingroup PrefereceKeys
+The default value for \c #kAIPrefShowLockIcon.*/
+constexpr bool kAIPrefDefaultShowLockIcon = false;
+
+/** @ingroup PreferenceKeys
+Enables whether to highlight locked objects on marquee selection.*/
+#define kAIPrefHighlightLockedObjects ((const char*) "highlightLockedObjects")
+
+/** @ingroup PrefereceKeys
+The default value for \c #kAIPrefDefaultHighlightLockedObjects.*/
+constexpr bool kAIPrefDefaultHighlightLockedObjects = false;
+
+/** Preference : Illustrator Major Version  */
+#define kAIIllustratorMajorVersion ((const char *)"Illustrator version")
+
+/** Preference : Illustrator Full Version  in format like 24.0.0*/
+#define kAIPrefDialogDimVersion ((const char *)"PrefDialogDimensionVersion")
+
+#define kAIEnableOptimizedNetworkOperationsKey ((const char*) "aiOptimizeNetworkOperations")
+constexpr bool kAIEnableOptimizedNetworkOperationsDefaultValue = true;
+
+#define kSaveBackupPreference ((const char*)"Ai_SaveBackupFiles")
+constexpr bool kDefaultSaveBackupFilesPreferenceValue {true};
+
+
+/** @ingroup PreferenceKeys
+ Link transform Pref key */
+#define kAIPrefLinkTransform ((const char*) "linkTransform")
+/** @ingroup PrefereceKeys
+ The default value for \c linkTransform pref key.*/
+constexpr bool kAIPrefDefaultLinkTransform = false;
+
+/** Preference Prefix: CDP Don't Show Again Onboarding Checkbox.*/
+#define kAIPrefCDPDontShowAgainPrefix nullptr
+/** Preference Suffix: Don't Show Again Onboarding Checkbox.*/
+#define kAIPrefCDPDontShowAgainSuffix ((const char*) "dontShowAgainOnboarding")
+/** Preference Default: Don't Show Again Onboarding Checkbox Default.*/
+constexpr bool kAIPrefCDPDontShowAgainDefault = false;
+
+#define kPrefArtboardPrefix                "CropAreaPrefix"
+
+#define kPrefToggleMoveArtwrkWithArtbrd    "MoveContentWithArtbrd"
+#define kPrefToggleScaleArtwrkWithArtbrd    "ScaleContentWithArtbrd"
+
+/** Preference Prefix: Save As Copy is invoked.*/
+#define kAIPrefSavingAsCopyPrefix nullptr
+/** Preference Suffix: Save As Copy is invoked.*/
+#define kAIPrefSavingAsCopySuffix ((const char*) "savingAsCopy")
+/** Preference Default: Default for Save As Copy preference.*/
+constexpr bool kaiPrefSavingAsCopyDefault = false;
+
+/** Preference Prefix: Switching from native OS dialog to CDP.*/
+#define kAIPrefSwitchingNativeToCDPDlgPrefix nullptr
+/** Preference Suffix: Switching from native OS dialog to CDP.*/
+#define kAIPrefSwitchingNativeToCDPDlgSuffix ((const char*) "SwitchingNativeToCDPDlg")
+/** Preference Default: Default for switching from native OS dialog to CDP preference.*/
+constexpr bool kaiPrefSwitchingNativeToCDPDlgDefault = false;
+
+/** Preference Prefix: Saving before invite to edit.*/
+#define kAIPrefSavingBeforeInviteToEditPrefix nullptr
+/** Preference Suffix: Saving before invite to edit.*/
+#define kAIPrefSavingBeforeInviteToEditSuffix ((const char*) "SavingBeforeInviteToEdit")
+/** Preference Default: Default for Saving before invite to edit preference.*/
+constexpr bool kAIPrefSavingBeforeInviteToEditDefault = false;
+
+/** Preference Prefix: Replacing links*/
+#define kAIPrefReplacingLinksPrefix nullptr
+/** Preference Suffix: Replacing links*/
+#define kAIPrefReplacingLinksSuffix ((const char*) "ReplacingLinks")
+
+constexpr bool kAIPrefSavingFromInviteToEditDefault = false;
+
+/** Preference Prefix: Saving from invite to edit */
+#define kAIPrefSavingFromInviteToEditPrefix nullptr
+/** Preference Suffix: Saving from invite to edit*/
+#define kAIPrefSavingFromInviteToEditSuffix ((const char*) "SavingFromInviteToEdit")
+
+/** Preference Suffix: Enable GPU Rendering for 3D AILib.*/
+#define kAIPrefEnableGPURenderingFor3DAILibSuffix ((const char*) "EnableGPURenderingFor3DAILib")
+
+#define kAIPrefEnableAnnotationWithAsyncPan                 ((const char*)"AIEnableAnnotationWithAsyncPan")
+
+#define kAIPrefDisableAsyncRendering                 ((const char*)"AIDisableAsyncRendering")
+
+/** Preference: ShareButton Clicked*/
+ constexpr const char* kSaveTriggeredFromShareForReviewSuffix{ "saveTriggeredFromShareForReview" };
+ constexpr bool kSaveTriggeredFromShareForReviewDefault = false;
+
+/*Preference to show hex value in lowercase/uppercase */
+ constexpr const char* kisHexInUpperCase = "isHexInUpperCase";
+
+/** Preference:  Share For Review Sharesheet Onboarding*/
+constexpr const char* kAIS4RSharesheetOnboardingPrefSuffix{ "S4RSharesheetOnboardingPref" };
+constexpr bool kAIS4RSharesheetOnboardingPrefDefault = false;
+
+/** Preference:  Number of times SFR onboarding shown*/
+constexpr const char* kAINumOfTimesSFROnboardingShownPrefSuffix{ "NumOfTimesSFROnboardingShownPref" };
+constexpr const ai::int32 kAINumOfTimesSFROnboardingShownPrefDefault = 0;
+
+/** Preference:  Autofind missing links*/
+constexpr const char* kAINavigationGetPreferencePrefix { "ai_navigation_get" };
+constexpr const char* kGetPrefereceSmartRelinkSuffix { "smartrelink" };
+constexpr bool kGetPrefereceSmartRelinkSuffixDefaultValue { false };
+
+/** Preference:  UnEmbed multiple embedded images*/
+constexpr const char* kAINavigationPutPreferencePrefix { "ai_navigation_put" };
+constexpr const char* kGetPreferenceUnEmbedAllSuffix { "unembedAll" };
+constexpr bool kGetPreferenceUnEmbedAllSuffixDefaultValue { false };
+
+/** Preference: Stitched Journey*/
+constexpr const char* kStitchedJourneyPreferenceName { "StitchedJourneyCampaignStatus" };
+constexpr const char* kUXPPreferencePrefix { "uxp" };
+constexpr const char* kStitchedJourneyOptOutStatus{ "OPT_OUT" };
+constexpr const char* kStitchedJourneyOptInStatus{ "OPT_IN" };
+constexpr const char* kWorkspaceTriggered{ "WorkspaceTriggered" };
+constexpr const char* kStockPanelVersionPref{"StockPanelVersion"};
+constexpr const char* kIsImageTraceNewCreateOptionsInvokedAtleastOnce{"ImageTraceNewCreateOptionsInvokedAtleastOnce"};
+constexpr const char* kIsImageTraceAutoGroupingOptionsInvokedAtleastOnce{"ImageTraceAutoGroupingOptionsInvokedAtleastOnce"};
+constexpr const char* kIsImageTraceOptionsInvokedAtleastOnce{"ImageTraceOptionsInvokedAtleastOnce"};
+constexpr const char* kIsGradientInterpolationBlueDotInvokedAtleastOnce{"GradientInterpolationBlueDotInvokedAtleastOnce"};
+
+/* ImageTrace Invoked Once */
+#define kIsImageTraceInvokedAtleastOnce ((const char *)"ImageTraceInvokedAtleastOnce")
+#define kIsImageTracePanelInvokedAtleastOnce ((const char *)"ImageTracePanelInvokedAtleastOnce")
+#define kIsImageTraceEnhancedPresetEnabled ((const char*)"ImageTraceEnhancedPresetEnabled")
+#define kIsImageTraceLegacyDialogInvokedAtleastOnce ((const char*)"ImageTraceLegacyDialogInvokedAtleastOnce")
+#define kIsImageTraceEnhancedDialogInvokedAtleastOnce ((const char*)"ImageTraceEnhancedDialogInvokedAtleastOnce")
+#define kIsImageTraceEnhancedToastInvokedAtleastOnce ((const char*)"ImageTraceEnhancedToastInvokedAtleastOnce")
+#define kImageTraceInvokedCount ((const char *)"ImageTraceInvokedCount")
+#define kImageTracePresetSwitchEnabledCohort2 ((const char *)"ImageTracePresetSwitchEnabledCohort2")
+
+/* Shape Quick Start PLG */
+constexpr bool kIsQuickStartTutorialLaunchedDefaultValue { false };
+
+#define kIsQuickStartTutorialLaunchedPrefix nullptr
+#define kIsQuickStartTutorialLaunchedSuffix ((const char *)"ShapeQuickStartTutorialLaunched")
+
+/* Drover */
+constexpr const char* kDisableHoverScroll { "DisableHoverScroll" };
+
+/*Measue Tool Area Calculator*/
+constexpr const char* kPrefMeasureToolPrefix = "ToolMeasurePrefix";
+constexpr const char* kPrefMeasureToolClicked = "MeasureToolClicked";
+
+/* Artboard Color Notification*/
+constexpr const char* kArtboardBackgroundColorPref {"ArtboardBackgroundColor"};
+constexpr const char* kArtboardBackgroundColorNotification {"ArtboardBackgroundColorNotification"};
+
+#endif
