@@ -16,8 +16,16 @@
     "codegen",
     "tauri"
   ],
-  "author": "",
+  "author": "YOUR_NAME <your@email.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/nuxp.git"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/nuxp#readme",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/nuxp/issues"
+  },
   "dependencies": {
     "commander": "^11.0.0",
     "fs-extra": "^11.1.1",

@@ -54,6 +54,15 @@
 // Selection and matching
 #include "AIMatchingArt.h"
 
+// Application context
+#include "AIContext.h"
+
+// User interaction
+#include "AIUser.h"
+
+// Undo management
+#include "AIUndo.h"
+
 // Unicode strings
 #include "IAIUnicodeString.h"
 

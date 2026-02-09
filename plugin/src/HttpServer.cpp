@@ -13,6 +13,7 @@
 #include "EventMapper.hpp"
 #include "HandleManager.hpp"
 #include "MainThreadDispatch.hpp"
+#include "endpoints/DemoEndpoints.hpp"
 #include "endpoints/generated/CentralDispatcher.h"
 
 // cpp-httplib (header-only HTTP library)
@@ -295,6 +296,53 @@ void HttpServer::ConfigureRoutes() {
     json response = {{"success", true}, {"events", events}};
     res.set_content(response.dump(), "application/json");
   });
+
+  // -------------------------------------------------------------------------
+  // Demo Endpoints - Hand-written endpoints for real SDK integration
+  // -------------------------------------------------------------------------
+
+  // GET /demo/document-info - Get current document information
+  svr.Get("/demo/document-info",
+          [](const httplib::Request &, httplib::Response &res) {
+            json result = MainThreadDispatch::Run(
+                []() -> json { return DemoEndpoints::GetDocumentInfo(); });
+            res.set_content(result.dump(), "application/json");
+          });
+
+  // GET /demo/layers - List all layers in the document
+  svr.Get("/demo/layers",
+          [](const httplib::Request &, httplib::Response &res) {
+            json result = MainThreadDispatch::Run(
+                []() -> json { return DemoEndpoints::GetLayers(); });
+            res.set_content(result.dump(), "application/json");
+          });
+
+  // GET /demo/selection - Get information about selected art
+  svr.Get("/demo/selection",
+          [](const httplib::Request &, httplib::Response &res) {
+            json result = MainThreadDispatch::Run(
+                []() -> json { return DemoEndpoints::GetSelection(); });
+            res.set_content(result.dump(), "application/json");
+          });
+
+  // POST /demo/create-rectangle - Create a rectangle in the document
+  svr.Post("/demo/create-rectangle",
+           [](const httplib::Request &req, httplib::Response &res) {
+             try {
+               json params =
+                   req.body.empty() ? json::object() : json::parse(req.body);
+               json result = MainThreadDispatch::Run([&params]() -> json {
+                 return DemoEndpoints::CreateRectangle(params);
+               });
+               res.set_content(result.dump(), "application/json");
+             } catch (const json::parse_error &e) {
+               json errorResponse = {
+                   {"success", false},
+                   {"error", "Invalid JSON: " + std::string(e.what())}};
+               res.status = 400;
+               res.set_content(errorResponse.dump(), "application/json");
+             }
+           });
 }
 
 /*******************************************************************************

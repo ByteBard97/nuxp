@@ -2,6 +2,12 @@
   "name": "nuxp-shell",
   "version": "0.1.0",
   "description": "NUXP Debug Shell - Vue 3 frontend for Adobe Illustrator plugin",
+  "author": "YOUR_NAME <your@email.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/nuxp.git"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/nuxp#readme",
   "private": true,
   "type": "module",
   "scripts": {
