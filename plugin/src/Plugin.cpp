@@ -17,6 +17,7 @@
 #include "HandleManager.hpp"
 #include "HttpServer.hpp"
 #include "MainThreadDispatch.hpp"
+#include "SuitePointers.hpp"
 
 #include "IllustratorSDK.h"
 
@@ -198,6 +199,13 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
     gLayerListChangedNotifier = nullptr;
   }
 
+  // Acquire SDK suites for use throughout the plugin
+  error = SuitePointers::Acquire();
+  if (error != kNoErr) {
+    // Non-fatal - some suites may not be available in older Illustrator versions
+    // Plugin can still function, but some features may be limited
+  }
+
   // Start HTTP server on background thread
   HttpServer::Start(NUXP_DEFAULT_PORT);
 
@@ -251,7 +259,10 @@ ASErr ShutdownPlugin(SPInterfaceMessage *message) {
     }
   }
 
-  // Release suites
+  // Release SDK suites
+  SuitePointers::Release();
+
+  // Release infrastructure suites
   if (sSPBasic != nullptr) {
     if (sAINotifier != nullptr) {
       sSPBasic->ReleaseSuite(kAINotifierSuite, kAINotifierSuiteVersion);
