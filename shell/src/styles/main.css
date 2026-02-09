@@ -1,0 +1,357 @@
+/**
+ * NUXP Shell Base Styles
+ *
+ * Dark theme inspired by Adobe's design language.
+ * Uses CSS custom properties for easy theming.
+ */
+
+/* CSS Custom Properties (Theme Variables) */
+:root {
+  /* Background colors */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d2d;
+  --bg-hover: #3c3c3c;
+  --bg-active: #094771;
+
+  /* Text colors */
+  --text-primary: #cccccc;
+  --text-secondary: #969696;
+  --text-muted: #6e6e6e;
+  --text-bright: #ffffff;
+
+  /* Accent colors */
+  --accent-blue: #0d99ff;
+  --accent-blue-hover: #2ba8ff;
+  --accent-green: #3c9a5f;
+  --accent-red: #e74c3c;
+  --accent-orange: #f39c12;
+
+  /* Border colors */
+  --border-color: #3c3c3c;
+  --border-color-light: #4a4a4a;
+
+  /* Status colors */
+  --status-connected: #3c9a5f;
+  --status-disconnected: #e74c3c;
+  --status-warning: #f39c12;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Border radius */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* Sidebar width */
+  --sidebar-width: 200px;
+
+  /* Header height */
+  --header-height: 48px;
+
+  /* Font settings */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 14px;
+  --font-size-xl: 16px;
+
+  /* Transitions */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.2s ease;
+}
+
+/* Reset and Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-bright);
+  font-weight: 500;
+  margin-bottom: var(--spacing-sm);
+}
+
+h1 { font-size: var(--font-size-xl); }
+h2 { font-size: var(--font-size-lg); }
+h3 { font-size: var(--font-size-md); }
+
+p {
+  margin-bottom: var(--spacing-sm);
+}
+
+a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-blue-hover);
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+button:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--border-color-light);
+}
+
+button:active:not(:disabled) {
+  background-color: var(--bg-active);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: var(--text-bright);
+}
+
+button.primary:hover:not(:disabled) {
+  background-color: var(--accent-blue-hover);
+  border-color: var(--accent-blue-hover);
+}
+
+/* Form elements */
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color-light);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Utility classes */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-bright {
+  color: var(--text-bright);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+
+/* Status indicator */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: var(--spacing-sm);
+}
+
+.status-dot.connected {
+  background-color: var(--status-connected);
+  box-shadow: 0 0 4px var(--status-connected);
+}
+
+.status-dot.disconnected {
+  background-color: var(--status-disconnected);
+}
+
+.status-dot.warning {
+  background-color: var(--status-warning);
+}
+
+/* Card component */
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.card-header {
+  font-weight: 500;
+  color: var(--text-bright);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Panel styling */
+.panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-content {
+  padding: var(--spacing-md);
+}
+
+/* Info row */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+}
+
+.info-row .label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.info-row .value {
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* Code/pre styling */
+pre,
+code {
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: var(--font-size-xs);
+}
+
+pre {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  overflow: auto;
+  max-height: 200px;
+}
+
+code {
+  background-color: var(--bg-tertiary);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
