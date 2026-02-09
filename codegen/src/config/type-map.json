@@ -1,0 +1,34 @@
+{
+    "handles": {
+        "AIArtHandle": "art",
+        "AILayerHandle": "layers",
+        "AIDocumentHandle": "documents",
+        "AIArtboardHandle": "artboards",
+        "AIMenuItemHandle": "menuItems",
+        "ai::UnicodeString": "strings"
+    },
+    "primitives": {
+        "AIBoolean": "bool",
+        "ai::int32": "int32_t",
+        "ai::int16": "int16_t",
+        "short": "int16_t",
+        "long": "int32_t",
+        "size_t": "uint32_t",
+        "AIReal": "double",
+        "ASReal": "double"
+    },
+    "structs": {
+        "AIRealRect": "rect",
+        "AIRealPoint": "point",
+        "AIRealMatrix": "matrix"
+    },
+    "string_types": [
+        "ai::UnicodeString",
+        "const char*"
+    ],
+    "ignored_types": [
+        "SPBasicSuite",
+        "AILibVersion",
+        "void"
+    ]
+}

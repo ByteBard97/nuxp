@@ -1,0 +1,15 @@
+[
+    "AIDocument.h",
+    "AIDocumentList.h",
+    "AIArt.h",
+    "AILayer.h",
+    "AIColor.h",
+    "AIPath.h",
+    "AIPathStyle.h",
+    "AIArtboard.h",
+    "AIMatchingArt.h",
+    "AITransformArt.h",
+    "AIDictionary.h",
+    "AIMenu.h",
+    "AIUndo.h"
+]
