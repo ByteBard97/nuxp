@@ -2,8 +2,15 @@
 plugin/build/
 shell/build/
 shell/target/
+shell/dist/
 client/dist/
 codegen/output/
+codegen/dist/
+
+# TypeScript build info
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
 
 # Dependencies
 node_modules/
