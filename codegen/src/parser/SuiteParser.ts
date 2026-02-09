@@ -110,10 +110,23 @@ export class SuiteParser {
           let typeName = 'void';
 
           if (child.namedChildren.length > 0) {
-            typeName = child.namedChildren[0].text;
-            const last = child.namedChildren[child.namedChildren.length - 1];
+            const lastIndex = child.namedChildren.length - 1;
+            const last = child.namedChildren[lastIndex];
             // strip strict pointer chars
-            paramName = last.text.replace(/[*&]/g, '');
+            paramName = last.text.replace(/[*&]/g, '').trim();
+
+            // Reconstruct type from all previous nodes
+            // Example: "const", "ai::UnicodeString", "&name" -> typeName="const ai::UnicodeString"
+            if (lastIndex > 0) {
+              typeName = '';
+              for (let i = 0; i < lastIndex; i++) {
+                typeName += child.namedChildren[i].text + ' ';
+              }
+              typeName = typeName.trim();
+            } else {
+              // If only one child (unlikely for SDK params), treat as type with default name
+              typeName = child.namedChildren[0].text;
+            }
           }
 
           // Use Classifier

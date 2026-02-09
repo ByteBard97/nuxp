@@ -6,14 +6,24 @@
  * - Header with app title
  * - Sidebar for navigation
  * - Main content area for views
+ * - Router support for standalone pages like /design
  */
 
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
 import DebugPanel from '@/components/DebugPanel.vue';
 import DocumentStatus from '@/components/DocumentStatus.vue';
 import { useConnectionStore } from '@/stores/connection';
 import { useDocumentStore } from '@/stores/document';
+
+// Router
+const route = useRoute();
+
+// Check if we're on a standalone route (like /design)
+const isStandaloneRoute = computed(() => {
+  return route.matched.length > 0;
+});
 
 // Stores
 const connectionStore = useConnectionStore();
@@ -52,7 +62,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app-container">
+  <!-- Standalone routes (like /design) render directly via router-view -->
+  <router-view v-if="isStandaloneRoute" />
+
+  <!-- Main application layout for the default view -->
+  <div v-else class="app-container">
     <!-- Header -->
     <header class="app-header">
       <div class="header-title">

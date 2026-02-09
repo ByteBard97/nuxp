@@ -4,12 +4,30 @@
  * The NUXP plugin runs an HTTP server on localhost:8080 that accepts
  * JSON-RPC style requests. This module provides low-level communication
  * primitives used by the Illustrator service.
+ *
+ * When VITE_USE_MOCK=true, all API calls are intercepted and routed
+ * to the MockBridge, returning realistic fake data for frontend development.
  */
 
 import type { ApiResponse, HealthResponse } from './types';
+import {
+  isMockMode,
+  mockCallPlugin,
+  mockGetFromPlugin,
+  mockCheckHealth,
+  mockGetHealthInfo,
+} from './MockBridge';
+
+/** Whether mock mode is enabled */
+const USE_MOCK = isMockMode();
 
 /** Default plugin server URL */
 const PLUGIN_URL = import.meta.env.VITE_PLUGIN_URL || 'http://localhost:8080';
+
+// Log mock mode status on module load
+if (USE_MOCK) {
+  console.log('[API] Mock mode enabled - using MockBridge for all API calls');
+}
 
 /** Request timeout in milliseconds */
 const REQUEST_TIMEOUT = 5000;
@@ -49,6 +67,11 @@ export async function callPlugin<T = unknown>(
   endpoint: string,
   data?: unknown
 ): Promise<ApiResponse<T>> {
+  // Route to mock bridge when mock mode is enabled
+  if (USE_MOCK) {
+    return mockCallPlugin<T>(endpoint, data);
+  }
+
   const url = `${PLUGIN_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
   const controller = createTimeoutController(REQUEST_TIMEOUT);
 
@@ -101,6 +124,11 @@ export async function callPlugin<T = unknown>(
  * @throws ApiError if request fails
  */
 export async function getFromPlugin<T = unknown>(endpoint: string): Promise<ApiResponse<T>> {
+  // Route to mock bridge when mock mode is enabled
+  if (USE_MOCK) {
+    return mockGetFromPlugin<T>(endpoint);
+  }
+
   const url = `${PLUGIN_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
   const controller = createTimeoutController(REQUEST_TIMEOUT);
 
@@ -149,6 +177,11 @@ export async function getFromPlugin<T = unknown>(endpoint: string): Promise<ApiR
  * @returns true if plugin responds to health check, false otherwise
  */
 export async function checkHealth(): Promise<boolean> {
+  // Route to mock bridge when mock mode is enabled
+  if (USE_MOCK) {
+    return mockCheckHealth();
+  }
+
   try {
     const response = await getFromPlugin<HealthResponse>('/health');
     return response.success && response.data?.status === 'ok';
@@ -163,6 +196,11 @@ export async function checkHealth(): Promise<boolean> {
  * @returns Health response with version info, or null if unavailable
  */
 export async function getHealthInfo(): Promise<HealthResponse | null> {
+  // Route to mock bridge when mock mode is enabled
+  if (USE_MOCK) {
+    return mockGetHealthInfo();
+  }
+
   try {
     const response = await getFromPlugin<HealthResponse>('/health');
     return response.data ?? null;

@@ -48,6 +48,15 @@ namespace {{suiteName}} {
 nlohmann::json {{name}}(const nlohmann::json& params);
 
 {{/functions}}
+/**
+ * Dispatch a method call by name
+ * @param method The method name to call
+ * @param params The JSON parameters to pass to the method
+ * @returns The JSON result from the method call
+ * @throws std::runtime_error if method is not found
+ */
+nlohmann::json Dispatch(const std::string& method, const nlohmann::json& params);
+
 } // namespace {{suiteName}}
 } // namespace Flora
 `,
@@ -84,6 +93,13 @@ nlohmann::json {{name}}(const nlohmann::json& params) {
 }
 
 {{/functions}}
+nlohmann::json Dispatch(const std::string& method, const nlohmann::json& params) {
+{{#dispatchCases}}
+{{{.}}}
+{{/dispatchCases}}
+    throw std::runtime_error("Unknown method: " + method + " in {{suiteName}}");
+}
+
 } // namespace {{suiteName}}
 } // namespace Flora
 `
@@ -205,12 +221,39 @@ export class CppGenerator {
         // Extract short name (e.g., "AIArtSuite" -> "Art")
         const suiteShortName = this.extractShortName(suite.name);
 
+        // Generate dispatch cases for method routing
+        const dispatchCases = this.generateDispatchCases(suite.functions);
+
         return {
             suiteName: suite.name,
             suiteTypeName: suite.name,
             suiteShortName: suiteShortName,
-            functions: suite.functions.map(func => this.prepareFunctionData(func, suiteShortName))
+            functions: suite.functions.map(func => this.prepareFunctionData(func, suiteShortName)),
+            dispatchCases
         };
+    }
+
+    /**
+     * Generate dispatch case statements for all functions in a suite
+     */
+    private generateDispatchCases(functions: FunctionInfo[]): string[] {
+        const cases: string[] = [];
+
+        for (let i = 0; i < functions.length; i++) {
+            const func = functions[i];
+            if (i === 0) {
+                cases.push(`    if (method == "${func.name}") {`);
+            } else {
+                cases.push(`    } else if (method == "${func.name}") {`);
+            }
+            cases.push(`        return ${func.name}(params);`);
+        }
+
+        if (functions.length > 0) {
+            cases.push(`    }`);
+        }
+
+        return cases;
     }
 
     /**
