@@ -5,6 +5,12 @@
  * Uses CSS custom properties for easy theming.
  */
 
+/* Import Flora Design System Variables */
+@import './variables.css';
+
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 /* CSS Custom Properties (Theme Variables) */
 :root {
   /* Background colors */

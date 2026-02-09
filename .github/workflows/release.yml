@@ -1,0 +1,272 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  # ============================================================================
+  # Plugin Build for Release
+  # ============================================================================
+  plugin-release:
+    name: Plugin (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            platform: mac
+            zip-name: nuxp-plugin-mac
+          - os: windows-latest
+            platform: win
+            zip-name: nuxp-plugin-win
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Illustrator SDK
+        shell: bash
+        run: |
+          mkdir -p plugin/sdk
+          mkdir -p plugin/lib
+
+          # Download SDK from secret URL
+          if [ -n "${{ secrets.ILLUSTRATOR_SDK_URL }}" ]; then
+            echo "Downloading Illustrator SDK..."
+            curl -L -o sdk.zip "${{ secrets.ILLUSTRATOR_SDK_URL }}"
+            unzip -q sdk.zip -d plugin/sdk
+            rm sdk.zip
+          else
+            echo "::error::ILLUSTRATOR_SDK_URL secret is required for release builds"
+            exit 1
+          fi
+
+      - name: Download third-party libraries
+        shell: bash
+        run: |
+          mkdir -p plugin/lib/nlohmann
+
+          # Download cpp-httplib
+          echo "Downloading cpp-httplib..."
+          curl -L -o plugin/lib/httplib.h \
+            "https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.14.3/httplib.h"
+
+          # Download nlohmann/json
+          echo "Downloading nlohmann/json..."
+          curl -L -o plugin/lib/nlohmann/json.hpp \
+            "https://raw.githubusercontent.com/nlohmann/json/v3.11.3/single_include/nlohmann/json.hpp"
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Configure CMake (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DAI_SDK_PATH="${{ github.workspace }}/plugin/sdk" \
+            -DLIB_PATH="${{ github.workspace }}/plugin/lib"
+        working-directory: plugin
+
+      - name: Configure CMake (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DAI_SDK_PATH="${{ github.workspace }}/plugin/sdk" `
+            -DLIB_PATH="${{ github.workspace }}/plugin/lib"
+        working-directory: plugin
+        shell: pwsh
+
+      - name: Build Plugin
+        run: cmake --build build --config Release
+        working-directory: plugin
+
+      - name: Package plugin (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p release
+          # Find the .aip bundle/file
+          find plugin/build -name "*.aip" -type d -exec cp -R {} release/ \; 2>/dev/null || \
+          find plugin/build -name "*.aip" -type f -exec cp {} release/ \; 2>/dev/null || \
+          echo "Warning: No .aip file found"
+          # Create zip
+          cd release && zip -r ../${{ matrix.zip-name }}.zip . || true
+
+      - name: Package plugin (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release
+          # Find and copy the .aip file
+          Get-ChildItem -Path plugin/build -Recurse -Filter "*.aip" | ForEach-Object {
+            Copy-Item $_.FullName -Destination release/
+          }
+          # Create zip
+          Compress-Archive -Path release/* -DestinationPath "${{ matrix.zip-name }}.zip" -Force
+
+      - name: Upload plugin release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.zip-name }}
+          path: ${{ matrix.zip-name }}.zip
+          if-no-files-found: warn
+          retention-days: 30
+
+  # ============================================================================
+  # Frontend Build for Release
+  # ============================================================================
+  frontend-release:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache npm dependencies (codegen)
+        uses: actions/cache@v4
+        with:
+          path: codegen/node_modules
+          key: ${{ runner.os }}-codegen-${{ hashFiles('codegen/package-lock.json', 'codegen/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-codegen-
+
+      - name: Cache npm dependencies (shell)
+        uses: actions/cache@v4
+        with:
+          path: shell/node_modules
+          key: ${{ runner.os }}-shell-${{ hashFiles('shell/package-lock.json', 'shell/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-shell-
+
+      - name: Install codegen dependencies
+        run: npm ci || npm install
+        working-directory: codegen
+
+      - name: Build codegen
+        run: npm run build
+        working-directory: codegen
+
+      - name: Run codegen tests
+        run: npm test
+        working-directory: codegen
+
+      - name: Install shell dependencies
+        run: npm ci || npm install
+        working-directory: shell
+
+      - name: Build shell
+        run: npm run build
+        working-directory: shell
+
+      - name: Package frontend
+        run: |
+          mkdir -p release
+          cp -r shell/dist release/shell
+          cp -r codegen/dist release/codegen
+          cd release && zip -r ../nuxp-frontend.zip .
+
+      - name: Upload frontend release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuxp-frontend
+          path: nuxp-frontend.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  # ============================================================================
+  # Create GitHub Release
+  # ============================================================================
+  create-release:
+    name: Create Release
+    needs: [plugin-release, frontend-release]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display artifacts
+        run: |
+          echo "=== Downloaded Artifacts ==="
+          find artifacts -type f -name "*.zip" | while read f; do
+            echo "  - $f ($(du -h "$f" | cut -f1))"
+          done
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          cat << 'EOF' > release_notes.md
+          ## NUXP ${{ steps.version.outputs.version }}
+
+          ### Downloads
+
+          | Platform | File |
+          |----------|------|
+          | macOS Plugin | `nuxp-plugin-mac.zip` |
+          | Windows Plugin | `nuxp-plugin-win.zip` |
+          | Frontend (Shell + Codegen) | `nuxp-frontend.zip` |
+
+          ### Installation
+
+          #### Plugin Installation
+          1. Download the plugin zip for your platform
+          2. Extract the `.aip` file
+          3. Copy to your Adobe Illustrator Plug-ins folder:
+             - **macOS**: `~/Library/Application Support/Adobe/Adobe Illustrator 2024/Plug-ins/`
+             - **Windows**: `C:\Program Files\Adobe\Adobe Illustrator 2024\Plug-ins\`
+          4. Restart Adobe Illustrator
+
+          #### Frontend Setup
+          1. Download and extract `nuxp-frontend.zip`
+          2. Open `shell/index.html` in a browser or serve with a local HTTP server
+          3. Connect to the plugin's HTTP endpoint (default: `http://localhost:8080`)
+
+          ### Requirements
+          - Adobe Illustrator 2024 or later
+          - Modern web browser (Chrome, Firefox, Safari, Edge)
+
+          ---
+          *This release was automatically generated by GitHub Actions.*
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: NUXP ${{ steps.version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          files: |
+            artifacts/nuxp-plugin-mac/nuxp-plugin-mac.zip
+            artifacts/nuxp-plugin-win/nuxp-plugin-win.zip
+            artifacts/nuxp-frontend/nuxp-frontend.zip
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
