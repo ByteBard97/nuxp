@@ -486,8 +486,22 @@ describe('TypeScriptGenerator', () => {
         });
     });
 
-    describe('HTTP call generation', () => {
-        it('should call callPlugin with function name', () => {
+    describe('Bridge integration', () => {
+        it('should import callCpp from bridge', () => {
+            const suite = mockSuite([]);
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain("import { callCpp } from '@/sdk/bridge'");
+        });
+
+        it('should define SUITE_NAME constant', () => {
+            const suite = mockSuite([]);
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain("const SUITE_NAME = 'AIArtSuite'");
+        });
+
+        it('should call callCpp with suite name, method name, and args', () => {
             const func = mockFunction('DisposeArt', [
                 mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' })
             ]);
@@ -495,53 +509,10 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('callPlugin("DisposeArt"');
+            expect(file.content).toContain("callCpp(SUITE_NAME, 'DisposeArt'");
         });
 
-        it('should include callPlugin helper function', () => {
-            const suite = mockSuite([]);
-            const file = generator.generate(suite);
-
-            expect(file.content).toContain('async function callPlugin');
-            expect(file.content).toContain('method: string');
-            expect(file.content).toContain('params: Record<string, unknown>');
-        });
-
-        it('should use correct endpoint pattern with suite name', () => {
-            const func = mockFunction('GetArt', [
-                mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' })
-            ]);
-
-            const suite = mockSuite([func]);
-            const file = generator.generate(suite);
-
-            expect(file.content).toContain('/AIArtSuite/${method}');
-        });
-
-        it('should include fetch with POST method', () => {
-            const suite = mockSuite([]);
-            const file = generator.generate(suite);
-
-            expect(file.content).toContain('await fetch');
-            expect(file.content).toContain('method: "POST"');
-        });
-
-        it('should include Content-Type header', () => {
-            const suite = mockSuite([]);
-            const file = generator.generate(suite);
-
-            expect(file.content).toContain('Content-Type');
-            expect(file.content).toContain('application/json');
-        });
-
-        it('should stringify params as JSON body', () => {
-            const suite = mockSuite([]);
-            const file = generator.generate(suite);
-
-            expect(file.content).toContain('JSON.stringify(params)');
-        });
-
-        it('should pass input parameters to callPlugin', () => {
+        it('should pass input parameters as args object', () => {
             const func = mockFunction('SetArtVisible', [
                 mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
                 mockParam('visible', 'AIBoolean', { category: 'Primitive', baseType: 'AIBoolean' })
@@ -550,23 +521,39 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('callPlugin("SetArtVisible", { art, visible })');
+            expect(file.content).toContain("callCpp(SUITE_NAME, 'SetArtVisible', { art, visible })");
         });
 
-        it('should include ENDPOINT_BASE constant', () => {
-            const suite = mockSuite([]);
+        it('should use typed callCpp for single output parameter', () => {
+            const func = mockFunction('GetArtType', [
+                mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
+                mockParam('type', 'short', { isOutput: true, category: 'Primitive', baseType: 'short' })
+            ]);
+
+            const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('ENDPOINT_BASE');
-            expect(file.content).toContain('http://localhost:3000');
+            expect(file.content).toContain('callCpp<{ type: number }>(SUITE_NAME');
         });
 
-        it('should handle error responses', () => {
-            const suite = mockSuite([]);
+        it('should use typed callCpp for multiple output parameters', () => {
+            const func = mockFunction('GetArtInfo', [
+                mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
+                mockParam('type', 'short', { isOutput: true, category: 'Primitive', baseType: 'short' }),
+                mockParam('visible', 'AIBoolean', { isOutput: true, category: 'Primitive', baseType: 'AIBoolean' })
+            ]);
+
+            const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('if (!response.ok)');
-            expect(file.content).toContain('throw new Error');
+            expect(file.content).toContain('callCpp<{ type: number; visible: boolean }>(SUITE_NAME');
+        });
+
+        it('should use SUITE_NAME constant matching the suite name', () => {
+            const suite = mockSuite([], 'AILayerSuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain("const SUITE_NAME = 'AILayerSuite'");
         });
     });
 
@@ -704,7 +691,8 @@ describe('TypeScriptGenerator', () => {
 
             expect(file.filename).toBe('AIArtSuite.ts');
             expect(file.content).toContain('AIArtSuite client functions');
-            expect(file.content).toContain('callPlugin');
+            expect(file.content).toContain("import { callCpp } from '@/sdk/bridge'");
+            expect(file.content).toContain("const SUITE_NAME = 'AIArtSuite'");
         });
 
         it('should handle function with no parameters', () => {

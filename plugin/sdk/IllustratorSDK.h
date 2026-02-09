@@ -4,6 +4,8 @@
  * This header provides a convenient way to include all commonly-used
  * Illustrator SDK headers. It should be included by plugin source files
  * that need access to Illustrator types and functions.
+ *
+ * NOTE: This is a NUXP convenience header, not part of Adobe's SDK.
  */
 
 #ifndef __IllustratorSDK__
@@ -48,42 +50,11 @@
 // Transform and geometry
 #include "AIRealMath.h"
 #include "AITransformArt.h"
-#include "AIHitTest.h"
 
-// Text
-#include "AITextFrame.h"
-#include "AIFont.h"
-
-// UI and tools
-#include "AITool.h"
-#include "AIMenu.h"
-#include "AIPanel.h"
-
-// Symbols
-#include "AISymbol.h"
-
-// Matching and selection
+// Selection and matching
 #include "AIMatchingArt.h"
 
-// Dictionary and data
-#include "AIDictionary.h"
-#include "AIArray.h"
-#include "AIEntry.h"
+// Unicode strings
+#include "IAIUnicodeString.h"
 
-// File I/O
-#include "AIFileFormat.h"
-#include "AIFilePath.h"
-
-// Undo
-#include "AIUndo.h"
-
-// Context
-#include "AIContext.h"
-
-// User interaction
-#include "AIUser.h"
-
-// Error handling
-#include "AIErrorCodes.h"
-
-#endif /* __IllustratorSDK__ */
+#endif // __IllustratorSDK__

@@ -30,11 +30,9 @@
 
 /**
  * Forward declarations for plugin message types.
- * These are defined in the Adobe SDK headers.
+ * AITimerMessage and AINotifierMessage are already defined via the includes above.
  */
 struct SPInterfaceMessage;
-struct AITimerMessage;
-struct AINotifierMessage;
 
 /**
  * Plugin startup handler.

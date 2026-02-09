@@ -1,0 +1,57 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default (NUXP)",
+      "description": "Default NUXP plugin configuration",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "custom-example",
+      "displayName": "Custom Plugin Example",
+      "description": "Example showing how to customize plugin identity",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PLUGIN_NAME": "MyIllustratorPlugin",
+        "PLUGIN_DISPLAY_NAME": "My Illustrator Plugin",
+        "PLUGIN_VERSION": "1.0.0",
+        "PLUGIN_BUNDLE_ID": "com.mycompany.illustrator.myplugin",
+        "PLUGIN_AUTHOR": "Your Name",
+        "PLUGIN_DESCRIPTION": "My custom Illustrator plugin"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug Build",
+      "description": "Debug configuration with symbols",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "custom-example",
+      "configurePreset": "custom-example"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    }
+  ]
+}

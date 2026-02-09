@@ -1,103 +1,204 @@
-/**
- * SPBasic.h - PICA Basic Suite Header (Stub)
- *
- * This is a minimal stub for the Adobe PICA Suite Pea framework.
- * It provides the basic types needed for Illustrator plugin development.
- */
+/***********************************************************************/
+/*                                                                     */
+/* SPBasic.h                                                           */
+/*                                                                     */
+/* ADOBE SYSTEMS INCORPORATED                                          */
+/* Copyright 1995-2007 Adobe Systems Incorporated.                     */
+/* All Rights Reserved.                                                */
+/*                                                                     */
+/* NOTICE:  Adobe permits you to use, modify, and distribute this file */
+/* in accordance with the terms of the Adobe license agreement         */
+/* accompanying it. If you have received this file from a source other */
+/* than Adobe, then your use, modification, or distribution of it      */
+/* requires the prior written permission of Adobe.                     */
+/*                                                                     */
+/* Patents Pending                                                     */
+/*                                                                     */
+/*                                                                     */
+/***********************************************************************/
 
 #ifndef __SPBasic__
 #define __SPBasic__
 
+
+/*******************************************************************************
+ **
+ **	Imports
+ **
+ **/
+
+#include "SPTypes.h"
 #include "AIBasicTypes.h"
 
+#include "SPHeaderBegin.h"
+
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/*******************************************************************************
- * Error Codes
- ******************************************************************************/
-
-#define kSPNoError                      0
-#define kSPUnimplementedError           'UIMP'
-#define kSPUserCanceledError            'STOP'
-#define kSPOperationInterrupted         'INTR'
-#define kSPOutOfMemoryError             '!MEM'
-#define kSPBufferTooSmallError          'SMAL'
-#define kSPBadParameterError            'PARM'
-#define kSPBlockDebugError              'DBUG'
-#define kSPBlockInUseError              'BUSE'
-#define kSPPluginNotFound               'P!FD'
-#define kSPCorruptPStringError          'PSTR'
-#define kSPPluginCachesFlushResponse    'FLSH'
-#define kSPPluginCouldntLoad            'LOAD'
-#define kSPCantChangeProperty           'PROP'
-#define kSPSuiteNotFoundError           'S!FD'
 
 /*******************************************************************************
- * Types
- ******************************************************************************/
+ **
+ **	Constants
+ **
+ **/
+/** PICA basic suite name */
+#define kSPBasicSuite				"SP Basic Suite"
+/** PICA basic suite version */
+#define kSPBasicSuiteVersion		4
 
-/** Opaque reference to a plugin */
-typedef struct SPPlugin* SPPluginRef;
-
-/** Opaque reference to a suite */
-typedef struct SPSuite* SPSuiteRef;
-
-/** Opaque reference to a property list */
-typedef struct SPPropertyList* SPPropertyListRef;
-
-/** Opaque reference to a property */
-typedef struct SPProperty* SPPropertyRef;
-
-/** Opaque reference to an access path */
-typedef struct SPAccess* SPAccessRef;
-
-/** Opaque reference to a file */
-typedef struct SPFile* SPFileRef;
-
-/** Opaque reference to a file list */
-typedef struct SPFileList* SPFileListRef;
-
-/** Opaque reference to a platform file specification */
-typedef struct SPPlatformFileSpecification* SPPlatformFileSpecificationRef;
-
-/** Plugin list iterator */
-typedef struct SPPluginListIterator* SPPluginListIteratorRef;
 
 /*******************************************************************************
- * SPBasicSuite - The fundamental suite for acquiring/releasing other suites
- ******************************************************************************/
+ **
+ **	Suite
+ **
+ **/
 
-#define kSPBasicSuite           "SP Basic Suite"
-#define kSPBasicSuiteVersion    4
+/** @ingroup Suites
+	This suite provides basic memory management for PICA (the Adobe plug-in manager)
+	and defines the basic functions for acquiring and releasing other suites.
 
+	A suite consists of a list of function pointers. The application, or a
+	plug-in that loads a suite, provides valid pointers when the suite is
+	acquired. When a suite is not available, the pointers are set to the
+	address of the \c #Undefined() function.
+
+	Do not attempt to acquire a suite (other than the \c #SPBlocksSuite)
+	in response to a PICA access (\c #kSPAccessCaller) or property
+	(\c #kSPPropertiesCaller) message. Most suites are unavailable
+	during these load and unload operations.
+
+	You can acquire all the suites you will need when your plug-in is first
+	loaded, as long as you release them before your plug-in is unloaded.
+	At shutdown, however, it is most efficient to acquire only those
+	suites explicitly needed to shut down; for example, to free memory
+	and save preferences.
+
+	The \c SPBasicSuite itself is a part of the message data passed
+	to your plug-in with any call. To access it from the message data structure:
+	@code
+	SPBasicSuite sBasic = message->d.basic;
+	sBasic->function( )
+	@endcode
+	*/
 typedef struct SPBasicSuite {
-    /** Acquire a suite by name and version */
-    ai::int32 (*AcquireSuite)(const char* name, ai::int32 version, const void** suite);
+	/** Acquires a function suite. Loads the suite if necessary,
+		and increments its reference count. For example:
+	@code
+SPErr error;
+SPBasicSuite *sBasic = message->d.basic;
+AIRandomSuite *sRandom;
+sBasic->AcquireSuite( kAIRandomSuite, kAIRandomVersion, &sRandom );
+	@endcode
+			@param name The suite name.
+			@param version The suite version number.
+			@param suite [out] A buffer in which to return the suite pointer.
+			@see \c #SPSuitesSuite::AcquireSuite()
+		*/
+	SPAPI SPErr (*AcquireSuite)( const char *name, ai::int32 version, const void **suite );
+	/** Decrements the reference count of a suite and unloads it when the
+		reference count reaches 0.
+			@param name The suite name.
+			@param version The suite version number.
+		*/
+	SPAPI SPErr (*ReleaseSuite)( const char *name, ai::int32 version );
+	/** Compares two strings for equality.
+			@param token1 The first null-terminated string.
+			@param token2 The second null-terminated string.
+			@return True if the strings are the same, false otherwise.
+		*/
+	SPAPI SPBoolean (*IsEqual)( const char *token1, const char *token2 );
+	/** Allocates a block of memory.
+			@param size The number of bytes.
+			@param block [out] A buffer in which to return the block pointer.
+			@see \c #SPBlocksSuite::AllocateBlock()
+		*/
+	SPAPI SPErr (*AllocateBlock)( size_t size, void **block );
+	/** Frees a block of memory allocated with \c #AllocateBlock().
+			@param block The block pointer.
+			@see \c #SPBlocksSuite::FreeBlock()
+		*/
+	SPAPI SPErr (*FreeBlock)( void *block );
+	/** Reallocates a block previously allocated with \c #AllocateBlock().
+		Increases the size without changing the location, if possible.
+			@param block The block pointer.
+			@param newSize The new number of bytes.
+			@param newblock [out] A buffer in which to return the new block pointer.
+			@see \c #SPBlocksSuite::ReallocateBlock()
+		*/
+	SPAPI SPErr (*ReallocateBlock)( void *block, size_t newSize, void **newblock );
+ 	/** A function pointer for unloaded suites. This is a protective measure
+ 		against other plug-ins that may mistakenly use the suite after they have
+ 		released it.
 
-    /** Release a previously acquired suite */
-    ai::int32 (*ReleaseSuite)(const char* name, ai::int32 version);
+ 		A plug-in that exports a suite should unload the suite's procedure pointers
+ 		when it is unloaded, and restore them when the plug-in is reloaded.
+ 		\li On unload, replace the suite's procedure pointers
+ 			with the address of this function.
+		\li On reload, restore the suite's procedure
+			pointers with the updated addresses of their functions.
 
-    /** Check if a suite is available */
-    ai::int32 (*IsEqual)(const char* token1, const char* token2);
+		For example:
+	@code
+	 	SPErr UnloadSuite( MySuite *mySuite, SPAccessMessage *message ) {
+	 		mySuite->functionA = (void *) message->d.basic->Undefined;
+	 		mySuite->functionB = (void *) message->d.basic->Undefined;
+	 	}
 
-    /** Allocate memory */
-    ai::int32 (*AllocateBlock)(size_t size, void** block);
-
-    /** Free memory */
-    ai::int32 (*FreeBlock)(void* block);
-
-    /** Reallocate memory */
-    ai::int32 (*ReallocateBlock)(void* block, size_t size, void** newBlock);
-
-    /** Report an error to the user */
-    ai::int32 (*Undefined)(void);
+	 	SPErr ReloadSuite( MySuite *mySuite, SPAccessMessage *message ) {
+	 		mySuite->functionA = functionA;
+	 		mySuite->functionB = functionB;
+	 	}
+	@endcode
+		*/
+	SPAPI SPErr (*Undefined)( void );
 
 } SPBasicSuite;
 
-#ifdef __cplusplus
-}
-#endif
+/*******************************************************************************
+ **
+ **	Errors
+ **
+ **/
 
-#endif /* __SPBasic__ */
+#include "SPErrorCodes.h"
+
+#ifdef __cplusplus
+}	// extern "C"
+#endif	// __cplusplus
+
+#include "SPHeaderEnd.h"
+
+
+#ifdef __cplusplus
+
+namespace ai
+{
+
+/** Internal */
+SPAPI SPErr SPBasicAcquireSuite( const char *name, ai::int32 version, const void **suite );
+/** Internal */
+SPAPI SPErr SPBasicReleaseSuite( const char *name, ai::int32 version );
+/** Internal */
+SPAPI SPBoolean SPBasicIsEqual( const char *token1, const char *token2 );
+/** Internal */
+SPAPI SPErr SPBasicAllocateBlock( size_t size, void **block );
+/** Internal */
+SPAPI SPErr SPBasicFreeBlock( void *block );
+/** Internal */
+SPAPI SPErr SPBasicReallocateBlock( void *block, size_t newSize, void **newblock );
+/** Internal */
+SPAPI SPErr SPBasicUndefined( void );
+/** Internal */
+SPAPI SPErr SPSubAllocateBlock( size_t size, void **block );
+/** Internal */
+SPAPI SPErr SPSubFreeBlock( void *block );
+/** Internal */
+SPAPI SPErr SPSubReallocateBlock( void *block, size_t newSize, void **newblock );
+
+}	// namespace ai
+
+#endif	// __cplusplus
+
+#endif	// __SPBasic__

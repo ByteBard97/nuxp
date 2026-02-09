@@ -9,7 +9,23 @@
 #   cmake --install build
 
 cmake_minimum_required(VERSION 3.20)
-project(NUXPPlugin VERSION 1.0.0 LANGUAGES CXX)
+
+# -----------------------------------------------------------------------------
+# Plugin Identity Configuration
+# -----------------------------------------------------------------------------
+# Users can customize these values when running cmake:
+#   cmake -B build -DPLUGIN_NAME="MyPlugin" -DPLUGIN_DISPLAY_NAME="My Plugin"
+#
+# Or set them in a CMakeUserPresets.json or environment variables.
+
+set(PLUGIN_NAME "NUXPPlugin" CACHE STRING "Plugin library/file name (no spaces)")
+set(PLUGIN_DISPLAY_NAME "NUXP" CACHE STRING "Display name shown in Illustrator")
+set(PLUGIN_VERSION "1.0.0" CACHE STRING "Plugin version (semver)")
+set(PLUGIN_BUNDLE_ID "com.nuxp.illustrator.plugin" CACHE STRING "Bundle identifier (macOS)")
+set(PLUGIN_AUTHOR "" CACHE STRING "Plugin author name")
+set(PLUGIN_DESCRIPTION "Adobe Illustrator Plugin with HTTP/JSON Bridge" CACHE STRING "Plugin description")
+
+project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES CXX)
 
 # Require C++17 for modern features (std::optional, std::string_view, etc.)
 set(CMAKE_CXX_STANDARD 17)
@@ -154,10 +170,10 @@ if(APPLE)
         BUNDLE TRUE
         BUNDLE_EXTENSION "aip"
         MACOSX_BUNDLE TRUE
-        MACOSX_BUNDLE_BUNDLE_NAME "NUXP"
+        MACOSX_BUNDLE_BUNDLE_NAME "${PLUGIN_DISPLAY_NAME}"
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "com.nuxp.illustrator.plugin"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "${PLUGIN_BUNDLE_ID}"
     )
 
     # Use custom Info.plist if available
@@ -217,6 +233,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     NUXP_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
     NUXP_VERSION_MINOR=${PROJECT_VERSION_MINOR}
     NUXP_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+    PLUGIN_NAME="${PLUGIN_NAME}"
+    PLUGIN_DISPLAY_NAME="${PLUGIN_DISPLAY_NAME}"
 )
 
 # -----------------------------------------------------------------------------
@@ -324,7 +342,13 @@ message(STATUS "")
 message(STATUS "========================================")
 message(STATUS "NUXP Plugin Configuration Summary")
 message(STATUS "========================================")
+message(STATUS "Plugin Identity:")
+message(STATUS "  Name:             ${PLUGIN_NAME}")
+message(STATUS "  Display Name:     ${PLUGIN_DISPLAY_NAME}")
 message(STATUS "  Version:          ${PROJECT_VERSION}")
+message(STATUS "  Bundle ID:        ${PLUGIN_BUNDLE_ID}")
+message(STATUS "")
+message(STATUS "Build Settings:")
 message(STATUS "  Platform:         ${PLATFORM_NAME}")
 message(STATUS "  C++ Standard:     C++${CMAKE_CXX_STANDARD}")
 message(STATUS "  SDK Path:         ${AI_SDK_PATH}")
