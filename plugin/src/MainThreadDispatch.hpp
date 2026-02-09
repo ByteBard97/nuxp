@@ -1,6 +1,6 @@
 #pragma once
 
-#include "json.hpp" // nlohmann/json
+#include <nlohmann/json.hpp>
 #include <functional>
 #include <future>
 #include <mutex>

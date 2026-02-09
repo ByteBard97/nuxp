@@ -67,15 +67,21 @@ endif()
 
 # Core plugin infrastructure sources
 set(CORE_SOURCES
+    src/Plugin.cpp
+    src/HttpServer.cpp
     src/HandleManager.cpp
     src/MainThreadDispatch.cpp
+    src/Errors.cpp
 )
 
 # Core plugin headers
 set(CORE_HEADERS
+    src/Plugin.hpp
+    src/HttpServer.hpp
     src/HandleManager.hpp
     src/HandleRegistry.hpp
     src/MainThreadDispatch.hpp
+    src/Errors.hpp
 )
 
 # Hand-written endpoint files (manually created endpoints)
