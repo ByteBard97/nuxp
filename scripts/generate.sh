@@ -121,7 +121,7 @@ TS_SRC="$CODEGEN_DIR/output/typescript"
 
 # Destination directories
 CPP_DEST="$ROOT_DIR/plugin/src/endpoints/generated"
-TS_DEST="$ROOT_DIR/client/src/sdk/generated"
+TS_DEST="$ROOT_DIR/shell/src/sdk/generated"
 
 # Copy C++ files to plugin
 if [ -d "$CPP_SRC" ] && [ "$(ls -A "$CPP_SRC" 2>/dev/null)" ]; then
