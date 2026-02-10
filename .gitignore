@@ -36,6 +36,10 @@ node_modules/
 # OS
 .DS_Store
 
+# Secrets (never commit)
+huggingface.token
+*.token
+
 # Adobe SDK headers (proprietary - must be downloaded from Adobe)
 # See docs/getting-started.md for setup instructions
 plugin/sdk/*

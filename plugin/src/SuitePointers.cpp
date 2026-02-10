@@ -25,6 +25,8 @@ AIMatchingArtSuite *SuitePointers::sAIMatchingArt = nullptr;
 AIUserSuite *SuitePointers::sAIUser = nullptr;
 AIUndoSuite *SuitePointers::sAIUndo = nullptr;
 AITransformArtSuite *SuitePointers::sAITransformArt = nullptr;
+AIPathStyleSuite *SuitePointers::sAIPathStyle = nullptr;
+AIMdMemorySuite *SuitePointers::sAIMdMemory = nullptr;
 
 bool SuitePointers::sAcquired = false;
 
@@ -79,6 +81,8 @@ ASErr SuitePointers::Acquire() {
   ACQUIRE_SUITE(kAIUndoSuite, AIUndo, kAIUndoSuiteVersion);
   ACQUIRE_SUITE(kAITransformArtSuite, AITransformArt,
                 kAITransformArtSuiteVersion);
+  ACQUIRE_SUITE(kAIPathStyleSuite, AIPathStyle, kAIPathStyleSuiteVersion);
+  ACQUIRE_SUITE(kAIMdMemorySuite, AIMdMemory, kAIMdMemorySuiteVersion);
 
   sAcquired = true;
   return kNoErr;
@@ -100,6 +104,8 @@ void SuitePointers::Release() {
   RELEASE_SUITE(kAIUndoSuite, AIUndo, kAIUndoSuiteVersion);
   RELEASE_SUITE(kAITransformArtSuite, AITransformArt,
                 kAITransformArtSuiteVersion);
+  RELEASE_SUITE(kAIPathStyleSuite, AIPathStyle, kAIPathStyleSuiteVersion);
+  RELEASE_SUITE(kAIMdMemorySuite, AIMdMemory, kAIMdMemorySuiteVersion);
 
   sAcquired = false;
 }
@@ -132,6 +138,10 @@ AIUserSuite *SuitePointers::AIUser() { return sAIUser; }
 AIUndoSuite *SuitePointers::AIUndo() { return sAIUndo; }
 
 AITransformArtSuite *SuitePointers::AITransformArt() { return sAITransformArt; }
+
+AIPathStyleSuite *SuitePointers::AIPathStyle() { return sAIPathStyle; }
+
+AIMdMemorySuite *SuitePointers::AIMdMemory() { return sAIMdMemory; }
 
 // -------------------------------------------------------------------------
 // Cleanup Macros
