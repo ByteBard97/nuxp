@@ -22,28 +22,44 @@ export class SuiteParser {
     code = code.replace(/AIAPI /g, '');
 
     const tree = this.parser.parse(code);
+    // 2. Find Structs ending in Suite
     const suites: SuiteInfo[] = [];
 
-    // 2. Find Structs ending in Suite
-    const suiteQuery = new Parser.Query(Cpp, `
+    // Query 1: typedef struct { ... } SuiteName;
+    const typedefQuery = new Parser.Query(Cpp, `
       (type_definition
         type: (struct_specifier
-          name: (type_identifier) @suite_name
+          name: (type_identifier)? @struct_name
           body: (field_declaration_list) @body
         )
+        declarator: (type_identifier) @suite_name
       )
     `);
 
-    const suiteMatches = suiteQuery.matches(tree.rootNode);
+    // Query 2: struct SuiteName { ... };
+    const structQuery = new Parser.Query(Cpp, `
+      (struct_specifier
+        name: (type_identifier) @suite_name
+        body: (field_declaration_list) @body
+      )
+    `);
 
-    for (const match of suiteMatches) {
+    const matches1 = typedefQuery.matches(tree.rootNode);
+    const matches2 = structQuery.matches(tree.rootNode);
+
+    // Process all matches
+    const seenSuites = new Set<string>();
+
+    for (const match of [...matches1, ...matches2]) {
       const suiteNameNode = match.captures.find(c => c.name === 'suite_name')?.node;
       const bodyNode = match.captures.find(c => c.name === 'body')?.node;
 
       if (!suiteNameNode || !bodyNode) continue;
 
       const suiteName = suiteNameNode.text;
-      if (!suiteName.endsWith('Suite')) continue;
+      if (!suiteName.endsWith('Suite') || seenSuites.has(suiteName)) continue;
+
+      seenSuites.add(suiteName);
 
       const functions = this.extractFunctions(bodyNode, suiteName);
 
