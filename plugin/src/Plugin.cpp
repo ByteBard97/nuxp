@@ -12,6 +12,7 @@
  */
 
 #include "Plugin.hpp"
+#include "ConfigManager.hpp"
 #include "Errors.hpp"
 #include "EventMapper.hpp"
 #include "HandleManager.hpp"
@@ -206,8 +207,12 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
     // Plugin can still function, but some features may be limited
   }
 
-  // Start HTTP server on background thread
-  HttpServer::Start(NUXP_DEFAULT_PORT);
+  // Load configuration (creates default if missing)
+  ConfigManager::Instance().Load();
+
+  // Start HTTP server on configured port
+  int port = ConfigManager::Instance().GetPort();
+  HttpServer::Start(port);
 
   return kNoErr;
 }

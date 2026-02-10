@@ -21,8 +21,10 @@
 #define NUXP_TIMER_NAME         "NUXP Timer"
 #define NUXP_NOTIFIER_NAME      "NUXP Notifier"
 
-// Default HTTP server port
+// Default HTTP server port (set via CMake NUXP_DEFAULT_PORT)
+#ifndef NUXP_DEFAULT_PORT
 #define NUXP_DEFAULT_PORT       8080
+#endif
 
 // Timer period in ticks (60 ticks per second, 1 tick ~= 16.67ms)
 // We use 1 tick for responsive main thread dispatch
