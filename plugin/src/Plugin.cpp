@@ -18,9 +18,11 @@
 #include "HandleManager.hpp"
 #include "HttpServer.hpp"
 #include "MainThreadDispatch.hpp"
+#include "MenuHandler.hpp"
 #include "SuitePointers.hpp"
 
 #include "IllustratorSDK.h"
+#include "AIMenu.h"
 
 #include <cstring>
 
@@ -92,6 +94,10 @@ extern "C" ASAPI ASErr PluginMain(char *caller, char *selector, void *message) {
   // Notifier callback - handle document/art change events
   else if (std::strcmp(caller, kCallerAINotify) == 0) {
     error = HandleNotifier(static_cast<AINotifierMessage *>(message));
+  }
+  // Menu callback - handle menu item selection
+  else if (std::strcmp(caller, kCallerAIMenu) == 0) {
+    error = MenuHandler::HandleMenu(static_cast<AIMenuMessage *>(message));
   }
 
   return error;
@@ -207,6 +213,12 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
     // Plugin can still function, but some features may be limited
   }
 
+  // Initialize menu items
+  error = MenuHandler::Initialize(gPluginRef);
+  if (error != kNoErr) {
+    // Non-fatal - plugin works without menu, just no UI for settings
+  }
+
   // Load configuration (creates default if missing)
   ConfigManager::Instance().Load();
 
@@ -263,6 +275,9 @@ ASErr ShutdownPlugin(SPInterfaceMessage *message) {
       gLayerListChangedNotifier = nullptr;
     }
   }
+
+  // Shutdown menu handler
+  MenuHandler::Shutdown();
 
   // Release SDK suites
   SuitePointers::Release();
