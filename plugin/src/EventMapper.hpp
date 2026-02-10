@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IllustratorSDK.h"
+#include "SSE.hpp"
 #include <mutex>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -27,7 +28,7 @@ public:
   }
 
   /**
-   * Add an event to the queue (Thread-safe).
+   * Add an event to the queue and broadcast via SSE (Thread-safe).
    *
    * @param type The event type - can be a raw Illustrator notifier string
    *             (will be mapped to a friendly name) or a custom event type.
@@ -39,9 +40,15 @@ public:
     // Map the raw notifier string to a friendly name
     std::string friendlyType = MapEventType(type);
 
-    eventQueue_.push_back({{"type", friendlyType},
-                           {"data", data},
-                           {"timestamp", std::time(nullptr)}});
+    json eventData = {{"type", friendlyType},
+                      {"data", data},
+                      {"timestamp", std::time(nullptr)}};
+
+    // Store in queue for long-polling clients
+    eventQueue_.push_back(eventData);
+
+    // Broadcast via SSE for real-time clients
+    SSE::Broadcast(friendlyType, eventData);
   }
 
   /**
