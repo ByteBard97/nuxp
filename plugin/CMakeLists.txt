@@ -217,7 +217,13 @@ endif() # CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR
 
 add_library(nuxp-core INTERFACE)
 
+# Collect generated endpoint sources
+file(GLOB NUXP_GENERATED_ENDPOINTS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated/*.cpp"
+)
+
 target_sources(nuxp-core INTERFACE
+    # Core infrastructure
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HttpServer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MainThreadDispatch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SSE.cpp
@@ -225,17 +231,23 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HandleManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ConfigManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Errors.cpp
+    # Utility functions
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/StringUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/LayerUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/GeometryUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ColorUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/DocumentUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/SelectionUtils.cpp
+    # Endpoints
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/DemoEndpoints.cpp
+    ${NUXP_GENERATED_ENDPOINTS}
 )
 
 target_include_directories(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
     ${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
 
