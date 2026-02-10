@@ -146,10 +146,6 @@ When creating a PR, please include:
 - **Issues**: Report bugs or request features via GitHub Issues
 - **Discussions**: Ask questions in GitHub Discussions
 
-## Code of Conduct
-
-Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
-
 ## License
 
 By contributing to NUXP, you agree that your contributions will be licensed under the MIT License.
