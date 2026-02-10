@@ -19,10 +19,10 @@ jobs:
         include:
           - os: macos-latest
             platform: mac
-            artifact-name: flora-mac.aip
+            artifact-name: NUXPPlugin-mac.aip
           - os: windows-latest
             platform: win
-            artifact-name: flora-win.aip
+            artifact-name: NUXPPlugin-win.aip
 
     runs-on: ${{ matrix.os }}
 
@@ -156,18 +156,16 @@ jobs:
         working-directory: codegen
 
       - name: Run codegen tests
-        run: npm test || echo "No tests configured or tests failed"
+        run: npm test
         working-directory: codegen
-        continue-on-error: true
 
       - name: Install shell dependencies
         run: npm ci || npm install
         working-directory: shell
 
       - name: Type-check shell
-        run: npm run type-check || echo "Type-check not configured"
+        run: npm run type-check
         working-directory: shell
-        continue-on-error: true
 
       - name: Build shell
         run: npm run build

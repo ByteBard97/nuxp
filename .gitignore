@@ -11,6 +11,7 @@ codegen/dist/
 # IDE / Editor
 .cache/
 .idea/
+.claude/
 *.swp
 *.swo
 
