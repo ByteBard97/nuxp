@@ -37,7 +37,7 @@ namespace {{suiteName}} {
 
 {{#functions}}
 /**
- * Wrapper for {{suiteName}}::{{name}}
+ * Wrapper for {{suiteName}}::{{sdkName}}
 {{#inputParams}}
  * @param params["{{name}}"] - {{type}}{{#isHandle}} (handle ID{{#isOptional}}, optional{{/isOptional}}){{/isHandle}}
 {{/inputParams}}
@@ -80,9 +80,9 @@ nlohmann::json {{name}}(const nlohmann::json& params) {
 {{/unmarshalCode}}
 
     // Call SDK function
-    AIErr err = s{{suiteShortName}}->{{name}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+    AIErr err = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
     if (err != kNoErr) {
-        throw std::runtime_error("{{name}} failed with error: " + std::to_string(err));
+        throw std::runtime_error("{{sdkName}} failed with error: " + std::to_string(err));
     }
 
 {{#marshalCode}}
@@ -111,6 +111,31 @@ nlohmann::json Dispatch(const std::string& method, const nlohmann::json& params)
 interface StructFieldInfo {
     name: string;
     cppType: string;
+}
+
+/**
+ * Function names that conflict with system macros (macOS CarbonCore/FixMath.h)
+ * These are prefixed with "AI_" in generated code to avoid collision
+ */
+const MACRO_CONFLICTING_NAMES: Set<string> = new Set([
+    'FractToFloat',
+    'FloatToFract',
+    'FixedToFloat',
+    'FloatToFixed',
+    'FixRatio',
+    'FixMul',
+    'FixDiv',
+    'FixRound',
+]);
+
+/**
+ * Get safe function name, prefixing if it conflicts with system macros
+ */
+function getSafeFunctionName(name: string): string {
+    if (MACRO_CONFLICTING_NAMES.has(name)) {
+        return `AI_${name}`;
+    }
+    return name;
 }
 
 /**
@@ -158,8 +183,14 @@ export class CppGenerator {
      * @returns Array of generated files (header and source)
      */
     generate(suite: SuiteInfo): GeneratedFile[] {
-        const headerData = this.prepareHeaderData(suite);
-        const sourceData = this.prepareSourceData(suite);
+        // Filter out functions with unsupported parameter types
+        const filteredSuite: SuiteInfo = {
+            ...suite,
+            functions: this.filterFunctions(suite.functions)
+        };
+
+        const headerData = this.prepareHeaderData(filteredSuite);
+        const sourceData = this.prepareSourceData(filteredSuite);
 
         const headerContent = Mustache.render(templates.header, headerData);
         const sourceContent = Mustache.render(templates.source, sourceData);
@@ -183,7 +214,8 @@ export class CppGenerator {
         return {
             suiteName: suite.name,
             functions: suite.functions.map(func => ({
-                name: func.name,
+                name: getSafeFunctionName(func.name),
+                sdkName: func.name,  // Original SDK name for documentation
                 inputParams: func.params
                     .filter(p => !p.isOutput)
                     .map(p => ({
@@ -215,6 +247,103 @@ export class CppGenerator {
     }
 
     /**
+     * Check if a function has parameters that cannot be serialized to JSON
+     * Returns true if function should be skipped
+     */
+    private hasUnsupportedParams(func: FunctionInfo): boolean {
+        for (const param of func.params) {
+            // Skip functions with void* parameters (can't serialize opaque pointers)
+            // Parser stores pointer info separately, so check both type and isPointer
+            if (param.type === 'void' && param.isPointer) {
+                return true;
+            }
+            // Also check for void** in raw type string
+            if (param.type.includes('void') && param.type.includes('*')) {
+                return true;
+            }
+            // Skip triple pointers (e.g., AIArtHandle*** for array outputs)
+            // These require complex memory management that we don't handle
+            if (param.type.includes('***') || param.type.includes('** *')) {
+                return true;
+            }
+            // Skip callback function pointers
+            if (param.type.includes('(*)') || param.type.includes('Proc')) {
+                return true;
+            }
+            // Skip if parameter name is 'void' (C-style no-param declaration)
+            if (param.name === 'void') {
+                return true;
+            }
+            // Skip forward-declared struct types (can't instantiate)
+            if (param.type.includes('struct _') || param.type.includes('struct _AIDictionary')) {
+                return true;
+            }
+            // Skip complex struct types that have explicit constructors or are difficult to marshal
+            const complexStructTypes = [
+                'AINewDocumentPreset',
+                'ActionDialogStatus',
+                'AIDocumentColorProfile',
+                'AIRasterizeSettings',
+                'AIColorConversionOptions',
+                'AIColor',       // Complex union type
+                'AIGradient',    // Complex structure
+                'AIPattern',     // Complex structure
+                'AIPathStyle',   // Complex nested structure
+                'AISuspendedAppContext', // Opaque type
+                'ai::FilePath',  // SDK implementation type - requires SDK library
+                'ai::UnicodeString', // SDK implementation type - requires SDK library
+                'ArtboardList',  // SDK implementation type
+                'ArtboardProperties', // SDK implementation type
+            ];
+            if (complexStructTypes.some(t => param.type.includes(t))) {
+                return true;
+            }
+            // Skip char** outputs (string pointers managed by SDK)
+            // Parser loses the double-pointer info, so we see 'char' with isPointer
+            if (param.type === 'char' && param.isPointer && param.isOutput) {
+                return true;
+            }
+            // Skip malformed const char (should be const char*)
+            if (param.type === 'const char' && param.isPointer) {
+                // This should be classified as string, but parser might miss it
+                // Skip for now if it's not being handled correctly
+                if (param.classification?.category !== 'String') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if a function has an unsupported return type
+     * Returns true if function should be skipped
+     */
+    private hasUnsupportedReturnType(func: FunctionInfo): boolean {
+        // Skip functions that return void (can't check for errors)
+        if (func.returnType === 'void') {
+            return true;
+        }
+        // Only support functions that return AIErr or ASErr (error codes)
+        // Functions that return other types (AIEntryRef, AIBoolean, etc.) need different handling
+        const supportedReturnTypes = ['AIErr', 'ASErr'];
+        if (!supportedReturnTypes.includes(func.returnType)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Filter suite functions to remove those with unsupported parameters or return types
+     */
+    private filterFunctions(functions: FunctionInfo[]): FunctionInfo[] {
+        return functions.filter(func =>
+            !this.hasUnsupportedParams(func) &&
+            !this.hasUnsupportedReturnType(func)
+        );
+    }
+
+    /**
      * Prepare data for source template
      */
     private prepareSourceData(suite: SuiteInfo): object {
@@ -235,18 +364,20 @@ export class CppGenerator {
 
     /**
      * Generate dispatch case statements for all functions in a suite
+     * Maps original SDK method names to (possibly prefixed) function names
      */
     private generateDispatchCases(functions: FunctionInfo[]): string[] {
         const cases: string[] = [];
 
         for (let i = 0; i < functions.length; i++) {
             const func = functions[i];
+            const safeName = getSafeFunctionName(func.name);
             if (i === 0) {
                 cases.push(`    if (method == "${func.name}") {`);
             } else {
                 cases.push(`    } else if (method == "${func.name}") {`);
             }
-            cases.push(`        return ${func.name}(params);`);
+            cases.push(`        return ${safeName}(params);`);
         }
 
         if (functions.length > 0) {
@@ -278,6 +409,7 @@ export class CppGenerator {
         const unmarshalLines: string[] = [];
         const marshalLines: string[] = [];
         const callArgs: { argName: string; hasMore: boolean }[] = [];
+        const safeName = getSafeFunctionName(func.name);
 
         // Process each parameter
         for (let i = 0; i < func.params.length; i++) {
@@ -315,7 +447,8 @@ export class CppGenerator {
         }
 
         return {
-            name: func.name,
+            name: safeName,           // Safe (prefixed) name for C++ function
+            sdkName: func.name,       // Original SDK name for the actual call
             suiteShortName,
             unmarshalCode: unmarshalLines,
             marshalCode: marshalLines,
@@ -338,6 +471,8 @@ export class CppGenerator {
         switch (category) {
             case 'Handle':
                 // Input handle - get from registry by ID
+                // HandleRegistry<StructType>::Get() returns StructType* which IS the handle type
+                // (e.g., HandleRegistry<ArtObject>::Get() returns ArtObject* = AIArtHandle)
                 // Check if this is an optional handle (can be null/-1)
                 if (this.isOptionalHandle(param)) {
                     lines.push(`    // Input handle (optional): ${param.name}`);
@@ -345,19 +480,15 @@ export class CppGenerator {
                     lines.push(`    if (params.contains("${param.name}") && !params["${param.name}"].is_null()) {`);
                     lines.push(`        int32_t ${param.name}_id = params["${param.name}"].get<int32_t>();`);
                     lines.push(`        if (${param.name}_id >= 0) {`);
-                    lines.push(`            auto ${param.name}_ptr = HandleManager::${registryName}.Get(${param.name}_id);`);
-                    lines.push(`            if (${param.name}_ptr) {`);
-                    lines.push(`                ${param.name}_val = *${param.name}_ptr;`);
-                    lines.push(`            }`);
+                    lines.push(`            ${param.name}_val = HandleManager::${registryName}.Get(${param.name}_id);`);
                     lines.push(`        }`);
                     lines.push(`    }`);
                 } else {
                     lines.push(`    // Input handle: ${param.name}`);
-                    lines.push(`    auto ${param.name}_ptr = HandleManager::${registryName}.Get(params["${param.name}"].get<int32_t>());`);
-                    lines.push(`    if (!${param.name}_ptr) {`);
+                    lines.push(`    ${baseType} ${param.name}_val = HandleManager::${registryName}.Get(params["${param.name}"].get<int32_t>());`);
+                    lines.push(`    if (!${param.name}_val) {`);
                     lines.push(`        throw std::runtime_error("Invalid ${baseType} handle for parameter '${param.name}'");`);
                     lines.push(`    }`);
-                    lines.push(`    ${baseType} ${param.name}_val = *${param.name}_ptr;`);
                 }
                 break;
 
