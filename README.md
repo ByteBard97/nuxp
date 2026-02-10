@@ -30,6 +30,37 @@ NUXP replaces the "CEP Panel" approach with a standalone web application that co
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Current Capabilities (Alpha)
+
+NUXP is an **infrastructure release**. The HTTP server, handle management, and event system foundation is solid and production-tested, but SDK feature coverage is limited.
+
+### What Works
+- **Documents** - Get active document, basic document info
+- **Layers** - List layers, get layer properties
+- **Selection** - Get/set selected objects
+- **Basic Shapes** - Create rectangles
+- **Object Properties** - Get bounds, transform objects
+- **Real-time Events** - SSE push notifications for document changes
+
+### What Doesn't Work Yet
+- **Text** - Not supported (SDK header compatibility issues)
+- **Complex Fills** - Gradients, patterns not supported
+- **Advanced Paths** - Path segments, compound paths limited
+- **Symbols** - Not supported
+- **Effects** - Live effects not supported
+
+### Why Some Features Are Limited
+
+The code generator automatically wraps SDK functions that return standard error codes and use simple parameter types (numbers, strings, object handles).
+
+It cannot yet handle:
+- Callback functions
+- Array parameters
+- Complex struct types
+- Certain pointer patterns
+
+These require hand-written wrappers. The infrastructure makes adding them straightforward - community contributions are welcome! See the `plugin/src/endpoints/` directory for examples.
+
 ## Quick Start
 
 ### Prerequisites
