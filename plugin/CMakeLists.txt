@@ -178,6 +178,49 @@ if(EXISTS "${LIB_PATH}/nlohmann")
 endif()
 
 # -----------------------------------------------------------------------------
+# Interface Library for Downstream Projects
+# -----------------------------------------------------------------------------
+# This allows projects like Flora to use NUXP's core infrastructure
+# without copying code. Usage:
+#   add_subdirectory(path/to/nuxp/plugin nuxp-build)
+#   target_link_libraries(MyPlugin PRIVATE nuxp-core)
+#
+# Note: Downstream projects must provide their own:
+#   - Adobe SDK include paths
+#   - Plugin entry points (Plugin.cpp equivalent)
+#   - Endpoint handlers
+
+add_library(nuxp-core INTERFACE)
+
+target_sources(nuxp-core INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/HttpServer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MainThreadDispatch.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SSE.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/SuitePointers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/HandleManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Errors.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/StringUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/LayerUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/GeometryUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ColorUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/DocumentUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/SelectionUtils.cpp
+)
+
+target_include_directories(nuxp-core INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib
+)
+
+# nlohmann/json for downstream projects
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/nlohmann")
+    target_include_directories(nuxp-core INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/nlohmann
+    )
+endif()
+
+# -----------------------------------------------------------------------------
 # Platform-Specific Configuration
 # -----------------------------------------------------------------------------
 
