@@ -77,6 +77,12 @@ public:
   /** Transform suite - geometric transformations */
   static AITransformArtSuite *AITransformArt();
 
+  /** Path style suite - fill and stroke management */
+  static AIPathStyleSuite *AIPathStyle();
+
+  /** Memory suite - memory management for SDK allocations */
+  static AIMdMemorySuite *AIMdMemory();
+
 private:
   // Prevent instantiation
   SuitePointers() = delete;
@@ -93,6 +99,8 @@ private:
   static AIUserSuite *sAIUser;
   static AIUndoSuite *sAIUndo;
   static AITransformArtSuite *sAITransformArt;
+  static AIPathStyleSuite *sAIPathStyle;
+  static AIMdMemorySuite *sAIMdMemory;
 
   // Track if suites are acquired
   static bool sAcquired;

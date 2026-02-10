@@ -90,6 +90,12 @@ set(CORE_SOURCES
     src/SSE.cpp
     src/SuitePointers.cpp
     src/Errors.cpp
+    src/utils/StringUtils.cpp
+    src/utils/LayerUtils.cpp
+    src/utils/GeometryUtils.cpp
+    src/utils/ColorUtils.cpp
+    src/utils/DocumentUtils.cpp
+    src/utils/SelectionUtils.cpp
 )
 
 # Core plugin headers
@@ -102,6 +108,12 @@ set(CORE_HEADERS
     src/SSE.hpp
     src/SuitePointers.hpp
     src/Errors.hpp
+    src/utils/StringUtils.hpp
+    src/utils/LayerUtils.hpp
+    src/utils/GeometryUtils.hpp
+    src/utils/ColorUtils.hpp
+    src/utils/DocumentUtils.hpp
+    src/utils/SelectionUtils.hpp
 )
 
 # Hand-written endpoint files (manually created endpoints)
@@ -155,6 +167,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${AI_SDK_PATH}
     ${LIB_PATH}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
 )
