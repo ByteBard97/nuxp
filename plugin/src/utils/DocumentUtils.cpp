@@ -13,10 +13,10 @@
 extern "C" SPBasicSuite* sSPBasic;
 
 // Local suite pointers for document utilities
-static AIDocumentSuite* sDocument = nullptr;
-static AIDocumentListSuite* sDocumentList = nullptr;
-static AIArtboardSuite* sArtboard = nullptr;
-static AIFontSuite* sFont = nullptr;
+static AIDocumentSuite* sAIDocument = nullptr;
+static AIDocumentListSuite* sAIDocumentList = nullptr;
+static AIArtboardSuite* sAIArtboard = nullptr;
+// static AIFontSuite* sAIFont = nullptr;  // Disabled - ATE header conflicts
 
 // Track if suites are acquired
 static bool sSuitesAcquired = false;
@@ -42,20 +42,20 @@ namespace {
  */
 bool EnsureSuites() {
   if (sSuitesAcquired) {
-    return sDocument != nullptr && sDocumentList != nullptr;
+    return sAIDocument != nullptr && sAIDocumentList != nullptr;
   }
 
   if (sSPBasic == nullptr) {
     return false;
   }
 
-  ACQUIRE_LOCAL_SUITE(kAIDocumentSuite, Document, kAIDocumentSuiteVersion);
-  ACQUIRE_LOCAL_SUITE(kAIDocumentListSuite, DocumentList, kAIDocumentListSuiteVersion);
-  ACQUIRE_LOCAL_SUITE(kAIArtboardSuite, Artboard, kAIArtboardSuiteVersion);
-  ACQUIRE_LOCAL_SUITE(kAIFontSuite, Font, kAIFontSuiteVersion);
+  ACQUIRE_LOCAL_SUITE(kAIDocumentSuite, AIDocument, kAIDocumentSuiteVersion);
+  ACQUIRE_LOCAL_SUITE(kAIDocumentListSuite, AIDocumentList, kAIDocumentListSuiteVersion);
+  ACQUIRE_LOCAL_SUITE(kAIArtboardSuite, AIArtboard, kAIArtboardSuiteVersion);
+  // ACQUIRE_LOCAL_SUITE(kAIFontSuite, AIFont, kAIFontSuiteVersion);  // Disabled - ATE conflicts
 
   sSuitesAcquired = true;
-  return sDocument != nullptr && sDocumentList != nullptr;
+  return sAIDocument != nullptr && sAIDocumentList != nullptr;
 }
 
 #undef ACQUIRE_LOCAL_SUITE
@@ -131,13 +131,13 @@ std::string EscapeJsonString(const std::string& input) {
 
 namespace DocumentUtils {
 
-bool HasDocument() {
-  if (!EnsureSuites() || sDocumentList == nullptr) {
+bool HasAIDocument() {
+  if (!EnsureSuites() || sAIDocumentList == nullptr) {
     return false;
   }
 
   ai::int32 docCount = 0;
-  ASErr error = sDocumentList->Count(&docCount);
+  ASErr error = sAIDocumentList->Count(&docCount);
 
   return (error == kNoErr && docCount > 0);
 }
@@ -152,7 +152,7 @@ json GetDocumentInfo() {
 
   // Check if a document is open
   ai::int32 docCount = 0;
-  ASErr error = sDocumentList->Count(&docCount);
+  ASErr error = sAIDocumentList->Count(&docCount);
 
   if (error != kNoErr || docCount == 0) {
     response["error"] = "no_document";
@@ -164,12 +164,12 @@ json GetDocumentInfo() {
   std::string fullPath;
 
   ai::FilePath filePath;
-  error = sDocument->GetDocumentFileSpecification(filePath);
+  error = sAIDocument->GetDocumentFileSpecification(filePath);
 
   if (error == kNoErr) {
     // Get file name
     ai::UnicodeString fileNameUni;
-    error = sDocument->GetDocumentFileName(fileNameUni);
+    error = sAIDocument->GetDocumentFileName(fileNameUni);
     if (error == kNoErr) {
       fileName = fileNameUni.as_UTF8();
     }
@@ -183,27 +183,27 @@ json GetDocumentInfo() {
   AIReal width = 612.0;  // Default letter size
   AIReal height = 792.0;
 
-  if (sArtboard != nullptr) {
+  if (sAIArtboard != nullptr) {
     ai::ArtboardList artboardList;
-    error = sArtboard->GetArtboardList(artboardList);
+    error = sAIArtboard->GetArtboardList(artboardList);
 
     if (error == kNoErr) {
       ai::ArtboardID active = 0;
-      sArtboard->GetActive(artboardList, active);
+      sAIArtboard->GetActive(artboardList, active);
 
       ai::ArtboardProperties props;
-      sArtboard->Init(props);
-      error = sArtboard->GetArtboardProperties(artboardList, active, props);
+      sAIArtboard->Init(props);
+      error = sAIArtboard->GetArtboardProperties(artboardList, active, props);
 
       if (error == kNoErr) {
         AIRealRect bounds;
-        sArtboard->GetPosition(props, bounds);
+        sAIArtboard->GetPosition(props, bounds);
         width = bounds.right - bounds.left;
         height = bounds.top - bounds.bottom;
       }
 
-      sArtboard->Dispose(props);
-      sArtboard->ReleaseArtboardList(artboardList);
+      sAIArtboard->Dispose(props);
+      sAIArtboard->ReleaseArtboardList(artboardList);
     }
   }
 
@@ -230,14 +230,14 @@ json GetArtboards() {
 
   // Check if a document is open
   ai::int32 docCount = 0;
-  ASErr error = sDocumentList->Count(&docCount);
+  ASErr error = sAIDocumentList->Count(&docCount);
 
   if (error != kNoErr || docCount == 0) {
     response["error"] = "no_document";
     return response;
   }
 
-  if (sArtboard == nullptr) {
+  if (sAIArtboard == nullptr) {
     response["error"] = "artboard_suite_not_available";
     return response;
   }
@@ -245,7 +245,7 @@ json GetArtboards() {
   json artboardsArray = json::array();
 
   ai::ArtboardList artboardList;
-  error = sArtboard->GetArtboardList(artboardList);
+  error = sAIArtboard->GetArtboardList(artboardList);
 
   if (error != kNoErr) {
     response["error"] = "could_not_get_artboard_list";
@@ -253,22 +253,22 @@ json GetArtboards() {
   }
 
   ai::ArtboardID count = 0;
-  sArtboard->GetCount(artboardList, count);
+  sAIArtboard->GetCount(artboardList, count);
 
   ai::ArtboardID active = 0;
-  sArtboard->GetActive(artboardList, active);
+  sAIArtboard->GetActive(artboardList, active);
 
   for (ai::ArtboardID i = 0; i < count; i++) {
     ai::ArtboardProperties props;
-    sArtboard->Init(props);
-    error = sArtboard->GetArtboardProperties(artboardList, i, props);
+    sAIArtboard->Init(props);
+    error = sAIArtboard->GetArtboardProperties(artboardList, i, props);
 
     if (error == kNoErr) {
       AIRealRect bounds;
-      sArtboard->GetPosition(props, bounds);
+      sAIArtboard->GetPosition(props, bounds);
 
       ai::UnicodeString nameUni;
-      sArtboard->GetName(props, nameUni);
+      sAIArtboard->GetName(props, nameUni);
       std::string name = nameUni.as_UTF8();
 
       json artboard;
@@ -283,10 +283,10 @@ json GetArtboards() {
       artboardsArray.push_back(artboard);
     }
 
-    sArtboard->Dispose(props);
+    sAIArtboard->Dispose(props);
   }
 
-  sArtboard->ReleaseArtboardList(artboardList);
+  sAIArtboard->ReleaseArtboardList(artboardList);
 
   response["artboards"] = artboardsArray;
   response["count"] = static_cast<int>(count);
@@ -296,20 +296,20 @@ json GetArtboards() {
 }
 
 std::string GetRulerUnits() {
-  if (!EnsureSuites() || sDocument == nullptr) {
+  if (!EnsureSuites() || sAIDocument == nullptr) {
     return "unknown";
   }
 
   // Check if a document is open
   ai::int32 docCount = 0;
-  ASErr error = sDocumentList->Count(&docCount);
+  ASErr error = sAIDocumentList->Count(&docCount);
 
   if (error != kNoErr || docCount == 0) {
     return "unknown";
   }
 
   ai::int16 units = 0;
-  error = sDocument->GetDocumentRulerUnits(&units);
+  error = sAIDocument->GetDocumentRulerUnits(&units);
 
   if (error != kNoErr) {
     return "unknown";
@@ -320,56 +320,12 @@ std::string GetRulerUnits() {
 
 json GetFonts() {
   json response;
-
-  if (!EnsureSuites()) {
-    response["error"] = "suites_not_available";
-    return response;
-  }
-
-  if (sFont == nullptr) {
-    response["error"] = "font_suite_not_available";
-    response["fonts"] = json::array();
-    response["count"] = 0;
-    return response;
-  }
-
-  json fontsArray = json::array();
-
-  ai::int32 fontCount = 0;
-  ASErr error = sFont->CountFonts(&fontCount);
-
-  if (error != kNoErr) {
-    response["error"] = "could_not_count_fonts";
-    response["fonts"] = json::array();
-    response["count"] = 0;
-    return response;
-  }
-
-  // Limit to 500 fonts to avoid very long responses
-  const ai::int32 maxFonts = 500;
-  ai::int32 fontsToReturn = (fontCount < maxFonts) ? fontCount : maxFonts;
-  bool truncated = (fontCount > maxFonts);
-
-  for (ai::int32 i = 0; i < fontsToReturn; i++) {
-    AIFontKey fontKey;
-    error = sFont->IndexFontList(i, &fontKey);
-
-    if (error == kNoErr) {
-      char fontNameBuf[256];
-      error = sFont->GetUserFontName(fontKey, fontNameBuf, sizeof(fontNameBuf));
-
-      if (error == kNoErr) {
-        json font;
-        font["name"] = std::string(fontNameBuf);
-        fontsArray.push_back(font);
-      }
-    }
-  }
-
-  response["fonts"] = fontsArray;
-  response["count"] = fontCount;
-  response["truncated"] = truncated;
-
+  // AIFontSuite is disabled due to ATE header conflicts
+  // Font enumeration requires special handling to avoid typedef conflicts
+  response["error"] = "font_suite_disabled";
+  response["message"] = "AIFontSuite disabled due to ATE header conflicts";
+  response["fonts"] = json::array();
+  response["count"] = 0;
   return response;
 }
 
