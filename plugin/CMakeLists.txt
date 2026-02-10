@@ -173,6 +173,12 @@ set(PLUGIN_HEADERS
 # -----------------------------------------------------------------------------
 # Plugin Library Target
 # -----------------------------------------------------------------------------
+# Only build the standalone plugin when NUXP is the top-level project.
+# When included as a subdirectory (e.g., by Flora), downstream projects
+# should use the nuxp-core interface library instead.
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    # We are the top-level project - build the full plugin
 
 add_library(${PROJECT_NAME} SHARED
     ${PLUGIN_SOURCES}
@@ -193,6 +199,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 if(EXISTS "${LIB_PATH}/nlohmann")
     target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_PATH}/nlohmann)
 endif()
+
+endif() # CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR
 
 # -----------------------------------------------------------------------------
 # Interface Library for Downstream Projects
@@ -241,6 +249,9 @@ endif()
 # -----------------------------------------------------------------------------
 # Platform-Specific Configuration
 # -----------------------------------------------------------------------------
+# Only configure the plugin target when building standalone
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
 if(APPLE)
     # macOS Bundle Configuration
@@ -412,6 +423,8 @@ add_custom_target(regenerate
     COMMENT "Regenerating code and rebuilding plugin"
     VERBATIM
 )
+
+endif() # CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR (standalone plugin)
 
 # -----------------------------------------------------------------------------
 # Generate TypeScript Defaults
