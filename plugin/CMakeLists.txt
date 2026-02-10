@@ -98,6 +98,17 @@ set(CORE_SOURCES
     src/utils/SelectionUtils.cpp
 )
 
+# SDK implementation files for ai:: classes
+# These require global suite pointers that we define in SuitePointers.cpp:
+#   sAIUnicodeString, sAIFilePath, sAIArtboard, sSPBlocks
+# Note: AIAssert.cpp excluded - requires Objective-C; we provide our own stub
+# Note: IAIAutoBuffer.cpp excluded - ai::SPAlloc symbols already in IAIUnicodeString.cpp
+set(SDK_SOURCES
+    sdk/IAIUnicodeString.cpp
+    sdk/IAIFilePath.cpp
+    sdk/IAIArtboards.cpp
+)
+
 # Core plugin headers
 set(CORE_HEADERS
     src/Plugin.hpp
@@ -143,6 +154,7 @@ endif()
 # Combine all sources
 set(PLUGIN_SOURCES
     ${CORE_SOURCES}
+    ${SDK_SOURCES}
     ${HANDWRITTEN_ENDPOINT_SOURCES}
     ${GENERATED_ENDPOINT_SOURCES}
 )

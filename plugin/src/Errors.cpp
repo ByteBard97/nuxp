@@ -1,5 +1,13 @@
 #include "Errors.hpp"
 #include "AIErrorCodes.h"
+#include <cstdio>
+
+// Stub for SDK assertion function (replaces AIAssert.cpp which requires Objective-C)
+extern "C" void ShowPlatformAssert(const bool success, const char* message) {
+    if (!success) {
+        std::fprintf(stderr, "NUXP Assert Failed: %s\n", message ? message : "(no message)");
+    }
+}
 
 namespace Errors {
 
