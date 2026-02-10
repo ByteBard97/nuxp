@@ -1,0 +1,44 @@
+{
+  "endpoint": "/events/stream",
+  "events": [
+    {
+      "name": "selection",
+      "description": "Fired when the document selection changes",
+      "payload": {
+        "count": { "type": "number", "description": "Number of selected items" },
+        "selectedIds": { "type": "number[]", "description": "Array of art handle IDs" }
+      }
+    },
+    {
+      "name": "document",
+      "description": "Fired on document lifecycle events (open, close, switch)",
+      "payload": {
+        "type": { "type": "string", "enum": ["opened", "closed", "activated"], "description": "Event type" },
+        "documentName": { "type": "string", "description": "Name of the document" }
+      }
+    },
+    {
+      "name": "layers",
+      "description": "Fired when layers are added, removed, or reordered",
+      "payload": {
+        "layerCount": { "type": "number", "description": "Current number of layers" }
+      }
+    },
+    {
+      "name": "artChanged",
+      "description": "Fired when art objects are modified",
+      "payload": {
+        "artIds": { "type": "number[]", "description": "IDs of changed art objects" },
+        "changeType": { "type": "string", "enum": ["created", "modified", "deleted"], "description": "Type of change" }
+      }
+    },
+    {
+      "name": "version",
+      "description": "Sent on initial connection with plugin version info",
+      "payload": {
+        "version": { "type": "string", "description": "Plugin version string" },
+        "build": { "type": "string", "description": "Build timestamp" }
+      }
+    }
+  ]
+}

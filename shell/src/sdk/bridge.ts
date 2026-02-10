@@ -269,6 +269,9 @@ let isPolling = false;
 /**
  * Start the event polling loop
  *
+ * @deprecated Use connectSSE() from '@/sdk/generated/events' instead.
+ * This polling-based approach will be removed in a future version.
+ *
  * Polls the /events endpoint for updates from Illustrator.
  * Dispatches received events to the eventBus.
  */
@@ -323,6 +326,9 @@ export async function startEventLoop() {
 
 /**
  * Stop the event polling loop
+ *
+ * @deprecated Use disconnectSSE() from '@/sdk/generated/events' instead.
+ * This polling-based approach will be removed in a future version.
  */
 export function stopEventLoop() {
   isPolling = false;
