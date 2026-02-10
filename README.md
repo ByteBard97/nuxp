@@ -313,6 +313,141 @@ void RegisterMyFeatureEndpoints(httplib::Server& server) {
 
 Register in `plugin/src/endpoints/RegisterAll.cpp` and add corresponding TypeScript types in `shell/src/sdk/`.
 
+## Using NUXP as a Library
+
+If you want to keep NUXP as a separate upstream dependency (rather than forking), you can link against NUXP's core infrastructure from your own project. This allows you to:
+
+- Pull in NUXP updates without merge conflicts
+- Keep your plugin code separate from NUXP infrastructure
+- Contribute fixes back to NUXP easily
+
+### Project Structure
+
+```
+your-workspace/
+├── nuxp/                    # Clone of NUXP (upstream)
+│   └── plugin/
+└── your-plugin/             # Your project
+    ├── CMakeLists.txt
+    ├── plugin/
+    │   └── src/
+    │       ├── YourPlugin.cpp       # Your plugin entry point
+    │       └── endpoints/           # Your endpoint handlers
+    └── frontend/                    # Your frontend (optional)
+```
+
+### CMakeLists.txt Example
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+project(YourPlugin VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Include NUXP's core infrastructure
+# This provides: HttpServer, SSE, SuitePointers, HandleManager, utils
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../nuxp/plugin nuxp-build)
+
+# Your plugin sources
+set(YOUR_SOURCES
+    src/YourPlugin.cpp
+    src/endpoints/FeatureOneEndpoints.cpp
+    src/endpoints/FeatureTwoEndpoints.cpp
+)
+
+# Create your plugin
+add_library(YourPlugin SHARED ${YOUR_SOURCES})
+
+# Link NUXP core infrastructure
+target_link_libraries(YourPlugin PRIVATE nuxp-core)
+
+# Add YOUR Adobe SDK location (NUXP doesn't provide this)
+set(AI_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/sdk")
+target_include_directories(YourPlugin PRIVATE
+    ${AI_SDK_PATH}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# Platform-specific settings (see NUXP's CMakeLists.txt for full example)
+if(APPLE)
+    set_target_properties(YourPlugin PROPERTIES
+        BUNDLE TRUE
+        BUNDLE_EXTENSION "aip"
+        MACOSX_BUNDLE TRUE
+    )
+    target_compile_definitions(YourPlugin PRIVATE MAC_ENV)
+    target_link_libraries(YourPlugin PRIVATE
+        "-framework CoreFoundation"
+        "-framework Cocoa"
+    )
+endif()
+```
+
+### What NUXP Core Provides
+
+When you link against `nuxp-core`, you get:
+
+| Component | Description |
+|-----------|-------------|
+| `HttpServer` | Background HTTP server with CORS support |
+| `SSE` | Server-Sent Events for real-time push notifications |
+| `MainThreadDispatch` | Safe SDK calls from HTTP thread |
+| `SuitePointers` | Adobe SDK suite acquisition (12 essential suites) |
+| `HandleManager` | Thread-safe handle lifecycle management |
+| `StringUtils` | String conversion utilities |
+| `ColorUtils` | Color manipulation helpers |
+| `GeometryUtils` | Geometry and transform utilities |
+| `LayerUtils` | Layer management helpers |
+| `DocumentUtils` | Document operations |
+| `SelectionUtils` | Selection handling |
+
+### What You Provide
+
+Your project must provide:
+
+- **Adobe SDK headers** - Download from Adobe, add to your include paths
+- **Plugin entry point** - Your own `Plugin.cpp` with `StartupPlugin()`, `ShutdownPlugin()`, etc.
+- **Endpoint handlers** - Your feature-specific HTTP endpoints
+- **Route registration** - Call your handlers from `HttpServer::ConfigureRoutes()`
+
+### Example Plugin Entry Point
+
+```cpp
+// YourPlugin.cpp
+#include "SuitePointers.hpp"
+#include "HttpServer.hpp"
+#include "SSE.hpp"
+
+extern "C" SPBasicSuite* sSPBasic;
+
+ASErr StartupPlugin(SPInterfaceMessage* message) {
+    sSPBasic = message->d.basic;
+
+    // Initialize NUXP infrastructure
+    SuitePointers::Acquire();
+    HttpServer::Start(8080);
+
+    return kNoErr;
+}
+
+ASErr ShutdownPlugin(SPInterfaceMessage* message) {
+    HttpServer::Stop();
+    SuitePointers::Release();
+    return kNoErr;
+}
+
+// ... other plugin callbacks
+```
+
+### Workflow
+
+1. **Clone NUXP** alongside your project
+2. **Create your CMakeLists.txt** referencing NUXP via `add_subdirectory()`
+3. **Write your plugin code** using NUXP's infrastructure
+4. **Find a bug in NUXP?** Fix it in the nuxp/ folder, commit, push upstream
+5. **Pull NUXP updates** with `git pull` in the nuxp/ folder
+
 ## Building for Production
 
 ### Frontend
