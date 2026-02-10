@@ -153,37 +153,4 @@ void SSE::closeAll() {
   connections_.clear();
 }
 
-/*******************************************************************************
- * Event Emitters
- ******************************************************************************/
-
-namespace Events {
-
-void EmitSelectionChange(const std::vector<int> &selectedIds, int count) {
-  json data = {{"selectedIds", selectedIds}, {"count", count}};
-  SSE::Broadcast("selection", data);
-}
-
-void EmitDocumentEvent(const std::string &eventType,
-                       const std::string &documentName) {
-  // Escape special characters in document name for JSON safety
-  json data = {{"type", eventType}, {"documentName", documentName}};
-  SSE::Broadcast("document", data);
-}
-
-void EmitLayerChange(int layerCount) {
-  json data = {{"layerCount", layerCount}};
-  SSE::Broadcast("layers", data);
-}
-
-void EmitPluginEvent(const std::string &eventType, const json &data) {
-  SSE::Broadcast(eventType, data);
-}
-
-void EmitVersion(const std::string &version) {
-  json data = {{"version", version}};
-  SSE::Broadcast("version", data);
-}
-
-} // namespace Events
 

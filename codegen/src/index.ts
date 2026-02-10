@@ -21,6 +21,7 @@ import { Command } from 'commander';
 import { SuiteParser } from './parser/SuiteParser';
 import { CppGenerator } from './generator/CppGenerator';
 import { TypeScriptGenerator } from './generator/TypeScriptGenerator';
+import { SSEGenerator } from './generator/SSEGenerator';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as glob from 'glob';
@@ -647,6 +648,42 @@ async function main(): Promise<void> {
     if (!options.tsOnly && generatedSuiteNames.length > 0) {
         await generateCentralDispatcher(cppOutputDir, generatedSuiteNames);
         logger.debug('Generated CentralDispatcher.h');
+    }
+
+    // Generate SSE events if events.json exists
+    const eventsConfigPath = path.resolve(srcDir, 'config', 'events.json');
+    const hasEventsConfig = await fs.pathExists(eventsConfigPath);
+
+    if (hasEventsConfig) {
+        logger.info('Generating SSE events...');
+
+        try {
+            const sseGen = new SSEGenerator(eventsConfigPath);
+
+            // Generate C++ Events.hpp
+            if (!options.tsOnly) {
+                const cppFile = sseGen.generateCpp();
+                const cppPath = path.join(cppOutputDir, cppFile.filename);
+                await fs.writeFile(cppPath, cppFile.content, 'utf-8');
+                logger.debug(`  Wrote ${cppFile.filename}`);
+            }
+
+            // Generate TypeScript events.ts
+            if (!options.cppOnly) {
+                const tsFile = sseGen.generateTypeScript();
+                const tsPath = path.join(tsOutputDir, tsFile.filename);
+                await fs.writeFile(tsPath, tsFile.content, 'utf-8');
+                logger.debug(`  Wrote ${tsFile.filename}`);
+            }
+
+            logger.info('SSE events generated successfully');
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            logger.error(`Error generating SSE events: ${errorMessage}`);
+            errors.push({ header: 'events.json', error: errorMessage });
+        }
+    } else {
+        logger.debug('No events.json found, skipping SSE generation');
     }
 
     // Generate CMake include file for C++ sources (after CentralDispatcher so it's included)

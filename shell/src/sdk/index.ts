@@ -35,16 +35,31 @@ export {
   type PluginEvent,
 } from './events';
 
+// Re-export generated SSE events
+export * from './generated/events';
+
 // Configuration exports
 export {
   sdkConfig,
   updateSdkConfig,
   getApiUrl,
+  setPort,
+  getPort,
   type SdkConfig,
   DEFAULT_PORT,
   DEFAULT_HOST,
   DEFAULT_TIMEOUT_MS,
 } from './config';
+
+// Config API exports
+export {
+  getServerConfig,
+  changePort,
+  discoverPort,
+  autoConnect,
+  type PortChangeResult,
+  type ServerConfig,
+} from './configApi';
 
 // Mock utilities (for testing and development)
 export {
