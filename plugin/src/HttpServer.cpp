@@ -13,6 +13,7 @@
 #include "EventMapper.hpp"
 #include "HandleManager.hpp"
 #include "MainThreadDispatch.hpp"
+#include "SSE.hpp"
 #include "endpoints/DemoEndpoints.hpp"
 #include "endpoints/generated/CentralDispatcher.h"
 
@@ -296,6 +297,11 @@ void HttpServer::ConfigureRoutes() {
     json response = {{"success", true}, {"events", events}};
     res.set_content(response.dump(), "application/json");
   });
+
+  // -------------------------------------------------------------------------
+  // Server-Sent Events (SSE) - Real-time push notifications
+  // -------------------------------------------------------------------------
+  SSE::SetupEndpoint(svr);
 
   // -------------------------------------------------------------------------
   // Demo Endpoints - Hand-written endpoints for real SDK integration
