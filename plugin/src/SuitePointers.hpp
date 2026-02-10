@@ -16,6 +16,12 @@
 
 #include "IllustratorSDK.h"
 
+// Additional SDK headers for suite types not included by IllustratorSDK.h
+#include "AIArtboard.h"
+#include "AIDocumentList.h"
+#include "AIGroup.h"
+#include "AITransformArt.h"
+
 /**
  * Centralized suite pointer management.
  *
