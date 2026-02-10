@@ -21,9 +21,9 @@
 
 #include <nlohmann/json.hpp>
 #include <string>
+#include "IllustratorSDK.h"
 
-// Forward declare Adobe types
-typedef struct _t_AIArtOpaque *AIArtHandle;
+// Note: AIArtHandle is defined in IllustratorSDK.h via AITypes.h
 
 namespace SelectionUtils {
 

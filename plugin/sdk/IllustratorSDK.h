@@ -11,17 +11,20 @@
 #ifndef __IllustratorSDK__
 #define __IllustratorSDK__
 
+// Core Illustrator types - MUST be included before PICA headers
+// to avoid typedef conflicts with macOS CoreServices
+#include "AITypes.h"
+#include "AIBasicTypes.h"
+
 // PICA Suite Pea headers (required by Illustrator SDK)
+// Note: SPAccess.h imports CoreServices which can conflict with AITypes.h
+// if AITypes.h is included after
 #include "SPBasic.h"
 #include "SPPlugs.h"
 #include "SPFiles.h"
 #include "SPInterf.h"
 #include "SPAccess.h"
 #include "SPProps.h"
-
-// Core Illustrator types
-#include "AITypes.h"
-#include "AIBasicTypes.h"
 
 // Plugin infrastructure
 #include "AIPlugin.h"
@@ -65,5 +68,15 @@
 
 // Unicode strings
 #include "IAIUnicodeString.h"
+
+// Additional suites for Flora compatibility
+#include "AIMdMemory.h"
+#include "AIDictionary.h"
+#include "AIEntry.h"
+#include "AIArtboard.h"
+#include "AIDocumentList.h"
+#include "AIMask.h"  // Contains AIBlendStyleSuite
+#include "AITool.h"
+// #include "AIFont.h"  // DISABLED: causes typedef conflicts with ATE types
 
 #endif // __IllustratorSDK__

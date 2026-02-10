@@ -2,24 +2,25 @@
 
 #include "HandleRegistry.hpp"
 
-// Forward declarations of SDK types to avoid including big headers here if
-// possible Ideally we include "IllustratorSDK.h" or similar if we have a common
-// header. For now, assuming these typedefs exist or will be pulled in via PCH.
-// In a real plugin, you'd allow including this file after the SDK headers.
+// Include SDK headers to get the struct forward declarations
+// Handles are typedef'd as pointers to opaque structs, e.g.:
+//   typedef struct ArtObject *AIArtHandle;
+// The registry stores pointers, so we need HandleRegistry<ArtObject>
+// which gives us Register(ArtObject*) = Register(AIArtHandle)
 #include "IllustratorSDK.h"
 
 class HandleManager {
 public:
   // --- Per-type registries ---
-  static HandleRegistry<AIArtHandle> art;
-  static HandleRegistry<AILayerHandle> layers;
-  static HandleRegistry<AIDocumentHandle> documents;
+  // Use the underlying struct type, not the Handle typedef
+  // This ensures Register(T*) accepts the handle type directly
+  static HandleRegistry<ArtObject> art;              // AIArtHandle = ArtObject*
+  static HandleRegistry<_t_AILayerOpaque> layers;    // AILayerHandle = _t_AILayerOpaque*
+  static HandleRegistry<_t_AIDocument> documents;    // AIDocumentHandle = _t_AIDocument*
 
   // Add more as needed:
-  // static HandleRegistry<AIPatternHandle>   patterns;
-  // static HandleRegistry<AISymbolHandle>    symbols;
-  // static HandleRegistry<AIColor>           colors; // If AIColor is used by
-  // pointer
+  // static HandleRegistry<...>   patterns;
+  // static HandleRegistry<...>   symbols;
 
   // Bump all registries at once (document switch, undo/redo)
   static void InvalidateAll();
