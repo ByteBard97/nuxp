@@ -1,0 +1,12 @@
+/**
+ * NUXP Default Configuration
+ * Auto-generated from CMake - DO NOT EDIT
+ *
+ * To change defaults, edit plugin/CMakeLists.txt:
+ *   set(NUXP_DEFAULT_PORT 8080 CACHE STRING "...")
+ *
+ * Then reconfigure: cmake -B plugin/build
+ */
+
+export const NUXP_DEFAULT_PORT = @NUXP_DEFAULT_PORT@;
+export const NUXP_VERSION = '@PROJECT_VERSION@';
