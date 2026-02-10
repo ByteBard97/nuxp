@@ -35,11 +35,13 @@ NUXP is in alpha stage - the core architecture is complete and functional, but s
 ## In Progress
 
 ### Phase 1: SDK Integration
-- [ ] Suite pointer management for essential suites
-- [ ] Demo endpoints (document info, layers, selection, create rectangle)
+- [x] Suite pointer management for essential suites (12 suites)
+- [x] Demo endpoints (document info, layers, selection, create rectangle)
+- [x] Utility modules (Color, Document, Geometry, Layer, Selection, String)
 - [ ] Artboard support
 
 ### Phase 2: Developer Experience
+- [x] SSE real-time push notifications
 - [ ] Better error messages from SDK calls
 - [ ] TypeScript SDK improvements
 - [ ] Hot reload improvements
