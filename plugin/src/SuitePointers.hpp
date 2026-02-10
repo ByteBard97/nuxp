@@ -83,6 +83,46 @@ public:
   /** Memory suite - memory management for SDK allocations */
   static AIMdMemorySuite *AIMdMemory();
 
+  /** Dictionary suite - document dictionary storage for metadata */
+  static AIDictionarySuite *AIDictionary();
+
+  /** Entry suite - dictionary entry manipulation */
+  static AIEntrySuite *AIEntry();
+
+  /** Artboard suite - artboard iteration and properties */
+  static AIArtboardSuite *AIArtboard();
+
+  /** Blend style suite - opacity and blend modes */
+  static AIBlendStyleSuite *AIBlendStyle();
+
+  // NOTE: AIFontSuite disabled - AIFont.h includes ATE headers that cause
+  // typedef conflicts with AITypes.h. Font operations require special handling.
+  // static AIFontSuite *AIFont();
+
+  /** Document list suite - multi-document management */
+  static AIDocumentListSuite *AIDocumentList();
+
+  /** Art set suite - art collection management */
+  static AIArtSetSuite *AIArtSet();
+
+  /** Tool suite - custom tool support */
+  static AIToolSuite *AITool();
+
+  /** Group suite - group and compound path operations */
+  static AIGroupSuite *AIGroup();
+
+  /** Layer list suite - layer iteration */
+  static AILayerListSuite *AILayerList();
+
+  /** Mask suite - opacity masks */
+  static AIMaskSuite *AIMask();
+
+  /** Notifier suite - event notifications */
+  static AINotifierSuite *AINotifier();
+
+  /** Timer suite - periodic callbacks */
+  static AITimerSuite *AITimer();
+
 private:
   // Prevent instantiation
   SuitePointers() = delete;
@@ -101,6 +141,19 @@ private:
   static AITransformArtSuite *sAITransformArt;
   static AIPathStyleSuite *sAIPathStyle;
   static AIMdMemorySuite *sAIMdMemory;
+  static AIDictionarySuite *sAIDictionary;
+  static AIEntrySuite *sAIEntry;
+  static AIArtboardSuite *sAIArtboard;
+  static AIBlendStyleSuite *sAIBlendStyle;
+  // static AIFontSuite *sAIFont;  // Disabled - ATE header conflicts
+  static AIDocumentListSuite *sAIDocumentList;
+  static AIArtSetSuite *sAIArtSet;
+  static AIToolSuite *sAITool;
+  static AIGroupSuite *sAIGroup;
+  static AILayerListSuite *sAILayerList;
+  static AIMaskSuite *sAIMask;
+  static AINotifierSuite *sAINotifier;
+  static AITimerSuite *sAITimer;
 
   // Track if suites are acquired
   static bool sAcquired;
