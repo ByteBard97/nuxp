@@ -1,11 +1,29 @@
 # Build outputs
 plugin/build/
+plugin/.cache/
 shell/build/
 shell/target/
 shell/dist/
 client/dist/
 codegen/output/
 codegen/dist/
+
+# IDE / Editor
+.cache/
+.idea/
+*.swp
+*.swo
+
+# Test artifacts
+*.png
+test-runner-results.*
+
+# Playwright
+.playwright-mcp/
+
+# Backup files
+*_backup/
+*.bak
 
 # TypeScript build info
 *.tsbuildinfo
