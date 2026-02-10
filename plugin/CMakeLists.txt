@@ -25,6 +25,9 @@ set(PLUGIN_BUNDLE_ID "com.nuxp.illustrator.plugin" CACHE STRING "Bundle identifi
 set(PLUGIN_AUTHOR "" CACHE STRING "Plugin author name")
 set(PLUGIN_DESCRIPTION "Adobe Illustrator Plugin with HTTP/JSON Bridge" CACHE STRING "Plugin description")
 
+# HTTP Server Configuration
+set(NUXP_DEFAULT_PORT 8080 CACHE STRING "Default HTTP server port (1024-65535)")
+
 project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES CXX)
 
 # Require C++17 for modern features (std::optional, std::string_view, etc.)
@@ -89,6 +92,7 @@ set(CORE_SOURCES
     src/MainThreadDispatch.cpp
     src/SSE.cpp
     src/SuitePointers.cpp
+    src/ConfigManager.cpp
     src/Errors.cpp
     src/utils/StringUtils.cpp
     src/utils/LayerUtils.cpp
@@ -118,6 +122,7 @@ set(CORE_HEADERS
     src/MainThreadDispatch.hpp
     src/SSE.hpp
     src/SuitePointers.hpp
+    src/ConfigManager.hpp
     src/Errors.hpp
     src/utils/StringUtils.hpp
     src/utils/LayerUtils.hpp
@@ -210,6 +215,7 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SSE.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SuitePointers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HandleManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ConfigManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Errors.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/StringUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/LayerUtils.cpp
@@ -305,6 +311,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     NUXP_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
     NUXP_VERSION_MINOR=${PROJECT_VERSION_MINOR}
     NUXP_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+    NUXP_DEFAULT_PORT=${NUXP_DEFAULT_PORT}
     PLUGIN_NAME="${PLUGIN_NAME}"
     PLUGIN_DISPLAY_NAME="${PLUGIN_DISPLAY_NAME}"
 )
@@ -407,6 +414,22 @@ add_custom_target(regenerate
 )
 
 # -----------------------------------------------------------------------------
+# Generate TypeScript Defaults
+# -----------------------------------------------------------------------------
+# This generates shell/src/sdk/defaults.ts from the template with CMake values
+# So that TypeScript uses the same defaults as C++
+
+set(SHELL_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../shell/src/sdk")
+if(EXISTS "${SHELL_SDK_DIR}/defaults.ts.in")
+    configure_file(
+        "${SHELL_SDK_DIR}/defaults.ts.in"
+        "${SHELL_SDK_DIR}/defaults.ts"
+        @ONLY
+    )
+    message(STATUS "Generated TypeScript defaults: ${SHELL_SDK_DIR}/defaults.ts")
+endif()
+
+# -----------------------------------------------------------------------------
 # Configuration Summary
 # -----------------------------------------------------------------------------
 
@@ -423,6 +446,7 @@ message(STATUS "")
 message(STATUS "Build Settings:")
 message(STATUS "  Platform:         ${PLATFORM_NAME}")
 message(STATUS "  C++ Standard:     C++${CMAKE_CXX_STANDARD}")
+message(STATUS "  Default Port:     ${NUXP_DEFAULT_PORT}")
 message(STATUS "  SDK Path:         ${AI_SDK_PATH}")
 message(STATUS "  Library Path:     ${LIB_PATH}")
 message(STATUS "  Install Path:     ${AI_PLUGINS_PATH}")

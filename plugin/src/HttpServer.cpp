@@ -9,6 +9,7 @@
  */
 
 #include "HttpServer.hpp"
+#include "ConfigManager.hpp"
 #include "Errors.hpp"
 #include "EventMapper.hpp"
 #include "HandleManager.hpp"
@@ -169,6 +170,85 @@ void HttpServer::ConfigureRoutes() {
                        {"layers", HandleManager::layers.Size()},
                        {"documents", HandleManager::documents.Size()}}}};
     res.set_content(response.dump(), "application/json");
+  });
+
+  // -------------------------------------------------------------------------
+  // Configuration Endpoints
+  // -------------------------------------------------------------------------
+
+  // GET /config - Get current configuration
+  svr.Get("/config", [](const httplib::Request &, httplib::Response &res) {
+    json response = {
+        {"success", true},
+        {"config", ConfigManager::Instance().GetConfig()}
+    };
+    res.set_content(response.dump(), "application/json");
+  });
+
+  // POST /config/port - Change server port
+  svr.Post("/config/port", [](const httplib::Request &req, httplib::Response &res) {
+    try {
+      auto body = json::parse(req.body);
+
+      if (!body.contains("port")) {
+        json errorResponse = {
+            {"success", false},
+            {"error", "Missing required field: 'port'"}
+        };
+        res.status = 400;
+        res.set_content(errorResponse.dump(), "application/json");
+        return;
+      }
+
+      int newPort = body["port"].get<int>();
+
+      // Validate port range
+      if (newPort < ConfigManager::MIN_PORT || newPort > ConfigManager::MAX_PORT) {
+        json errorResponse = {
+            {"success", false},
+            {"error", "Port must be between " + std::to_string(ConfigManager::MIN_PORT) +
+                      " and " + std::to_string(ConfigManager::MAX_PORT)}
+        };
+        res.status = 400;
+        res.set_content(errorResponse.dump(), "application/json");
+        return;
+      }
+
+      int oldPort = ConfigManager::Instance().GetPort();
+
+      // Save new port to config
+      ConfigManager::Instance().SetPort(newPort);
+      ConfigManager::Instance().Save();
+
+      // Prepare response before scheduling restart
+      json response = {
+          {"success", true},
+          {"previousPort", oldPort},
+          {"newPort", newPort},
+          {"message", "Server restarting on port " + std::to_string(newPort)}
+      };
+      res.set_content(response.dump(), "application/json");
+
+      // Schedule server restart after response is sent
+      // Use a short delay so the HTTP response can complete
+      std::thread([newPort]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        HttpServer::Stop();
+        HttpServer::Start(newPort);
+      }).detach();
+
+    } catch (const json::parse_error &e) {
+      json errorResponse = {
+          {"success", false},
+          {"error", "Invalid JSON: " + std::string(e.what())}
+      };
+      res.status = 400;
+      res.set_content(errorResponse.dump(), "application/json");
+    } catch (const std::exception &e) {
+      json errorResponse = {{"success", false}, {"error", e.what()}};
+      res.status = 500;
+      res.set_content(errorResponse.dump(), "application/json");
+    }
   });
 
   // Generic API call endpoint
