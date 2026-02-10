@@ -37,10 +37,31 @@ std::thread HttpServer::serverThread_;
 std::atomic<bool> HttpServer::running_{false};
 std::atomic<bool> HttpServer::ready_{false};
 int HttpServer::port_ = 8080;
+std::vector<RouteEntry> HttpServer::customRoutes_;
 
 // Server instance pointer (for shutdown)
 static std::unique_ptr<httplib::Server> gServer;
 static std::mutex gServerMutex;
+
+/*******************************************************************************
+ * Route Registration Functions
+ ******************************************************************************/
+
+void HttpServer::RegisterRoute(HttpMethod method, const std::string& path, RouteHandler handler) {
+    customRoutes_.push_back({method, path, handler});
+}
+
+void HttpServer::Get(const std::string& path, RouteHandler handler) {
+    RegisterRoute(HttpMethod::GET, path, handler);
+}
+
+void HttpServer::Post(const std::string& path, RouteHandler handler) {
+    RegisterRoute(HttpMethod::POST, path, handler);
+}
+
+void HttpServer::Delete(const std::string& path, RouteHandler handler) {
+    RegisterRoute(HttpMethod::DELETE, path, handler);
+}
 
 /*******************************************************************************
  * HttpServer::Start
@@ -429,6 +450,40 @@ void HttpServer::ConfigureRoutes() {
                res.set_content(errorResponse.dump(), "application/json");
              }
            });
+
+  // -------------------------------------------------------------------------
+  // Custom Routes - Registered by downstream plugins via RegisterRoute()
+  // -------------------------------------------------------------------------
+  for (const auto& route : customRoutes_) {
+    auto handler = [route](const httplib::Request &req, httplib::Response &res) {
+      try {
+        std::string result = route.handler(req.body);
+        res.set_content(result, "application/json");
+      } catch (const std::exception &e) {
+        json errorResponse = {{"success", false}, {"error", e.what()}};
+        res.status = 500;
+        res.set_content(errorResponse.dump(), "application/json");
+      }
+    };
+
+    switch (route.method) {
+      case HttpMethod::GET:
+        svr.Get(route.path, handler);
+        break;
+      case HttpMethod::POST:
+        svr.Post(route.path, handler);
+        break;
+      case HttpMethod::PUT:
+        svr.Put(route.path, handler);
+        break;
+      case HttpMethod::DELETE:
+        svr.Delete(route.path, handler);
+        break;
+      case HttpMethod::PATCH:
+        svr.Patch(route.path, handler);
+        break;
+    }
+  }
 }
 
 /*******************************************************************************

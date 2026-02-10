@@ -90,6 +90,7 @@ set(CORE_SOURCES
     src/HttpServer.cpp
     src/HandleManager.cpp
     src/MainThreadDispatch.cpp
+    src/MenuHandler.cpp
     src/SSE.cpp
     src/SuitePointers.cpp
     src/ConfigManager.cpp
@@ -120,6 +121,7 @@ set(CORE_HEADERS
     src/HandleManager.hpp
     src/HandleRegistry.hpp
     src/MainThreadDispatch.hpp
+    src/MenuHandler.hpp
     src/SSE.hpp
     src/SuitePointers.hpp
     src/ConfigManager.hpp

@@ -11,14 +11,72 @@
  * - The HTTP server runs entirely on a background thread
  * - All SDK calls are dispatched to the main thread
  * - The server can be started/stopped from any thread
+ *
+ * Route Registration:
+ * - Downstream plugins can register custom routes via RegisterRoute()
+ * - Routes must be registered BEFORE calling Start()
+ * - Use RegisterRouteHandler() for simple request -> string response patterns
  */
 
 #include <atomic>
+#include <functional>
 #include <string>
 #include <thread>
+#include <vector>
+
+/**
+ * HTTP method types for route registration
+ */
+enum class HttpMethod {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    PATCH
+};
+
+/**
+ * Handler function type for registered routes.
+ * Takes request body (empty for GET), returns response body (JSON string).
+ */
+using RouteHandler = std::function<std::string(const std::string& body)>;
+
+/**
+ * Route registration entry
+ */
+struct RouteEntry {
+    HttpMethod method;
+    std::string path;
+    RouteHandler handler;
+};
 
 class HttpServer {
 public:
+    /**
+     * Register a custom route handler.
+     * Must be called BEFORE Start().
+     *
+     * @param method HTTP method (GET, POST, etc.)
+     * @param path URL path (e.g., "/plant/place")
+     * @param handler Function that takes request body and returns JSON response
+     */
+    static void RegisterRoute(HttpMethod method, const std::string& path, RouteHandler handler);
+
+    /**
+     * Convenience: Register a GET route
+     */
+    static void Get(const std::string& path, RouteHandler handler);
+
+    /**
+     * Convenience: Register a POST route
+     */
+    static void Post(const std::string& path, RouteHandler handler);
+
+    /**
+     * Convenience: Register a DELETE route
+     */
+    static void Delete(const std::string& path, RouteHandler handler);
+
     /**
      * Start the HTTP server on a background thread.
      * If the server is already running, this is a no-op.
@@ -79,4 +137,7 @@ private:
 
     // Port number
     static int port_;
+
+    // Registered custom routes (populated before Start())
+    static std::vector<RouteEntry> customRoutes_;
 };
