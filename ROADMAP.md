@@ -48,11 +48,49 @@ NUXP is in alpha stage - the core architecture is complete and functional, but s
 
 ## Planned
 
+### Community Priority: Critical SDK Gaps
+
+These three manual wrappers would unblock ~80% of real-world Illustrator automation scripts.
+They require manual implementation because the code generator can't handle their parameter types.
+
+#### 1. Selection Access (AIMatchingArtSuite) - CRITICAL
+**Blocks:** ~95% of all scripts (everything starts with `app.selection`)
+**Endpoint:** `GET /api/selection` → returns array of art handle IDs
+**Why codegen fails:** Triple pointer output (`AIArtHandle***`) - SDK allocates array internally
+**Manual wrapper needs to:**
+- Call `GetSelectedArt(&matches, &count)`
+- Iterate returned array, register each handle with HandleManager
+- Free SDK-allocated memory with AIMdMemorySuite
+- Return JSON array of handle IDs
+
+#### 2. Fill/Stroke Colors (AIPathStyleSuite) - HIGH
+**Blocks:** ~20 color-related scripts (ColorCorrector, SelectBySwatches, etc.)
+**Endpoints:** `GET/POST /api/art/{id}/pathStyle`
+**Why codegen fails:** Complex nested structs with union types
+- `AIPathStyle` contains `AIFillStyle` and `AIStrokeStyle`
+- `AIColor` is a tagged union (gray/RGB/CMYK/pattern/gradient)
+**Manual wrapper needs to:**
+- Switch on `color.kind` to determine active union member
+- Recursively serialize each color variant to JSON
+- Handle pattern/gradient references (additional handle registration)
+
+#### 3. Path Geometry (AIPathSuite) - MEDIUM
+**Blocks:** ~12 path manipulation scripts (SplitPath, DrawPath, etc.)
+**Endpoints:** `GET/POST /api/path/{id}/segments`
+**Why codegen fails:** Array parameters with separate count
+- `GetPathSegments(art, segNumber, count, AIPathSegment* segments)`
+**Manual wrapper needs to:**
+- Allocate segment array buffer based on count
+- Serialize/deserialize `AIPathSegment[]` to JSON array
+- Each segment has: anchor point, in-handle, out-handle, corner flag
+
+---
+
 ### Phase 3: Extended SDK Support
-- [ ] Text frame manipulation
+- [ ] Text frame manipulation (blocked by ATE header conflicts)
 - [ ] Symbol library access
-- [ ] Gradient and pattern support
-- [ ] Color management
+- [ ] Gradient and pattern support (needs AIGradientSuite, AIPatternSuite)
+- [ ] Swatch management (needs AISwatchListSuite)
 
 ### Phase 4: Advanced Features
 - [ ] Undo/redo transaction support
