@@ -1,0 +1,110 @@
+// NUXP Plugin - Common Xcode Build Configuration
+//
+// This xcconfig provides base settings for building Adobe Illustrator plugins
+// with PIPL resources on macOS.
+//
+// Usage:
+// 1. Copy the xcode/ template to your plugin directory
+// 2. Include this file in your Xcode project's Debug and Release configurations
+// 3. Set NUXP_SDK_PATH to point to your NUXP plugin/sdk directory
+
+// =============================================================================
+// User-Configurable Paths
+// =============================================================================
+
+// Path to NUXP SDK headers (relative to your .xcodeproj)
+// Override this in your project or via environment variable
+NUXP_SDK_PATH = $(PROJECT_DIR)/../sdk
+
+// Path to NUXP lib directory (httplib.h, json.hpp)
+NUXP_LIB_PATH = $(PROJECT_DIR)/../lib
+
+// Path to NUXP source directory (for Plugin.hpp, HttpServer.hpp, etc.)
+NUXP_SRC_PATH = $(PROJECT_DIR)/../src
+
+// =============================================================================
+// Compiler Settings
+// =============================================================================
+
+ALWAYS_SEARCH_USER_PATHS = NO
+ARCHS = $(ARCHS_STANDARD)
+CLANG_CXX_LANGUAGE_STANDARD = c++17
+CLANG_CXX_LIBRARY = libc++
+GCC_VERSION = com.apple.compilers.llvm.clang.1_0
+GCC_INPUT_FILETYPE = sourcecode.cpp.objcpp
+GCC_DEBUGGING_SYMBOLS = full
+GCC_GENERATE_DEBUGGING_SYMBOLS = YES
+GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO
+GCC_WARN_UNKNOWN_PRAGMAS = YES
+GCC_WARN_UNUSED_VARIABLE = YES
+
+// =============================================================================
+// Header Search Paths
+// =============================================================================
+
+// Include paths for:
+// - NUXP SDK (Illustrator API headers)
+// - NUXP lib (third-party headers: httplib, json)
+// - NUXP src (plugin infrastructure)
+// - Your plugin's Source directory
+HEADER_SEARCH_PATHS = $(NUXP_SDK_PATH) $(NUXP_SDK_PATH)/ate $(NUXP_LIB_PATH) $(NUXP_SRC_PATH) $(PROJECT_DIR)/Source
+
+// =============================================================================
+// Output Configuration
+// =============================================================================
+
+CONFIGURATION_BUILD_DIR = $(PROJECT_DIR)/output/$(AI_CONFIGURATION)
+CONFIGURATION_TEMP_DIR = $(PROJECT_TEMP_DIR)/Default
+OBJROOT = $(PROJECT_DIR)/build
+SYMROOT = $(PROJECT_DIR)/output/$(AI_CONFIGURATION)
+SHARED_PRECOMPS_DIR = $(PROJECT_DIR)/output/sharedprecompiledheaders/$(AI_CONFIGURATION)
+DSTROOT = /tmp/$(PRODUCT_NAME).dst
+
+// =============================================================================
+// Bundle Configuration
+// =============================================================================
+
+// Plugin bundles use .aip extension
+WRAPPER_EXTENSION = aip
+GENERATE_PKGINFO_FILE = YES
+
+// Bundle identifier - customize for your plugin
+PRODUCT_BUNDLE_IDENTIFIER = com.nuxp.illustrator.plugins.$(PRODUCT_NAME)
+PRODUCT_NAME = $(PROJECT_NAME)
+
+// Info.plist configuration
+INFOPLIST_FILE = $(PROJECT_DIR)/mac/resources/Info.plist
+
+// =============================================================================
+// Rez Resource Compiler
+// =============================================================================
+
+// Paths for finding .r resource files (for PIPL compilation)
+REZ_SEARCH_PATHS = $(PROJECT_DIR)/Resources/Mac $(PROJECT_DIR)/mac/resources
+
+// =============================================================================
+// macOS Deployment
+// =============================================================================
+
+SDKROOT = macosx
+MACOSX_DEPLOYMENT_TARGET[arch=arm64] = 12.0
+MACOSX_DEPLOYMENT_TARGET[arch=x86_64] = 12.0
+
+// =============================================================================
+// Linker Settings
+// =============================================================================
+
+ONLY_LINK_ESSENTIAL_SYMBOLS = YES
+PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES
+OTHER_LDFLAGS = $(inherited) -ld_classic
+
+// =============================================================================
+// Precompiled Headers (Optional)
+// =============================================================================
+
+// Uncomment and set if you have a precompiled header
+// GCC_PRECOMPILE_PREFIX_HEADER = YES
+// GCC_PREFIX_HEADER = $(PROJECT_DIR)/Source/Prefix.pch
+
+SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES
+PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO
