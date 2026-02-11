@@ -146,6 +146,8 @@ cmake -B build
 cmake --build build
 ```
 
+> 💡 **macOS Note**: NUXP's CMake build automatically configures the bundle metadata required by Illustrator (`CFBundlePackageType=ARPI`, `CFBundleSignature=ART5`). If your plugin doesn't load, see [Troubleshooting](#troubleshooting) below.
+
 **Customizing the Plugin Name:**
 
 You can customize your plugin's identity when configuring CMake:
@@ -513,6 +515,41 @@ Set the `ILLUSTRATOR_SDK_URL` secret to a URL where the SDK can be downloaded.
 2. Create a feature branch
 3. Run tests: `cd codegen && npm test`
 4. Submit a pull request
+
+## Troubleshooting
+
+### macOS: Plugin Not Loading (Silent Failure)
+
+> ⚠️ **Adobe's Undocumented Bundle Requirements**
+>
+> Illustrator **silently ignores** plugins that don't have the correct bundle metadata.
+> No error message, no log entry - the plugin simply won't appear. These settings are
+> **not documented** in Adobe's SDK but are **absolutely required**:
+>
+> | Info.plist Key | Required Value | Wrong Value (won't load) |
+> |----------------|----------------|--------------------------|
+> | `CFBundlePackageType` | `ARPI` | `BNDL`, `APPL` |
+> | `CFBundleSignature` | `ART5` | `????` |
+
+If your plugin builds but doesn't load:
+
+1. **Check Info.plist values**: Open `YourPlugin.aip/Contents/Info.plist` and verify:
+   - `CFBundlePackageType` is `ARPI` (Adobe Resource Plug-In)
+   - `CFBundleSignature` is `ART5` (Illustrator's signature)
+
+2. **Check PIPL resource exists**: The plugin needs a compiled PIPL resource:
+   ```bash
+   ls YourPlugin.aip/Contents/Resources/pipl/plugin.pipl
+   ```
+
+3. **Verify PIPL contents** (optional):
+   ```bash
+   DeRez -only 'PiPL' YourPlugin.aip/Contents/Resources/pipl/plugin.pipl
+   ```
+
+NUXP's CMake build automatically sets the correct values via `Info.plist.in`. If you're using Xcode directly or creating custom Info.plist files, ensure these values are correct.
+
+See [`plugin/mac/README.md`](plugin/mac/README.md) for detailed macOS build troubleshooting.
 
 ## License
 
