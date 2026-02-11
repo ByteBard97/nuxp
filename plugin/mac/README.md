@@ -88,6 +88,20 @@ export NUXP_SDK_PATH=/path/to/illustrator/sdk
 
 ## Troubleshooting
 
+> ⚠️ **CRITICAL: Adobe's Undocumented Bundle Requirements**
+>
+> Illustrator **silently ignores** plugins that don't have the correct bundle metadata.
+> No error message, no log entry - it just won't load. These settings are **not documented**
+> in Adobe's SDK but are absolutely required:
+>
+> | Info.plist Key | Required Value | Wrong Value (won't load) |
+> |----------------|----------------|--------------------------|
+> | `CFBundlePackageType` | `ARPI` | `BNDL`, `APPL` |
+> | `CFBundleSignature` | `ART5` | `????` |
+>
+> The NUXP templates (`Info.plist` and `Info.plist.in`) already have these correct values,
+> but if you're creating your own Info.plist or using Xcode's defaults, you **must** change them.
+
 ### Plugin Not Loading
 
 1. **Check PIPL resource**: Use `DeRez` to verify PIPL was compiled:
@@ -102,13 +116,15 @@ export NUXP_SDK_PATH=/path/to/illustrator/sdk
    │   ├── Info.plist
    │   ├── MacOS/
    │   │   └── YourPlugin       # Binary
-   │   ├── PkgInfo              # Contains "BNDL????"
+   │   ├── PkgInfo              # Contains "ARPIART5"
    │   └── Resources/
    │       └── pipl/
    │           └── plugin.pipl  # PIPL resource
    ```
 
-3. **Check CFBundlePackageType**: Must be `BNDL` (not `APPL`)
+3. **Check CFBundlePackageType**: Must be `ARPI` (Adobe Resource Plug-In), NOT `BNDL`
+   - Also check **CFBundleSignature**: Must be `ART5` (Illustrator's signature), NOT `????`
+   - **WARNING**: If these are wrong, Illustrator silently ignores the plugin with NO error message!
 
 ### Rez Compilation Errors
 
