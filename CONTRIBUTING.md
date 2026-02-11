@@ -17,7 +17,7 @@ Thank you for your interest in contributing to NUXP! This document provides guid
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/nuxp.git
+   git clone https://github.com/ByteBard97/nuxp.git
    cd nuxp
    ```
 
