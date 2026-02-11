@@ -1,5 +1,9 @@
 # Build outputs
 plugin/build/
+
+# Clang static analyzer output
+plugin/*.plist
+!plugin/tools/**/*.plist
 plugin/.cache/
 shell/build/
 shell/target/
@@ -25,6 +29,7 @@ test-runner-results.*
 # Backup files
 *_backup/
 *.bak
+*.backup
 
 # TypeScript build info
 *.tsbuildinfo
