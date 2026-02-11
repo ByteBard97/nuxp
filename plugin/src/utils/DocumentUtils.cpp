@@ -8,6 +8,8 @@
 
 #include "DocumentUtils.hpp"
 #include "IllustratorSDK.h"
+#include "AIDocumentList.h"
+#include "AIArtboard.h"
 
 // External suite pointers (acquired by generated wrappers or Plugin.cpp)
 extern "C" SPBasicSuite* sSPBasic;
@@ -80,51 +82,6 @@ const char* RulerUnitsToString(ai::int16 units) {
     default:
       return "unknown";
   }
-}
-
-/**
- * Escape special characters in a string for JSON.
- */
-std::string EscapeJsonString(const std::string& input) {
-  std::string output;
-  output.reserve(input.size() + 16);
-
-  for (char c : input) {
-    switch (c) {
-      case '"':
-        output += "\\\"";
-        break;
-      case '\\':
-        output += "\\\\";
-        break;
-      case '\b':
-        output += "\\b";
-        break;
-      case '\f':
-        output += "\\f";
-        break;
-      case '\n':
-        output += "\\n";
-        break;
-      case '\r':
-        output += "\\r";
-        break;
-      case '\t':
-        output += "\\t";
-        break;
-      default:
-        if (static_cast<unsigned char>(c) < 0x20) {
-          // Control character - escape as \uXXXX
-          char buf[8];
-          snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned char>(c));
-          output += buf;
-        } else {
-          output += c;
-        }
-        break;
-    }
-  }
-  return output;
 }
 
 } // anonymous namespace
