@@ -193,9 +193,12 @@ add_library(${PROJECT_NAME} MODULE
 )
 
 # Include directories
-target_include_directories(${PROJECT_NAME} PRIVATE
+# SDK headers use SYSTEM to suppress warnings (Adobe SDK has Windows-1252 encoding issues)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
     ${AI_SDK_PATH}
     ${LIB_PATH}
+)
+target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
@@ -250,20 +253,23 @@ target_sources(nuxp-core INTERFACE
     ${NUXP_GENERATED_ENDPOINTS}
 )
 
+# Third-party libs use SYSTEM to suppress warnings
+target_include_directories(nuxp-core SYSTEM INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib
+)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/nlohmann")
+    target_include_directories(nuxp-core SYSTEM INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/nlohmann
+    )
+endif()
+
+# NUXP source directories (our code - show warnings)
 target_include_directories(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
-
-# nlohmann/json for downstream projects
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lib/nlohmann")
-    target_include_directories(nuxp-core INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/nlohmann
-    )
-endif()
 
 # -----------------------------------------------------------------------------
 # Platform-Specific Configuration
@@ -291,23 +297,25 @@ if(APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         BUNDLE TRUE
         BUNDLE_EXTENSION "aip"
+        BUNDLE TRUE
+        BUNDLE_EXTENSION "aip"
         MACOSX_BUNDLE TRUE
-        MACOSX_BUNDLE_BUNDLE_NAME "${PLUGIN_DISPLAY_NAME}"
-        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
-        MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "${PLUGIN_BUNDLE_ID}"
-        # Critical: Must be BNDL (not APPL) for plugins
-        MACOSX_BUNDLE_INFO_STRING "Adobe Illustrator Plugin"
     )
 
-    # Use custom Info.plist if available, otherwise use template
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources/Info.plist")
+    # Generate Info.plist from template with proper variable substitution
+    # This is critical for Unix Makefiles which don't substitute $(PRODUCT_NAME) variables
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources/Info.plist.in")
+        configure_file(
+            "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources/Info.plist.in"
+            "${CMAKE_CURRENT_BINARY_DIR}/Info.plist"
+            @ONLY
+        )
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist"
+        )
+    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources/Info.plist")
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources/Info.plist"
-        )
-    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist")
-        set_target_properties(${PROJECT_NAME} PROPERTIES
-            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
         )
     endif()
 
@@ -329,60 +337,82 @@ if(APPLE)
     )
 
     # -------------------------------------------------------------------------
-    # PiPL Resource Compilation
+    # PiPL Generation (New Python-based method)
     # -------------------------------------------------------------------------
     # The PiPL (Plugin Property List) tells Illustrator how to load the plugin.
-    # It must be compiled from .r files using Apple's Rez tool.
+    # Since Illustrator 2022, Adobe recommends using create_pipl.py instead of Rez.
+    # The generated plugin.pipl goes in Contents/Resources/pipl/
 
-    find_program(REZ_EXECUTABLE Rez
-        HINTS /usr/bin /Applications/Xcode.app/Contents/Developer/usr/bin
+    find_program(PYTHON_EXECUTABLE python3
+        HINTS /opt/homebrew/bin /usr/local/bin /usr/bin
     )
 
-    # Path to resource files
-    set(PIPL_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources")
+    # Path to Adobe's PIPL tool (check project first, then SDK)
+    set(PIPL_TOOL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl")
+    if(NOT EXISTS "${PIPL_TOOL_DIR}/create_pipl.py")
+        # Fallback: check in SDK installation
+        set(PIPL_TOOL_DIR "${AI_SDK_PATH}/../tools/pipl")
+    endif()
 
-    if(REZ_EXECUTABLE AND EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
-        message(STATUS "Found Rez compiler: ${REZ_EXECUTABLE}")
-        message(STATUS "PiPL resources dir: ${PIPL_RESOURCES_DIR}")
+    if(PYTHON_EXECUTABLE AND EXISTS "${PIPL_TOOL_DIR}/create_pipl.py")
+        message(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
+        message(STATUS "PiPL tool dir: ${PIPL_TOOL_DIR}")
 
-        # Create the Resources directory in the bundle
+        # Generate plugin.pipl in build directory (pre-build)
+        set(PIPL_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/plugin.pipl")
+        add_custom_command(
+            OUTPUT "${PIPL_OUTPUT}"
+            COMMAND ${PYTHON_EXECUTABLE} "${PIPL_TOOL_DIR}/create_pipl.py"
+                -input "[{\"name\":\"${PLUGIN_NAME}\", \"entry_point\":\"PluginMain\"}]"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            COMMENT "Generating PiPL with Python tool"
+            VERBATIM
+        )
+
+        # Add as dependency to ensure it's generated before build
+        add_custom_target(generate_pipl DEPENDS "${PIPL_OUTPUT}")
+        add_dependencies(${PROJECT_NAME} generate_pipl)
+
+        # Copy plugin.pipl to bundle after build
         add_custom_command(
             TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory
-                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources"
-            COMMENT "Creating bundle Resources directory"
-        )
-
-        # Compile PiPL resource
-        # The .r file should #define PIPL_PLUGIN_NAME before including Plugin.r
-        # Note: We avoid generator expressions for Rez args as they don't work with all generators
-        set(REZ_DEBUG_FLAG "")
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(REZ_DEBUG_FLAG "-d" "DEBUG=1")
-        endif()
-
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${REZ_EXECUTABLE}
-                "-d" "PIPL_PLUGIN_NAME=\"${PLUGIN_NAME}\""
-                "-d" "TargetOS_Mac=1"
-                ${REZ_DEBUG_FLAG}
-                "-i" "${PIPL_RESOURCES_DIR}"
-                "-i" "${AI_SDK_PATH}"
-                "-useDF"
-                "-o" "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
-                "${PIPL_RESOURCES_DIR}/Plugin.r"
-            COMMENT "Compiling PiPL resource with Rez"
-            VERBATIM
+                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/pipl"
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "${PIPL_OUTPUT}"
+                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/pipl/plugin.pipl"
+            COMMENT "Copying plugin.pipl to bundle"
         )
     else()
-        if(NOT REZ_EXECUTABLE)
-            message(WARNING "Rez compiler not found - PiPL resource will not be compiled")
-            message(WARNING "Install Xcode Command Line Tools: xcode-select --install")
-        endif()
-        if(NOT EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
-            message(WARNING "Plugin.r not found at ${PIPL_RESOURCES_DIR}")
+        # Fallback to old Rez method if Python tool not available
+        find_program(REZ_EXECUTABLE Rez
+            HINTS /usr/bin /Applications/Xcode.app/Contents/Developer/usr/bin
+        )
+        set(PIPL_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources")
+
+        if(REZ_EXECUTABLE AND EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
+            message(STATUS "Using legacy Rez method for PiPL")
+            message(STATUS "Found Rez compiler: ${REZ_EXECUTABLE}")
+
+            add_custom_command(
+                TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory
+                    "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources"
+                COMMAND ${REZ_EXECUTABLE}
+                    "-d" "PIPL_PLUGIN_NAME=\"${PLUGIN_NAME}\""
+                    "-d" "TargetOS_Mac=1"
+                    "-i" "${PIPL_RESOURCES_DIR}"
+                    "-i" "${AI_SDK_PATH}"
+                    "-useDF"
+                    "-o" "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
+                    "${PIPL_RESOURCES_DIR}/Plugin.r"
+                COMMENT "Compiling PiPL resource with Rez (legacy)"
+                VERBATIM
+            )
+        else()
+            message(WARNING "Neither Python PIPL tool nor Rez compiler found")
             message(WARNING "PiPL resource is required for Illustrator to load the plugin")
+            message(WARNING "Copy Adobe SDK tools/pipl directory to ${CMAKE_CURRENT_SOURCE_DIR}/tools/")
         endif()
     endif()
 
@@ -452,6 +482,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wno-unused-parameter
         -Wno-missing-field-initializers
         -Wno-unknown-pragmas
+        # Suppress warnings from Adobe SDK (Windows-1252 encoding, ObjC #import)
+        -Wno-invalid-utf8
+        -Wno-import-preprocessor-directive-pedantic
     )
 
     # Enable debug symbols in debug builds
