@@ -50,10 +50,15 @@ node_modules/
 huggingface.token
 *.token
 
-# Adobe SDK headers (proprietary - must be downloaded from Adobe)
-# See docs/getting-started.md for setup instructions
-plugin/sdk/*
-!plugin/sdk/.gitkeep
+# Adobe SDK (proprietary - must be downloaded from Adobe)
+# See README.md for setup instructions
+plugin/sdk/
+
+# Adobe tools (proprietary - copied from SDK)
+plugin/tools/pipl/
+
+# Converted SDK documentation (derived from Adobe copyrighted PDFs)
+plugin/sdk-docs/
 
 # Generated code endpoint markers (but we KEEP the generated code itself if checked in? 
 # The REPO_STRUCTURE.md said "Do NOT check in generated code")
