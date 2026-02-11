@@ -5,9 +5,9 @@
   "author": "YOUR_NAME <your@email.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/nuxp.git"
+    "url": "https://github.com/ByteBard97/nuxp.git"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/nuxp#readme",
+  "homepage": "https://github.com/ByteBard97/nuxp#readme",
   "private": true,
   "type": "module",
   "scripts": {
