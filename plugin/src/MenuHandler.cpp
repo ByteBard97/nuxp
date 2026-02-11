@@ -148,6 +148,9 @@ bool ShowPortConfigDialog() {
     CFRelease(defaultValue);
 
     if (dialogError != 0 || notification == nullptr) {
+        if (notification != nullptr) {
+            CFRelease(notification);
+        }
         return false;
     }
 
