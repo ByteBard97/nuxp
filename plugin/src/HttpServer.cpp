@@ -321,7 +321,43 @@ void HttpServer::ConfigureRoutes() {
         }
       });
 
-  // Suite-specific endpoints
+  // -------------------------------------------------------------------------
+  // Custom Routes - Registered by downstream plugins via RegisterRoute()
+  // IMPORTANT: Must be registered BEFORE the generic suite dispatcher
+  // so specific paths like /doc/info don't match /{suite}/{method}
+  // -------------------------------------------------------------------------
+  for (const auto& route : customRoutes_) {
+    auto handler = [route](const httplib::Request &req, httplib::Response &res) {
+      try {
+        std::string result = route.handler(req.body);
+        res.set_content(result, "application/json");
+      } catch (const std::exception &e) {
+        json errorResponse = {{"success", false}, {"error", e.what()}};
+        res.status = 500;
+        res.set_content(errorResponse.dump(), "application/json");
+      }
+    };
+
+    switch (route.method) {
+      case HttpMethod::GET:
+        svr.Get(route.path, handler);
+        break;
+      case HttpMethod::POST:
+        svr.Post(route.path, handler);
+        break;
+      case HttpMethod::PUT:
+        svr.Put(route.path, handler);
+        break;
+      case HttpMethod::DELETE:
+        svr.Delete(route.path, handler);
+        break;
+      case HttpMethod::PATCH:
+        svr.Patch(route.path, handler);
+        break;
+    }
+  }
+
+  // Suite-specific endpoints (generic catch-all - MUST be after custom routes)
   // Pattern: POST /{SuiteName}/{MethodName}
   // Example: POST /AIArt/NewArt { "type": 1, "paintOrder": 1 }
   svr.Post(R"(/(\w+)/(\w+))", [](const httplib::Request &req,
