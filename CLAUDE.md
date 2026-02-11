@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL SAFETY RULES
+
+**These rules are MANDATORY and override all other instructions:**
+
+1. **NEVER COPY .aip FILES** to system locations (like Illustrator's Plug-ins folder) without explicit user permission. Always tell the user the output path and let them copy it themselves.
+
+2. **NEVER USE `rm` OR `rm -rf` COMMANDS - EVER.** If you need to delete files, use `mv` to move them to `~/.Trash/` instead. This allows recovery.
+   - Example: `mv /path/to/file ~/.Trash/` (NOT `rm /path/to/file`)
+
+3. **NEVER WRITE ANONYMOUS/INLINE SCRIPTS.** Don't run multi-line bash, python, or node scripts inline. Instead:
+   - Write the script to a file first (e.g., `scripts/my-script.sh`)
+   - Then run the file: `bash scripts/my-script.sh`
+   - This allows the user to grant permission once instead of repeatedly for each inline script
+
+4. **ALWAYS ASK FIRST** before moving or deleting anything, showing the exact path.
+
 ## Project Overview
 
 NUXP ("Not UXP") is a modern alternative to Adobe's deprecated CEP framework for Illustrator plugins. It combines a C++ plugin (HTTP/JSON server) with a Tauri desktop app (Vue 3 frontend), completely bypassing CEP/ExtendScript limitations.
