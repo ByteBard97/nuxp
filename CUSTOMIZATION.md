@@ -164,6 +164,6 @@ git merge upstream/main
 ## Need Help?
 
 If you encounter issues while customizing NUXP:
-1. Check the [GitHub Discussions](https://github.com/YOUR_USERNAME/nuxp/discussions)
-2. Review existing [Issues](https://github.com/YOUR_USERNAME/nuxp/issues)
+1. Check the [GitHub Discussions](https://github.com/ByteBard97/nuxp/discussions)
+2. Review existing [Issues](https://github.com/ByteBard97/nuxp/issues)
 3. Open a new issue with details about your customization
