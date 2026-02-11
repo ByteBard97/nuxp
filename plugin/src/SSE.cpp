@@ -32,10 +32,10 @@ void SSE::SetupEndpoint(httplib::Server &server) {
     Instance().addConnection(conn);
 
     // Set up SSE headers
+    // Note: Access-Control-Allow-Origin is set globally in HttpServer.cpp
     res.set_header("Content-Type", "text/event-stream");
     res.set_header("Cache-Control", "no-cache");
     res.set_header("Connection", "keep-alive");
-    res.set_header("Access-Control-Allow-Origin", "*");
 
     // Use chunked content provider for streaming
     res.set_chunked_content_provider(
