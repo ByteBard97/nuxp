@@ -5,25 +5,25 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleDisplayName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>@PLUGIN_DISPLAY_NAME@</string>
 	<key>CFBundleExecutable</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>@PLUGIN_NAME@</string>
 	<key>CFBundleGetInfoString</key>
-	<string>$(PRODUCT_NAME) $(MARKETING_VERSION)</string>
+	<string>@PLUGIN_DISPLAY_NAME@ @PLUGIN_VERSION@</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>@PLUGIN_BUNDLE_ID@</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>@PLUGIN_DISPLAY_NAME@</string>
 	<key>CFBundlePackageType</key>
 	<string>ARPI</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
+	<string>@PLUGIN_VERSION@</string>
 	<key>CFBundleSignature</key>
 	<string>ART5</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<string>@PLUGIN_VERSION@</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSRequiresCarbon</key>
