@@ -1,9 +1,13 @@
 # NUXP Plugin - CMake Build Configuration
 # Adobe Illustrator Plugin with HTTP/JSON Bridge
 #
-# Build instructions:
+# Build instructions (Unix Makefiles - default):
 #   cmake -B build
 #   cmake --build build
+#
+# Build instructions (Xcode - recommended for macOS):
+#   cmake -G Xcode -B build-xcode
+#   cmake --build build-xcode --config Release
 #
 # Install to Illustrator Plug-ins folder:
 #   cmake --install build
@@ -181,8 +185,9 @@ set(PLUGIN_HEADERS
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     # We are the top-level project - build the full plugin
+    # Use MODULE (not SHARED) for loadable bundles that are dynamically loaded at runtime
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} MODULE
     ${PLUGIN_SOURCES}
     ${PLUGIN_HEADERS}
 )
@@ -268,7 +273,21 @@ endif()
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
 if(APPLE)
+    # -------------------------------------------------------------------------
     # macOS Bundle Configuration
+    # -------------------------------------------------------------------------
+    # Adobe Illustrator plugins are loadable bundles (.aip) with:
+    # - Compiled PiPL (Plugin Property List) resource
+    # - Info.plist with CFBundlePackageType = "BNDL"
+    # - Universal binary (arm64 + x86_64)
+
+    # Deployment target for modern macOS features
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS version")
+
+    # Build Universal Binary (Apple Silicon + Intel)
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS")
+
+    # Bundle properties
     set_target_properties(${PROJECT_NAME} PROPERTIES
         BUNDLE TRUE
         BUNDLE_EXTENSION "aip"
@@ -277,16 +296,99 @@ if(APPLE)
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
         MACOSX_BUNDLE_GUI_IDENTIFIER "${PLUGIN_BUNDLE_ID}"
+        # Critical: Must be BNDL (not APPL) for plugins
+        MACOSX_BUNDLE_INFO_STRING "Adobe Illustrator Plugin"
     )
 
-    # Use custom Info.plist if available
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist")
+    # Use custom Info.plist if available, otherwise use template
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources/Info.plist")
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources/Info.plist"
+        )
+    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist")
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
         )
     endif()
 
-    # macOS compile definitions
+    # -------------------------------------------------------------------------
+    # Xcode Generator Attributes
+    # -------------------------------------------------------------------------
+    # These only take effect when using: cmake -G Xcode
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        # Universal Binary
+        XCODE_ATTRIBUTE_ARCHS "arm64 x86_64"
+        XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH NO
+        # Code Signing (use "-" for ad-hoc, or "Apple Development" for dev cert)
+        XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Automatic"
+        XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-"
+        XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+        # Other settings
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${PLUGIN_BUNDLE_ID}"
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_CFBundleDisplayName "${PLUGIN_DISPLAY_NAME}"
+    )
+
+    # -------------------------------------------------------------------------
+    # PiPL Resource Compilation
+    # -------------------------------------------------------------------------
+    # The PiPL (Plugin Property List) tells Illustrator how to load the plugin.
+    # It must be compiled from .r files using Apple's Rez tool.
+
+    find_program(REZ_EXECUTABLE Rez
+        HINTS /usr/bin /Applications/Xcode.app/Contents/Developer/usr/bin
+    )
+
+    # Path to resource files
+    set(PIPL_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources")
+
+    if(REZ_EXECUTABLE AND EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
+        message(STATUS "Found Rez compiler: ${REZ_EXECUTABLE}")
+        message(STATUS "PiPL resources dir: ${PIPL_RESOURCES_DIR}")
+
+        # Create the Resources directory in the bundle
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources"
+            COMMENT "Creating bundle Resources directory"
+        )
+
+        # Compile PiPL resource
+        # The .r file should #define PIPL_PLUGIN_NAME before including Plugin.r
+        # Note: We avoid generator expressions for Rez args as they don't work with all generators
+        set(REZ_DEBUG_FLAG "")
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set(REZ_DEBUG_FLAG "-d" "DEBUG=1")
+        endif()
+
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${REZ_EXECUTABLE}
+                "-d" "PIPL_PLUGIN_NAME=\"${PLUGIN_NAME}\""
+                "-d" "TargetOS_Mac=1"
+                ${REZ_DEBUG_FLAG}
+                "-i" "${PIPL_RESOURCES_DIR}"
+                "-i" "${AI_SDK_PATH}"
+                "-useDF"
+                "-o" "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
+                "${PIPL_RESOURCES_DIR}/Plugin.r"
+            COMMENT "Compiling PiPL resource with Rez"
+            VERBATIM
+        )
+    else()
+        if(NOT REZ_EXECUTABLE)
+            message(WARNING "Rez compiler not found - PiPL resource will not be compiled")
+            message(WARNING "Install Xcode Command Line Tools: xcode-select --install")
+        endif()
+        if(NOT EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
+            message(WARNING "Plugin.r not found at ${PIPL_RESOURCES_DIR}")
+            message(WARNING "PiPL resource is required for Illustrator to load the plugin")
+        endif()
+    endif()
+
+    # -------------------------------------------------------------------------
+    # macOS Compile Definitions
+    # -------------------------------------------------------------------------
     target_compile_definitions(${PROJECT_NAME} PRIVATE
         MAC_ENV
         __MACH__
@@ -300,9 +402,6 @@ if(APPLE)
         "-framework ApplicationServices"
         "-framework Cocoa"
     )
-
-    # Deployment target for modern macOS features
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS version")
 
 elseif(WIN32)
     # Windows Configuration
@@ -385,17 +484,31 @@ endif()
 # -----------------------------------------------------------------------------
 
 # Default installation paths for Adobe Illustrator plugins
+# Checks for 2026, 2025, 2024 in that order
 if(APPLE)
-    # macOS: User's Plug-ins folder or system Plug-ins folder
-    set(AI_PLUGINS_DEFAULT_PATH "$ENV{HOME}/Library/Application Support/Adobe/Adobe Illustrator 2024/Plug-ins")
-    if(NOT EXISTS "${AI_PLUGINS_DEFAULT_PATH}" AND EXISTS "$ENV{HOME}/Library/Application Support/Adobe/Adobe Illustrator 2025/Plug-ins")
-        set(AI_PLUGINS_DEFAULT_PATH "$ENV{HOME}/Library/Application Support/Adobe/Adobe Illustrator 2025/Plug-ins")
+    # macOS: User's Plug-ins folder (doesn't require sudo)
+    set(AI_PLUGINS_DEFAULT_PATH "")
+    foreach(YEAR 2026 2025 2024)
+        set(CHECK_PATH "$ENV{HOME}/Library/Application Support/Adobe/Adobe Illustrator ${YEAR}/Plug-ins")
+        if(EXISTS "${CHECK_PATH}" AND AI_PLUGINS_DEFAULT_PATH STREQUAL "")
+            set(AI_PLUGINS_DEFAULT_PATH "${CHECK_PATH}")
+        endif()
+    endforeach()
+    # Fallback to 2026 even if it doesn't exist yet
+    if(AI_PLUGINS_DEFAULT_PATH STREQUAL "")
+        set(AI_PLUGINS_DEFAULT_PATH "$ENV{HOME}/Library/Application Support/Adobe/Adobe Illustrator 2026/Plug-ins")
     endif()
 elseif(WIN32)
-    # Windows: Common Plug-ins folder
-    set(AI_PLUGINS_DEFAULT_PATH "C:/Program Files/Adobe/Adobe Illustrator 2024/Plug-ins")
-    if(NOT EXISTS "${AI_PLUGINS_DEFAULT_PATH}" AND EXISTS "C:/Program Files/Adobe/Adobe Illustrator 2025/Plug-ins")
-        set(AI_PLUGINS_DEFAULT_PATH "C:/Program Files/Adobe/Adobe Illustrator 2025/Plug-ins")
+    # Windows: Program Files Plug-ins folder
+    set(AI_PLUGINS_DEFAULT_PATH "")
+    foreach(YEAR 2026 2025 2024)
+        set(CHECK_PATH "C:/Program Files/Adobe/Adobe Illustrator ${YEAR}/Plug-ins")
+        if(EXISTS "${CHECK_PATH}" AND AI_PLUGINS_DEFAULT_PATH STREQUAL "")
+            set(AI_PLUGINS_DEFAULT_PATH "${CHECK_PATH}")
+        endif()
+    endforeach()
+    if(AI_PLUGINS_DEFAULT_PATH STREQUAL "")
+        set(AI_PLUGINS_DEFAULT_PATH "C:/Program Files/Adobe/Adobe Illustrator 2026/Plug-ins")
     endif()
 endif()
 
@@ -408,6 +521,17 @@ install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION "${AI_PLUGINS_PATH}"
     RUNTIME DESTINATION "${AI_PLUGINS_PATH}"
 )
+
+# macOS: Remove quarantine attribute after install (prevents "damaged" errors)
+if(APPLE)
+    install(CODE "
+        execute_process(
+            COMMAND xattr -cr \"\${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.aip\"
+            ERROR_QUIET
+        )
+        message(STATUS \"Removed quarantine attributes from ${PROJECT_NAME}.aip\")
+    ")
+endif()
 
 # -----------------------------------------------------------------------------
 # Custom Targets
@@ -477,17 +601,36 @@ message(STATUS "  Default Port:     ${NUXP_DEFAULT_PORT}")
 message(STATUS "  SDK Path:         ${AI_SDK_PATH}")
 message(STATUS "  Library Path:     ${LIB_PATH}")
 message(STATUS "  Install Path:     ${AI_PLUGINS_PATH}")
+if(APPLE)
+message(STATUS "")
+message(STATUS "macOS Settings:")
+message(STATUS "  Architectures:    ${CMAKE_OSX_ARCHITECTURES}")
+message(STATUS "  Deployment Target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
+if(REZ_EXECUTABLE)
+message(STATUS "  Rez Compiler:     ${REZ_EXECUTABLE}")
+else()
+message(STATUS "  Rez Compiler:     NOT FOUND (PiPL will not be compiled)")
+endif()
+endif()
 message(STATUS "")
 message(STATUS "Source files:")
-message(STATUS "  Core sources:     ${CORE_SOURCES}")
+list(LENGTH CORE_SOURCES CORE_COUNT)
+message(STATUS "  Core sources:          ${CORE_COUNT} files")
 list(LENGTH HANDWRITTEN_ENDPOINT_SOURCES HANDWRITTEN_COUNT)
 message(STATUS "  Handwritten endpoints: ${HANDWRITTEN_COUNT} files")
 list(LENGTH GENERATED_ENDPOINT_SOURCES GENERATED_COUNT)
 message(STATUS "  Generated endpoints:   ${GENERATED_COUNT} files")
 message(STATUS "")
 message(STATUS "Build commands:")
-message(STATUS "  cmake --build build            # Build plugin")
-message(STATUS "  cmake --build build -t generate    # Regenerate code")
+if(APPLE)
+message(STATUS "  # Recommended: Use Xcode generator for proper bundle/signing")
+message(STATUS "  cmake -G Xcode -B build-xcode")
+message(STATUS "  cmake --build build-xcode --config Release")
+message(STATUS "")
+message(STATUS "  # Alternative: Unix Makefiles (simpler, but no code signing)")
+endif()
+message(STATUS "  cmake -B build")
+message(STATUS "  cmake --build build")
 message(STATUS "  cmake --install build          # Install to Illustrator")
 message(STATUS "========================================")
 message(STATUS "")
