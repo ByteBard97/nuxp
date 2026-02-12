@@ -586,6 +586,10 @@ void HttpServer::ConfigureRoutes() {
  ******************************************************************************/
 
 void HttpServer::ServerThread() {
+  // Register custom routes from generated code (populates customRoutes_/patternRoutes_)
+  extern void RegisterCustomRoutes();
+  RegisterCustomRoutes();
+
   // Create server instance
   {
     std::lock_guard<std::mutex> lock(gServerMutex);
