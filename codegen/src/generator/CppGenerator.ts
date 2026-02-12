@@ -23,6 +23,11 @@ interface TypeMapConfig {
 }
 
 /**
+ * Return type categories for code generation
+ */
+type ReturnTypeCategory = 'Error' | 'Boolean' | 'Void';
+
+/**
  * Mustache templates for C++ code generation
  */
 const templates = {
@@ -44,6 +49,9 @@ namespace {{suiteName}} {
 {{#outputParams}}
  * @returns ["{{name}}"] - {{type}}{{#isHandle}} (handle ID){{/isHandle}}
 {{/outputParams}}
+{{#returnsBoolean}}
+ * @returns ["result"] - bool (from AIBoolean return)
+{{/returnsBoolean}}
  */
 nlohmann::json {{name}}(const nlohmann::json& params);
 
@@ -79,11 +87,22 @@ nlohmann::json {{name}}(const nlohmann::json& params) {
 {{{.}}}
 {{/unmarshalCode}}
 
-    // Call SDK function
+{{#returnsError}}
+    // Call SDK function (returns AIErr)
     AIErr err = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
     if (err != kNoErr) {
         throw std::runtime_error("{{sdkName}} failed with error: " + std::to_string(err));
     }
+{{/returnsError}}
+{{#returnsBoolean}}
+    // Call SDK function (returns AIBoolean)
+    AIBoolean result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+    response["result"] = static_cast<bool>(result);
+{{/returnsBoolean}}
+{{#returnsVoid}}
+    // Call SDK function (returns void)
+    s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+{{/returnsVoid}}
 
 {{#marshalCode}}
 {{{.}}}
@@ -230,7 +249,8 @@ export class CppGenerator {
                         name: p.name,
                         type: p.type,
                         isHandle: p.classification?.category === 'Handle'
-                    }))
+                    })),
+                returnsBoolean: func.returnType === 'AIBoolean'
             }))
         };
     }
@@ -270,9 +290,9 @@ export class CppGenerator {
             if (param.type.includes('(*)') || param.type.includes('Proc')) {
                 return true;
             }
-            // Skip if parameter name is 'void' (C-style no-param declaration)
+            // Skip C-style void parameters: func(void) means no params
             if (param.name === 'void') {
-                return true;
+                continue;
             }
             // Skip forward-declared struct types (can't instantiate)
             if (param.type.includes('struct _') || param.type.includes('struct _AIDictionary')) {
@@ -291,18 +311,16 @@ export class CppGenerator {
                 'AIPathStyle',   // Complex nested structure
                 'AISuspendedAppContext', // Opaque type
                 'ai::FilePath',  // SDK implementation type - requires SDK library
-                'ai::UnicodeString', // SDK implementation type - requires SDK library
                 'ArtboardList',  // SDK implementation type
                 'ArtboardProperties', // SDK implementation type
             ];
             if (complexStructTypes.some(t => param.type.includes(t))) {
                 return true;
             }
-            // Skip char** outputs (string pointers managed by SDK)
-            // Parser loses the double-pointer info, so we see 'char' with isPointer
-            if (param.type === 'char' && param.isPointer && param.isOutput) {
-                return true;
-            }
+            // char** outputs (SDK-managed strings) are now supported for non-const outputs
+            // The SDK allocates the string, we copy it to std::string before returning
+            // (handled in generateOutputUnmarshal/generateOutputMarshal)
+            // Note: const char** outputs are misparsed as inputs and must be in BLOCKED_FUNCTIONS
             // Skip malformed const char (should be const char*)
             if (param.type === 'const char' && param.isPointer) {
                 // This should be classified as string, but parser might miss it
@@ -320,17 +338,28 @@ export class CppGenerator {
      * Returns true if function should be skipped
      */
     private hasUnsupportedReturnType(func: FunctionInfo): boolean {
-        // Skip functions that return void (can't check for errors)
-        if (func.returnType === 'void') {
-            return true;
-        }
-        // Only support functions that return AIErr or ASErr (error codes)
-        // Functions that return other types (AIEntryRef, AIBoolean, etc.) need different handling
-        const supportedReturnTypes = ['AIErr', 'ASErr'];
+        // Supported return types:
+        // - AIErr/ASErr: Error codes that we check for errors
+        // - AIBoolean: Boolean values we wrap in {"result": true/false}
+        // - void: No return value, we just call the function
+        const supportedReturnTypes = ['AIErr', 'ASErr', 'AIBoolean', 'void'];
         if (!supportedReturnTypes.includes(func.returnType)) {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Classify the return type of a function
+     */
+    private classifyReturnType(func: FunctionInfo): ReturnTypeCategory {
+        if (func.returnType === 'AIBoolean') {
+            return 'Boolean';
+        }
+        if (func.returnType === 'void') {
+            return 'Void';
+        }
+        return 'Error'; // AIErr, ASErr
     }
 
     /**
@@ -411,9 +440,15 @@ export class CppGenerator {
         const callArgs: { argName: string; hasMore: boolean }[] = [];
         const safeName = getSafeFunctionName(func.name);
 
+        // Classify return type for template branching
+        const returnTypeCategory = this.classifyReturnType(func);
+
+        // Filter out C-style void parameters: func(void) means no params
+        const params = func.params.filter(p => !(p.name === 'void' && p.type === 'void'));
+
         // Process each parameter
-        for (let i = 0; i < func.params.length; i++) {
-            const param = func.params[i];
+        for (let i = 0; i < params.length; i++) {
+            const param = params[i];
             const classification = param.classification;
 
             if (!classification) {
@@ -421,12 +456,12 @@ export class CppGenerator {
                 if (param.isOutput) {
                     unmarshalLines.push(`    // Output parameter: ${param.name} (unknown type ${param.type})`);
                     unmarshalLines.push(`    ${param.type} ${param.name};`);
-                    callArgs.push({ argName: `&${param.name}`, hasMore: i < func.params.length - 1 });
+                    callArgs.push({ argName: `&${param.name}`, hasMore: i < params.length - 1 });
                     marshalLines.push(`    // Unable to marshal unknown type: ${param.name}`);
                 } else {
                     unmarshalLines.push(`    // Input parameter: ${param.name} (unknown type ${param.type})`);
                     unmarshalLines.push(`    // WARNING: Unknown type, using default`);
-                    callArgs.push({ argName: param.name, hasMore: i < func.params.length - 1 });
+                    callArgs.push({ argName: param.name, hasMore: i < params.length - 1 });
                 }
                 continue;
             }
@@ -437,12 +472,13 @@ export class CppGenerator {
                 // Output parameter handling
                 this.generateOutputUnmarshal(param, classification, unmarshalLines);
                 this.generateOutputMarshal(param, classification, marshalLines);
-                callArgs.push({ argName: `&${param.name}`, hasMore: i < func.params.length - 1 });
+                const argPrefix = param.isPointer ? '&' : '';
+                callArgs.push({ argName: `${argPrefix}${param.name}`, hasMore: i < params.length - 1 });
             } else {
                 // Input parameter handling
                 this.generateInputUnmarshal(param, classification, unmarshalLines);
                 const argName = this.getCallArgName(param, classification);
-                callArgs.push({ argName, hasMore: i < func.params.length - 1 });
+                callArgs.push({ argName, hasMore: i < params.length - 1 });
             }
         }
 
@@ -452,7 +488,11 @@ export class CppGenerator {
             suiteShortName,
             unmarshalCode: unmarshalLines,
             marshalCode: marshalLines,
-            callArgs
+            callArgs,
+            // Return type flags for template branching
+            returnsError: returnTypeCategory === 'Error',
+            returnsBoolean: returnTypeCategory === 'Boolean',
+            returnsVoid: returnTypeCategory === 'Void'
         };
     }
 
@@ -566,6 +606,11 @@ export class CppGenerator {
                 if (baseType === 'ai::UnicodeString') {
                     lines.push(`    // Output string: ${param.name}`);
                     lines.push(`    ai::UnicodeString ${param.name};`);
+                } else if (baseType === 'char*') {
+                    // char** output - SDK allocates and manages the string
+                    // Use non-const char* since SDK expects char** not const char**
+                    lines.push(`    // Output string pointer (SDK-managed): ${param.name}`);
+                    lines.push(`    char* ${param.name} = nullptr;`);
                 } else {
                     lines.push(`    // Output string buffer: ${param.name}`);
                     lines.push(`    char ${param.name}[1024];`);
@@ -626,6 +671,10 @@ export class CppGenerator {
                 if (baseType === 'ai::UnicodeString') {
                     lines.push(`    // Marshal output string: ${param.name}`);
                     lines.push(`    response["${param.name}"] = ${param.name}.as_UTF8();`);
+                } else if (baseType === 'char*') {
+                    // char** output - copy SDK-managed string to JSON
+                    lines.push(`    // Marshal output string pointer: ${param.name}`);
+                    lines.push(`    response["${param.name}"] = ${param.name} ? std::string(${param.name}) : "";`);
                 } else {
                     lines.push(`    // Marshal output string: ${param.name}`);
                     lines.push(`    response["${param.name}"] = std::string(${param.name});`);

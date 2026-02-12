@@ -5,17 +5,25 @@
         "AIDocumentHandle": "documents",
         "AIArtboardHandle": "artboards",
         "AIMenuItemHandle": "menuItems",
-        "ai::UnicodeString": "strings"
+        "AIMaskRef": "masks",
+        "AIToolHandle": "tools",
+        "AITimerHandle": "timers",
+        "AINotifierHandle": "notifiers"
     },
     "primitives": {
         "AIBoolean": "bool",
+        "ASBoolean": "bool",
+        "bool": "bool",
         "ai::int32": "int32_t",
         "ai::int16": "int16_t",
+        "ai::uint32": "uint32_t",
         "short": "int16_t",
         "long": "int32_t",
         "size_t": "uint32_t",
         "AIReal": "double",
-        "ASReal": "double"
+        "ASReal": "double",
+        "AIToolType": "int32_t",
+        "AIToolTime": "uint32_t"
     },
     "structs": {
         "AIRealRect": "rect",
