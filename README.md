@@ -14,52 +14,91 @@ NUXP replaces the "CEP Panel" approach with a standalone web application that co
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Your Application                          │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Vue 3 Frontend (shell/)                 │    │
-│  │   Components │ Pinia Stores │ TypeScript SDK Client  │    │
-│  └─────────────────────────┬───────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │              Vue 3 Frontend (shell/)                     ││
+│  │   Components │ Pinia Stores │ TypeScript SDK Client      ││
+│  └─────────────────────────┬───────────────────────────────┘│
 │                            │ HTTP (localhost:8080)           │
-│  ┌─────────────────────────▼───────────────────────────┐    │
-│  │              C++ Plugin (plugin/)                    │    │
-│  │   HTTP Server │ Handle Manager │ SDK Wrappers        │    │
-│  └─────────────────────────┬───────────────────────────┘    │
+│  ┌─────────────────────────▼───────────────────────────────┐│
+│  │              C++ Plugin (plugin/)                        ││
+│  │   HTTP Server │ Handle Manager │ SDK Wrappers            ││
+│  └─────────────────────────┬───────────────────────────────┘│
 │                            │ Native API                      │
-│  ┌─────────────────────────▼───────────────────────────┐    │
-│  │              Adobe Illustrator                       │    │
-│  └─────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────▼───────────────────────────────┐│
+│  │              Adobe Illustrator                           ││
+│  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Current Capabilities (Alpha)
+## Current Capabilities
 
-NUXP is an **infrastructure release**. The HTTP server, handle management, and event system foundation is solid and production-tested, but SDK feature coverage is limited.
+NUXP auto-generates typed C++ and TypeScript bindings for the Illustrator SDK. The code generator parses SDK headers with tree-sitter, classifies parameter types, and produces complete HTTP/JSON wrappers.
 
-### What Works
-- **Documents** - Get active document, basic document info
-- **Layers** - List layers, get layer properties
-- **Selection** - Get/set selected objects
-- **Basic Shapes** - Create rectangles
-- **Object Properties** - Get bounds, transform objects
-- **Real-time Events** - SSE push notifications for document changes
+### SDK Coverage
 
-### What Doesn't Work Yet
-- **Text** - Not supported (SDK header compatibility issues)
-- **Complex Fills** - Gradients, patterns not supported
-- **Advanced Paths** - Path segments, compound paths limited
-- **Symbols** - Not supported
-- **Effects** - Live effects not supported
+**442 functions** across **19 suites**, with 100% routing of all parsed functions:
 
-### Why Some Features Are Limited
+| Suite | Functions | Description |
+|-------|-----------|-------------|
+| AIArtSuite | 72 | Core art object manipulation |
+| AIDocumentSuite | 68 | Document management |
+| AIArtboardSuite | 40 | Artboard properties and layout |
+| AILayerSuite | 39 | Layer management |
+| AIDictionarySuite | 36 | Dictionary (metadata) access |
+| AIToolSuite | 32 | Tool management |
+| AIEntrySuite | 23 | Dictionary entry read/write |
+| AIBlendStyleSuite | 23 | Opacity, blending modes |
+| AIUserSuite | 20 | User interaction, dialogs |
+| AIArtSetSuite | 16 | Art set operations |
+| AIUndoSuite | 16 | Undo/redo transactions |
+| AIMaskSuite | 15 | Clipping mask operations |
+| AILayerListSuite | 12 | Layer list traversal |
+| AITimerSuite | 8 | Timer callbacks |
+| AIAppContextSuite | 7 | Application context |
+| AINotifierSuite | 5 | Event notifications |
+| AIMdMemorySuite | 5 | Memory management |
+| AIGroupSuite | 4 | Group operations |
+| AITransformArtSuite | 1 | Transform operations |
 
-The code generator automatically wraps SDK functions that return standard error codes and use simple parameter types (numbers, strings, object handles).
+### Type System
 
-It cannot yet handle:
-- Callback functions
-- Array parameters
-- Complex struct types
-- Certain pointer patterns
+The code generator handles these C++ type categories automatically:
 
-These require hand-written wrappers. The infrastructure makes adding them straightforward - community contributions are welcome! See the `plugin/src/endpoints/` directory for examples.
+| Category | Examples | Marshaling |
+|----------|----------|------------|
+| **Handles** (18 types) | AIArtHandle, AILayerHandle, AIDictionaryRef | Integer IDs via HandleRegistry |
+| **Managed Handles** (2 types) | ai::ArtboardProperties, ai::ArtboardList | Owned via ManagedHandleRegistry |
+| **Primitives** (10+ types) | AIBoolean, AIReal, ai::int32, size_t | Direct JSON mapping |
+| **Strings** (3 types) | ai::UnicodeString, const char*, ai::FilePath | UTF-8 string conversion |
+| **Structs** (3 types) | AIRealRect, AIRealPoint, AIRealMatrix | Nested JSON objects |
+| **Enums** | AIEntryType, ai::ArtboardID | Integer cast |
+| **Non-standard returns** | AIReal, AIArtHandle, const char* | Direct value or handle registration |
+
+### What Requires Hand-Written Wrappers
+
+Some SDK patterns can't be auto-generated and need manual C++ endpoints:
+
+- **Complex structs** - AIColor (tagged union), AIPathStyle (nested structs), AIGradient
+- **Callback functions** - Plugin infrastructure callbacks
+- **Array parameters** - AIPathSegment[], triple pointers (AIArtHandle***)
+- **Text (ATE)** - Adobe Text Engine headers have SDK conflicts
+
+The infrastructure makes adding manual wrappers straightforward. See `plugin/src/endpoints/` for examples.
+
+### Real-Time Events
+
+Server-Sent Events push Illustrator state changes to the frontend in real-time:
+- Document open/close/switch
+- Selection changes
+- Layer modifications
+- Art creation/deletion
+
+### Additional Code Generators
+
+Beyond SDK suite wrappers, NUXP includes:
+
+- **Custom Route Generator** - Define HTTP endpoints in JSON, get type-safe C++ handlers + TypeScript clients. Supports path parameters, request/response schemas, and config inheritance.
+- **SSE Event Generator** - Define events in JSON, get C++ emitters + TypeScript event bus with typed payloads.
 
 ## Quick Start
 
@@ -135,8 +174,8 @@ The setup script extracts and organizes:
 ```
 
 This parses SDK headers and generates:
-- C++ endpoint handlers → `plugin/src/endpoints/generated/`
-- TypeScript SDK client → `shell/src/sdk/generated/`
+- C++ endpoint handlers -> `plugin/src/endpoints/generated/`
+- TypeScript SDK client -> `shell/src/sdk/generated/`
 
 #### d. Build the C++ Plugin
 
@@ -146,7 +185,14 @@ cmake -B build
 cmake --build build
 ```
 
-> 💡 **macOS Note**: NUXP's CMake build automatically configures the bundle metadata required by Illustrator (`CFBundlePackageType=ARPI`, `CFBundleSignature=ART5`). If your plugin doesn't load, see [Troubleshooting](#troubleshooting) below.
+Or with Xcode:
+```bash
+cd plugin
+cmake -B build-xcode -G Xcode
+cmake --build build-xcode --config Release
+```
+
+> **macOS Note**: NUXP's CMake build automatically configures the bundle metadata required by Illustrator (`CFBundlePackageType=ARPI`, `CFBundleSignature=ART5`). If your plugin doesn't load, see [Troubleshooting](#troubleshooting) below.
 
 **Customizing the Plugin Name:**
 
@@ -203,26 +249,32 @@ nuxp/
 │   ├── lib/                # Third-party deps (httplib.h, json.hpp)
 │   └── src/
 │       ├── Plugin.cpp      # Entry point
-│       ├── HttpServer.cpp  # Local HTTP server
-│       ├── HandleManager.* # SDK object reference management
+│       ├── HttpServer.cpp  # Local HTTP server (cpp-httplib)
+│       ├── HandleManager.* # Thread-safe handle registries (18 types)
+│       ├── HandleRegistry.hpp        # Non-owning handle template
+│       ├── ManagedHandleRegistry.hpp # Owning handle template (RAII)
+│       ├── MainThreadDispatch.*      # SDK call queuing to main thread
+│       ├── SSE.*           # Server-Sent Events
+│       ├── utils/          # Color, Document, Geometry, Layer, Selection, String utils
 │       └── endpoints/      # HTTP endpoint handlers
 │           ├── *.cpp       # Hand-written endpoints
-│           └── generated/  # Auto-generated from codegen
+│           └── generated/  # Auto-generated (19 suites, 442 functions)
 │
 ├── shell/                  # Vue 3 frontend
 │   ├── src/
 │   │   ├── components/     # Vue components
 │   │   ├── services/       # API client, MockBridge
-│   │   ├── sdk/            # TypeScript SDK bindings
+│   │   ├── sdk/            # TypeScript SDK bindings (generated + bridge)
 │   │   ├── stores/         # Pinia state management
 │   │   └── views/          # Page components
 │   └── package.json
 │
 ├── codegen/                # SDK header parser & code generator
 │   ├── src/
-│   │   ├── parser/         # tree-sitter based header parser
-│   │   ├── generator/      # C++ and TypeScript generators
-│   │   └── config/         # Type mappings, skip lists
+│   │   ├── parser/         # Tree-sitter based header parser
+│   │   ├── generator/      # CppGenerator, TypeScriptGenerator,
+│   │   │                   # SSEGenerator, CustomRouteGenerator
+│   │   └── config/         # type-map.json, routes.json, events.json
 │   └── package.json
 │
 ├── scripts/
@@ -257,6 +309,14 @@ To add support for new Illustrator SDK features:
 
 1. **Automatic** (recommended): Add headers to the SDK and run `./scripts/generate.sh`
 2. **Manual**: Create custom endpoint handlers in `plugin/src/endpoints/`
+
+### Code Generator Tests
+
+```bash
+cd codegen
+npm test                    # all 346 tests
+npm test -- --testPathPattern="CppGenerator"  # single suite
+```
 
 ## API Overview
 
@@ -346,6 +406,30 @@ void RegisterMyFeatureEndpoints(httplib::Server& server) {
 
 Register in `plugin/src/endpoints/RegisterAll.cpp` and add corresponding TypeScript types in `shell/src/sdk/`.
 
+### 4. Adding Custom Routes via Code Generation
+
+For type-safe route generation, define endpoints in `codegen/src/config/routes.json`:
+
+```json
+{
+  "namespace": "MyApp",
+  "routes": [
+    {
+      "name": "GetWidgetInfo",
+      "method": "GET",
+      "path": "/api/widget/:id",
+      "pathParams": [{ "name": "id", "description": "Widget ID" }],
+      "response": [
+        { "name": "name", "type": "string" },
+        { "name": "count", "type": "number" }
+      ]
+    }
+  ]
+}
+```
+
+Run `npm run generate` to produce matching C++ handlers and TypeScript clients.
+
 ## Using NUXP as a Library
 
 If you want to keep NUXP as a separate upstream dependency (rather than forking), you can link against NUXP's core infrastructure from your own project. This allows you to:
@@ -423,11 +507,11 @@ When you link against `nuxp-core`, you get:
 
 | Component | Description |
 |-----------|-------------|
-| `HttpServer` | Background HTTP server with CORS support |
+| `HttpServer` | Background HTTP server with CORS and path parameter routing |
 | `SSE` | Server-Sent Events for real-time push notifications |
 | `MainThreadDispatch` | Safe SDK calls from HTTP thread |
-| `SuitePointers` | Adobe SDK suite acquisition (12 essential suites) |
-| `HandleManager` | Thread-safe handle lifecycle management |
+| `SuitePointers` | Adobe SDK suite acquisition |
+| `HandleManager` | Thread-safe handle lifecycle management (18 handle types + 2 managed) |
 | `StringUtils` | String conversion utilities |
 | `ColorUtils` | Color manipulation helpers |
 | `GeometryUtils` | Geometry and transform utilities |
@@ -520,7 +604,7 @@ Set the `ILLUSTRATOR_SDK_URL` secret to a URL where the SDK can be downloaded.
 
 ### macOS: Plugin Not Loading (Silent Failure)
 
-> ⚠️ **Adobe's Undocumented Bundle Requirements**
+> **Adobe's Undocumented Bundle Requirements**
 >
 > Illustrator **silently ignores** plugins that don't have the correct bundle metadata.
 > No error message, no log entry - the plugin simply won't appear. These settings are
