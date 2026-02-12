@@ -63,6 +63,8 @@ function getJsonType(category: TypeCategory, baseType: string): string {
     switch (category) {
         case 'Handle':
             return 'int32_t';
+        case 'ManagedHandle':
+            return 'int32_t';
         case 'String':
             return 'std::string';
         case 'Primitive':
@@ -1183,6 +1185,254 @@ describe('CppGenerator', () => {
             const [header] = generator.generate(suite);
 
             expect(header.content).toContain('@returns ["result"] - handle ID (from AIArtHandle return)');
+        });
+    });
+
+    describe('ManagedHandle input marshaling', () => {
+        it('should generate HandleManager::artboardProperties.Get for input managed handles', () => {
+            const func = mockFunction('GetArtboardName', [
+                mockParam('properties', 'ai::ArtboardProperties', {
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                }),
+                mockParam('name', 'ai::UnicodeString', {
+                    isOutput: true,
+                    isReference: true,
+                    category: 'String',
+                    baseType: 'ai::UnicodeString'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('HandleManager::artboardProperties.Get');
+        });
+
+        it('should throw error for invalid managed handles', () => {
+            const func = mockFunction('GetArtboardName', [
+                mockParam('properties', 'ai::ArtboardProperties', {
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('throw std::runtime_error');
+            expect(source.content).toContain('Invalid managed handle');
+        });
+
+        it('should dereference managed handle pointer for SDK call (*name_ptr)', () => {
+            const func = mockFunction('GetArtboardName', [
+                mockParam('properties', 'ai::ArtboardProperties', {
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('*properties_ptr');
+        });
+    });
+
+    describe('ManagedHandle output marshaling', () => {
+        it('should default-construct output managed handle', () => {
+            const func = mockFunction('GetArtboardProperties', [
+                mockParam('properties', 'ai::ArtboardProperties*', {
+                    isPointer: true,
+                    isOutput: true,
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('ai::ArtboardProperties properties;');
+        });
+
+        it('should use std::move() when registering output managed handles', () => {
+            const func = mockFunction('GetArtboardProperties', [
+                mockParam('properties', 'ai::ArtboardProperties*', {
+                    isPointer: true,
+                    isOutput: true,
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('HandleManager::artboardProperties.Register(std::move(properties))');
+        });
+
+        it('should pass output managed handle by reference (no & prefix) to SDK call', () => {
+            const func = mockFunction('GetArtboardProperties', [
+                mockParam('properties', 'ai::ArtboardProperties*', {
+                    isPointer: true,
+                    isOutput: true,
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            // ManagedHandle outputs should NOT have & prefix in SDK call
+            expect(source.content).not.toContain('&properties)');
+            expect(source.content).toContain('properties)');
+        });
+    });
+
+    describe('ManagedHandle return type', () => {
+        it('should generate std::move(result) for ManagedHandle return type', () => {
+            const func: FunctionInfo = {
+                name: 'GetArtboardProperties',
+                returnType: 'ai::ArtboardProperties',
+                params: [],
+                suiteName: 'AIArtboardSuite',
+            };
+
+            const suite = mockSuite([func], 'AIArtboardSuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('GetArtboardProperties');
+            expect(source.content).toContain('std::move(result)');
+        });
+
+        it('should register result in correct managed registry', () => {
+            const func: FunctionInfo = {
+                name: 'GetArtboardProperties',
+                returnType: 'ai::ArtboardProperties',
+                params: [],
+                suiteName: 'AIArtboardSuite',
+            };
+
+            const suite = mockSuite([func], 'AIArtboardSuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('HandleManager::artboardProperties.Register(std::move(result))');
+        });
+    });
+
+    describe('Dictionary handle marshaling', () => {
+        it('should generate HandleManager::dictionaries.Get for AIDictionaryRef input', () => {
+            const func = mockFunction('GetEntry', [
+                mockParam('dict', 'AIDictionaryRef', {
+                    category: 'Handle',
+                    registryName: 'dictionaries',
+                    baseType: 'AIDictionaryRef'
+                })
+            ], 'AIDictionarySuite');
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('HandleManager::dictionaries.Get');
+        });
+
+        it('should generate HandleManager::entries.Register for AIEntryRef output', () => {
+            const func = mockFunction('GetEntry', [
+                mockParam('entry', 'AIEntryRef*', {
+                    isPointer: true,
+                    isOutput: true,
+                    category: 'Handle',
+                    registryName: 'entries',
+                    baseType: 'AIEntryRef'
+                })
+            ], 'AIDictionarySuite');
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('HandleManager::entries.Register');
+        });
+
+        it('should handle ConstAIDictionaryRef as regular Handle sharing dictionaries registry', () => {
+            const func = mockFunction('ReadDict', [
+                mockParam('dict', 'ConstAIDictionaryRef', {
+                    category: 'Handle',
+                    registryName: 'dictionaries',
+                    baseType: 'ConstAIDictionaryRef'
+                })
+            ], 'AIDictionarySuite');
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('HandleManager::dictionaries.Get');
+        });
+
+        it('should handle AIDictKey as Handle with dictKeys registry', () => {
+            const func = mockFunction('GetKey', [
+                mockParam('key', 'AIDictKey', {
+                    category: 'Handle',
+                    registryName: 'dictKeys',
+                    baseType: 'AIDictKey'
+                })
+            ], 'AIDictionarySuite');
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('HandleManager::dictKeys.Get');
+        });
+    });
+
+    describe('Blocklist removal', () => {
+        it('should NOT filter out functions with ai::ArtboardProperties params', () => {
+            const func = mockFunction('GetArtboardRect', [
+                mockParam('properties', 'ai::ArtboardProperties', {
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                }),
+                mockParam('rect', 'AIRealRect*', {
+                    isPointer: true,
+                    isOutput: true,
+                    category: 'Struct',
+                    baseType: 'AIRealRect'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('GetArtboardRect');
+        });
+
+        it('should NOT filter out functions with ai::ArtboardList params', () => {
+            const func = mockFunction('GetArtboardCount', [
+                mockParam('list', 'ai::ArtboardList', {
+                    category: 'ManagedHandle',
+                    registryName: 'artboardLists',
+                    baseType: 'ai::ArtboardList'
+                }),
+                mockParam('count', 'ai::int32*', {
+                    isPointer: true,
+                    isOutput: true,
+                    category: 'Primitive',
+                    baseType: 'ai::int32'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('GetArtboardCount');
         });
     });
 

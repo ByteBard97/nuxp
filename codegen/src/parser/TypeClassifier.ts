@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-export type TypeCategory = 'Handle' | 'Primitive' | 'String' | 'Struct' | 'Enum' | 'Error' | 'Void' | 'Unknown';
+export type TypeCategory = 'Handle' | 'ManagedHandle' | 'Primitive' | 'String' | 'Struct' | 'Enum' | 'Error' | 'Void' | 'Unknown';
 
 export interface TypeDefinition {
     raw: string;           // "AIArtHandle *"
@@ -74,6 +74,14 @@ export class TypeClassifier {
             result.category = 'String';
             result.baseType = 'char*';
             result.jsonType = 'std::string';
+            return result;
+        }
+
+        // Check ManagedHandles (RAII objects, not opaque pointers)
+        if (this.config.managed_handles && this.config.managed_handles[base]) {
+            result.category = 'ManagedHandle';
+            result.registryName = this.config.managed_handles[base];
+            result.jsonType = 'int32_t';
             return result;
         }
 
