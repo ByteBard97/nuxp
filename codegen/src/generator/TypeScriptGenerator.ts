@@ -75,6 +75,7 @@ interface FunctionView {
     outputParams: OutputParamView[];
     singleOutputName: string;
     callParams: string;
+    returnsBooleanDirect: boolean; // For functions that return AIBoolean (not via output param)
 }
 
 /**
@@ -257,8 +258,9 @@ export class TypeScriptGenerator {
      * @returns The TypeScript type string
      */
     private mapPrimitiveToTypeScript(baseType: string): string {
-        // AIBoolean maps to boolean, everything else maps to number
-        if (baseType === 'AIBoolean') {
+        // All boolean primitives map to boolean (AIBoolean, ASBoolean, bool)
+        const jsonType = this.config.primitives[baseType];
+        if (jsonType === 'bool') {
             return 'boolean';
         }
 
@@ -344,6 +346,9 @@ export class TypeScriptGenerator {
         const inputParams = func.params.filter(p => !p.isOutput);
         const outputParams = func.params.filter(p => p.isOutput);
 
+        // Check if function returns AIBoolean directly (not via output param)
+        const returnsBooleanDirect = func.returnType === 'AIBoolean';
+
         // Generate input parameter views
         const paramViews: ParamView[] = inputParams.map((param, index) => ({
             name: param.name,
@@ -359,11 +364,14 @@ export class TypeScriptGenerator {
             isLast: index === outputParams.length - 1
         }));
 
-        // Determine return type
-        const returnType = this.determineReturnType(outputParams);
+        // Determine return type - if returns AIBoolean directly, override to boolean
+        let returnType = this.determineReturnType(outputParams);
+        if (returnsBooleanDirect) {
+            returnType = 'boolean';
+        }
         const hasReturn = returnType !== 'void';
-        const hasMultipleOutputs = outputParams.length > 1;
-        const hasSingleOutput = outputParams.length === 1;
+        const hasMultipleOutputs = outputParams.length > 1 && !returnsBooleanDirect;
+        const hasSingleOutput = outputParams.length === 1 && !returnsBooleanDirect;
         const singleOutputName = hasSingleOutput ? outputParams[0].name : '';
 
         // Generate parameter list string for function signature
@@ -385,7 +393,8 @@ export class TypeScriptGenerator {
             hasSingleOutput,
             outputParams: outputParamViews,
             singleOutputName,
-            callParams
+            callParams,
+            returnsBooleanDirect
         };
     }
 
@@ -679,6 +688,10 @@ export async function {{name}}({{paramList}}): Promise<{{returnType}}> {
 {{^hasReturn}}
     await callCpp(SUITE_NAME, '{{name}}', { {{callParams}} });
 {{/hasReturn}}
+{{#returnsBooleanDirect}}
+    const result = await callCpp<{ result: boolean }>(SUITE_NAME, '{{name}}', { {{callParams}} });
+    return result.result;
+{{/returnsBooleanDirect}}
 {{#hasSingleOutput}}
     const result = await callCpp<{ {{singleOutputName}}: {{returnType}} }>(SUITE_NAME, '{{name}}', { {{callParams}} });
     return result.{{singleOutputName}};
