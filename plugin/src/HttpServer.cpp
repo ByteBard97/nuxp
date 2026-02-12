@@ -38,6 +38,7 @@ std::atomic<bool> HttpServer::running_{false};
 std::atomic<bool> HttpServer::ready_{false};
 int HttpServer::port_ = 8080;
 std::vector<RouteEntry> HttpServer::customRoutes_;
+std::vector<PatternRouteEntry> HttpServer::patternRoutes_;
 
 // Server instance pointer (for shutdown)
 static std::unique_ptr<httplib::Server> gServer;
@@ -62,6 +63,21 @@ void HttpServer::Post(const std::string &path, RouteHandler handler) {
 
 void HttpServer::Delete(const std::string &path, RouteHandler handler) {
   RegisterRoute(HttpMethod::DELETE, path, handler);
+}
+
+void HttpServer::GetWithPattern(const std::string &pattern,
+                                PatternRouteHandler handler) {
+  patternRoutes_.push_back({HttpMethod::GET, pattern, handler});
+}
+
+void HttpServer::PostWithPattern(const std::string &pattern,
+                                 PatternRouteHandler handler) {
+  patternRoutes_.push_back({HttpMethod::POST, pattern, handler});
+}
+
+void HttpServer::DeleteWithPattern(const std::string &pattern,
+                                   PatternRouteHandler handler) {
+  patternRoutes_.push_back({HttpMethod::DELETE, pattern, handler});
 }
 
 /*******************************************************************************
@@ -357,6 +373,46 @@ void HttpServer::ConfigureRoutes() {
       break;
     case HttpMethod::PATCH:
       svr.Patch(route.path, handler);
+      break;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Pattern Routes - Routes with path parameters (regex capture groups)
+  // Example: R"(/plant/([a-f0-9-]+))" captures UUID from /plant/abc-123
+  // -------------------------------------------------------------------------
+  for (const auto &route : patternRoutes_) {
+    auto handler = [route](const httplib::Request &req,
+                           httplib::Response &res) {
+      try {
+        // Extract captured groups from regex matches
+        std::vector<std::string> params;
+        // matches[0] is the full match, [1], [2], etc. are capture groups
+        for (size_t i = 1; i < req.matches.size(); ++i) {
+          params.push_back(std::string(req.matches[i]));
+        }
+
+        std::string result = route.handler(req.body, params);
+        res.set_content(result, "application/json");
+      } catch (const std::exception &e) {
+        json errorResponse = {{"success", false}, {"error", e.what()}};
+        res.status = 500;
+        res.set_content(errorResponse.dump(), "application/json");
+      }
+    };
+
+    switch (route.method) {
+    case HttpMethod::GET:
+      svr.Get(route.pattern, handler);
+      break;
+    case HttpMethod::POST:
+      svr.Post(route.pattern, handler);
+      break;
+    case HttpMethod::DELETE:
+      svr.Delete(route.pattern, handler);
+      break;
+    default:
+      // PUT and PATCH not commonly used with path params, add if needed
       break;
     }
   }
