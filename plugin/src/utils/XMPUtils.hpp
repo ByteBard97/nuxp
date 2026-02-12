@@ -3,15 +3,19 @@
  *
  * Manual wrappers for Adobe XMP (Extensible Metadata Platform) operations.
  *
- * IMPORTANT: This module requires the Adobe XMP SDK which is separate from
- * the Illustrator SDK. The XMP SDK provides types like AXE_PluginRef and
+ * IMPORTANT: This module requires the Adobe XMP Toolkit SDK which is separate
+ * from the Illustrator SDK. The XMP SDK provides types like AXE_PluginRef and
  * XMP namespace handling that cannot be code-generated.
  *
+ * XMP SDK source: https://github.com/adobe/XMP-Toolkit-SDK
+ * Programmer's guide: https://github.com/adobe/XMP-Toolkit-SDK/blob/main/docs/XMPProgrammersGuide.pdf
+ *
  * To enable XMP functionality:
- * 1. Download Adobe XMP SDK from https://www.adobe.com/devnet/xmp.html
- * 2. Add XMP SDK headers to include path
- * 3. Link against XMP SDK libraries
- * 4. Define NUXP_HAS_XMP in your CMake configuration
+ * 1. Clone the XMP Toolkit SDK: git clone https://github.com/adobe/XMP-Toolkit-SDK.git
+ * 2. Build it per the repo instructions (CMake-based)
+ * 3. Add XMP SDK headers to include path
+ * 4. Link against XMP SDK libraries
+ * 5. Define NUXP_HAS_XMP in your CMake configuration
  *
  * Usage (when XMP SDK is available):
  *   #include "utils/XMPUtils.hpp"
