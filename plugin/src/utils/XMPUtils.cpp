@@ -2,12 +2,16 @@
  * NUXP XMP Utilities Implementation
  *
  * NOTE: This is a stub implementation. XMP functionality requires
- * the Adobe XMP SDK which is separate from the Illustrator SDK.
+ * the Adobe XMP Toolkit SDK which is separate from the Illustrator SDK.
+ *
+ * XMP SDK source: https://github.com/adobe/XMP-Toolkit-SDK
+ * Programmer's guide: https://github.com/adobe/XMP-Toolkit-SDK/blob/main/docs/XMPProgrammersGuide.pdf
  *
  * To enable XMP:
- * 1. Download Adobe XMP SDK
- * 2. Add to include/library paths
- * 3. Define NUXP_HAS_XMP in your CMake configuration
+ * 1. Clone: git clone https://github.com/adobe/XMP-Toolkit-SDK.git
+ * 2. Build per repo instructions (CMake-based)
+ * 3. Add to include/library paths
+ * 4. Define NUXP_HAS_XMP in your CMake configuration
  */
 
 #ifdef NUXP_HAS_XMP
