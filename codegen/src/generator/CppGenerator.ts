@@ -16,6 +16,7 @@ export interface GeneratedFile {
  */
 interface TypeMapConfig {
     handles: Record<string, string>;
+    managed_handles?: Record<string, string>;
     primitives: Record<string, string>;
     structs: Record<string, string>;
     string_types: string[];
@@ -25,7 +26,7 @@ interface TypeMapConfig {
 /**
  * Return type categories for code generation
  */
-type ReturnTypeCategory = 'Error' | 'Boolean' | 'Void' | 'Handle' | 'Primitive' | 'String' | 'Unsupported';
+type ReturnTypeCategory = 'Error' | 'Boolean' | 'Void' | 'Handle' | 'ManagedHandle' | 'Primitive' | 'String' | 'Unsupported';
 
 /**
  * Mustache templates for C++ code generation
@@ -55,6 +56,9 @@ namespace {{suiteName}} {
 {{#returnsHandle}}
  * @returns ["result"] - handle ID (from {{returnCppType}} return)
 {{/returnsHandle}}
+{{#returnsManagedHandle}}
+ * @returns ["result"] - managed handle ID (from {{returnCppType}} return)
+{{/returnsManagedHandle}}
 {{#returnsPrimitive}}
  * @returns ["result"] - {{returnCppType}} value
 {{/returnsPrimitive}}
@@ -121,6 +125,11 @@ nlohmann::json {{name}}(const nlohmann::json& params) {
         response["result"] = -1;
     }
 {{/returnsHandle}}
+{{#returnsManagedHandle}}
+    // Call SDK function (returns managed object)
+    {{returnCppType}} result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+    response["result"] = HandleManager::{{returnRegistryName}}.Register(std::move(result));
+{{/returnsManagedHandle}}
 {{#returnsPrimitive}}
     // Call SDK function (returns primitive)
     {{returnCppType}} result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
@@ -282,10 +291,15 @@ export class CppGenerator {
                         })),
                     returnsBoolean: returnTypeCategory === 'Boolean',
                     returnsHandle: returnTypeCategory === 'Handle',
+                    returnsManagedHandle: returnTypeCategory === 'ManagedHandle',
                     returnsPrimitive: returnTypeCategory === 'Primitive',
                     returnsString: returnTypeCategory === 'String',
                     returnCppType: func.returnType,
-                    returnRegistryName: returnTypeCategory === 'Handle' ? (this.config.handles[func.returnType] || '') : '',
+                    returnRegistryName: returnTypeCategory === 'Handle'
+                        ? (this.config.handles[func.returnType] || '')
+                        : returnTypeCategory === 'ManagedHandle'
+                        ? (this.config.managed_handles?.[func.returnType] || '')
+                        : '',
                 };
             })
         };
@@ -331,7 +345,7 @@ export class CppGenerator {
                 continue;
             }
             // Skip forward-declared struct types (can't instantiate)
-            if (param.type.includes('struct _') || param.type.includes('struct _AIDictionary')) {
+            if (param.type.includes('struct _')) {
                 return true;
             }
             // Skip complex struct types that have explicit constructors or are difficult to marshal
@@ -346,8 +360,6 @@ export class CppGenerator {
                 'AIPattern',     // Complex structure
                 'AIPathStyle',   // Complex nested structure
                 'AISuspendedAppContext', // Opaque type
-                'ArtboardList',  // SDK implementation type
-                'ArtboardProperties', // SDK implementation type
             ];
             if (complexStructTypes.some(t => param.type.includes(t))) {
                 return true;
@@ -393,6 +405,9 @@ export class CppGenerator {
         // Use type-map.json for non-standard return types
         if (this.config.handles[func.returnType]) {
             return 'Handle';
+        }
+        if (this.config.managed_handles && this.config.managed_handles[func.returnType]) {
+            return 'ManagedHandle';
         }
         if (this.config.primitives[func.returnType]) {
             return 'Primitive';
@@ -514,7 +529,8 @@ export class CppGenerator {
                 // Output parameter handling
                 this.generateOutputUnmarshal(param, classification, unmarshalLines);
                 this.generateOutputMarshal(param, classification, marshalLines);
-                const argPrefix = param.isPointer ? '&' : '';
+                // ManagedHandle outputs pass by reference (no & needed), regular handles need &
+                const argPrefix = (category === 'ManagedHandle') ? '' : (param.isPointer ? '&' : '');
                 callArgs.push({ argName: `${argPrefix}${param.name}`, hasMore: i < params.length - 1 });
             } else {
                 // Input parameter handling
@@ -529,6 +545,8 @@ export class CppGenerator {
         const returnCppType = func.returnType;
         if (returnTypeCategory === 'Handle') {
             returnRegistryName = this.config.handles[func.returnType] || '';
+        } else if (returnTypeCategory === 'ManagedHandle') {
+            returnRegistryName = this.config.managed_handles?.[func.returnType] || '';
         }
 
         // For string returns, determine the correct marshal expression
@@ -556,6 +574,7 @@ export class CppGenerator {
             returnsBoolean: returnTypeCategory === 'Boolean',
             returnsVoid: returnTypeCategory === 'Void',
             returnsHandle: returnTypeCategory === 'Handle',
+            returnsManagedHandle: returnTypeCategory === 'ManagedHandle',
             returnsPrimitive: returnTypeCategory === 'Primitive',
             returnsString: returnTypeCategory === 'String',
             returnCppType,
@@ -648,6 +667,14 @@ export class CppGenerator {
                 lines.push(`    AIErr ${param.name} = params["${param.name}"].get<int32_t>();`);
                 break;
 
+            case 'ManagedHandle':
+                lines.push(`    // Input managed handle: ${param.name}`);
+                lines.push(`    auto* ${param.name}_ptr = HandleManager::${registryName}.Get(params["${param.name}"].get<int32_t>());`);
+                lines.push(`    if (!${param.name}_ptr) {`);
+                lines.push(`        throw std::runtime_error("Invalid managed handle for parameter '${param.name}'");`);
+                lines.push(`    }`);
+                break;
+
             default:
                 // Unknown type
                 lines.push(`    // Unknown type: ${param.name} (${param.type})`);
@@ -710,6 +737,11 @@ export class CppGenerator {
             case 'Error':
                 lines.push(`    // Output error: ${param.name}`);
                 lines.push(`    AIErr ${param.name} = kNoErr;`);
+                break;
+
+            case 'ManagedHandle':
+                lines.push(`    // Output managed handle: ${param.name}`);
+                lines.push(`    ${baseType} ${param.name};`);
                 break;
 
             default:
@@ -780,6 +812,11 @@ export class CppGenerator {
             case 'Error':
                 lines.push(`    // Marshal output error: ${param.name}`);
                 lines.push(`    response["${param.name}"] = static_cast<int32_t>(${param.name});`);
+                break;
+
+            case 'ManagedHandle':
+                lines.push(`    // Marshal output managed handle: ${param.name}`);
+                lines.push(`    response["${param.name}"] = HandleManager::${registryName}.Register(std::move(${param.name}));`);
                 break;
 
             default:
@@ -890,6 +927,10 @@ export class CppGenerator {
         // For handles passed to SDK, we pass the value extracted from registry
         if (category === 'Handle') {
             return `${param.name}_val`;
+        }
+
+        if (category === 'ManagedHandle') {
+            return `*${param.name}_ptr`;
         }
 
         // For strings, we might need to pass reference or pointer

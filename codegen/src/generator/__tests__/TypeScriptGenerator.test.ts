@@ -286,6 +286,86 @@ describe('TypeScriptGenerator', () => {
         });
     });
 
+    describe('ManagedHandle type mappings', () => {
+        it('should map ManagedHandle category to number', () => {
+            const func = mockFunction('GetArtboardRect', [
+                mockParam('properties', 'ai::ArtboardProperties', {
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                }),
+                mockParam('rect', 'AIRealRect', {
+                    isOutput: true,
+                    category: 'Struct',
+                    baseType: 'AIRealRect'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('properties: number');
+        });
+
+        it('should return number for function returning ai::ArtboardProperties', () => {
+            const func: FunctionInfo = {
+                name: 'GetArtboardProperties',
+                returnType: 'ai::ArtboardProperties',
+                params: [],
+                suiteName: 'AIArtboardSuite',
+            };
+
+            const suite = mockSuite([func], 'AIArtboardSuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('Promise<number>');
+            expect(file.content).toContain('return result.result');
+        });
+    });
+
+    describe('Dictionary handle type mappings', () => {
+        it('should map AIDictionaryRef (Handle) to number', () => {
+            const func = mockFunction('GetEntry', [
+                mockParam('dict', 'AIDictionaryRef', {
+                    category: 'Handle',
+                    registryName: 'dictionaries',
+                    baseType: 'AIDictionaryRef'
+                }),
+                mockParam('entry', 'AIEntryRef', {
+                    isOutput: true,
+                    category: 'Handle',
+                    registryName: 'entries',
+                    baseType: 'AIEntryRef'
+                })
+            ], 'AIDictionarySuite');
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('dict: number');
+        });
+
+        it('should map AIEntryRef (Handle) to number', () => {
+            const func = mockFunction('GetEntryType', [
+                mockParam('entry', 'AIEntryRef', {
+                    category: 'Handle',
+                    registryName: 'entries',
+                    baseType: 'AIEntryRef'
+                }),
+                mockParam('type', 'AIEntryType', {
+                    isOutput: true,
+                    category: 'Primitive',
+                    baseType: 'AIEntryType'
+                })
+            ], 'AIEntrySuite');
+
+            const suite = mockSuite([func], 'AIEntrySuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('entry: number');
+        });
+    });
+
     describe('Struct interface generation', () => {
         it('should generate AIRealRect interface with correct fields', () => {
             const func = mockFunction('GetArtBounds', [
@@ -998,6 +1078,81 @@ describe('TypeScriptGenerator', () => {
             // Return description should mention both result and output params
             expect(file.content).toContain('result');
             expect(file.content).toContain('info');
+        });
+    });
+
+    describe('ManagedHandle type mappings', () => {
+        it('should map ManagedHandle category to number', () => {
+            const func = mockFunction('GetArtboardName', [
+                mockParam('props', 'ai::ArtboardProperties', {
+                    category: 'ManagedHandle',
+                    registryName: 'artboardProperties',
+                    baseType: 'ai::ArtboardProperties'
+                }),
+                mockParam('name', 'ai::UnicodeString', {
+                    isOutput: true,
+                    category: 'String',
+                    baseType: 'ai::UnicodeString'
+                })
+            ]);
+
+            const suite = mockSuite([func]);
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('props: number');
+        });
+
+        it('should return number for function returning ai::ArtboardProperties', () => {
+            const func: FunctionInfo = {
+                name: 'GetProperties',
+                returnType: 'ai::ArtboardProperties',
+                params: [],
+                suiteName: 'AIArtboardSuite',
+            };
+
+            const suite = mockSuite([func], 'AIArtboardSuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('Promise<number>');
+        });
+    });
+
+    describe('Dictionary handle type mappings', () => {
+        it('should map AIDictionaryRef Handle to number', () => {
+            const func = mockFunction('GetEntry', [
+                mockParam('dict', 'AIDictionaryRef', {
+                    category: 'Handle',
+                    registryName: 'dictionaries',
+                    baseType: 'AIDictionaryRef'
+                }),
+                mockParam('entry', 'AIEntryRef', {
+                    isOutput: true,
+                    category: 'Handle',
+                    registryName: 'entries',
+                    baseType: 'AIEntryRef'
+                })
+            ], 'AIDictionarySuite');
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('dict: number');
+        });
+
+        it('should map AIEntryRef Handle to number', () => {
+            const func = mockFunction('GetEntry', [
+                mockParam('entry', 'AIEntryRef', {
+                    isOutput: true,
+                    category: 'Handle',
+                    registryName: 'entries',
+                    baseType: 'AIEntryRef'
+                })
+            ], 'AIDictionarySuite');
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('Promise<number>');
         });
     });
 });

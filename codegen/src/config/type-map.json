@@ -8,7 +8,21 @@
         "AIMaskRef": "masks",
         "AIToolHandle": "tools",
         "AITimerHandle": "timers",
-        "AINotifierHandle": "notifiers"
+        "AINotifierHandle": "notifiers",
+        "AIDictionaryRef": "dictionaries",
+        "ConstAIDictionaryRef": "dictionaries",
+        "AIEntryRef": "entries",
+        "AIDictKey": "dictKeys",
+        "AIDictionaryIterator": "dictIterators",
+        "AIArrayRef": "arrays",
+        "AIArtStyleHandle": "artStyles",
+        "AIPatternHandle": "patterns",
+        "AIGradientHandle": "gradients",
+        "AICustomColorHandle": "customColors"
+    },
+    "managed_handles": {
+        "ai::ArtboardProperties": "artboardProperties",
+        "ai::ArtboardList": "artboardLists"
     },
     "primitives": {
         "AIBoolean": "bool",
@@ -25,7 +39,9 @@
         "AIToolType": "int32_t",
         "AIToolTime": "uint32_t",
         "AIBlendingMode": "int32_t",
-        "AIKnockout": "int32_t"
+        "AIKnockout": "int32_t",
+        "ai::ArtboardID": "int32_t",
+        "AIEntryType": "int32_t"
     },
     "structs": {
         "AIRealRect": "rect",
