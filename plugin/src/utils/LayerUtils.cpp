@@ -5,8 +5,8 @@
  */
 
 #include "LayerUtils.hpp"
-#include "../SuitePointers.hpp"
 #include "IllustratorSDK.h"
+#include "SuitePointers.hpp"
 
 namespace LayerUtils {
 

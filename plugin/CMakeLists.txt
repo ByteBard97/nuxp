@@ -239,6 +239,7 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SSE.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/SuitePointers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HandleManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MenuHandler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ConfigManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Errors.cpp
     # Utility functions

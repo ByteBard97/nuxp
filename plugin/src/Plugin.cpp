@@ -1,6 +1,16 @@
 /**
  * NUXP Plugin - Main Entry Point
  *
+ * ⚠️ DO NOT MODIFY THIS FILE FOR DOWNSTREAM-SPECIFIC CONCERNS ⚠️
+ *
+ * This is the STANDALONE entry point for NUXP. When downstream projects
+ * (like FloraBridge) use NUXP, they link against nuxp-core (INTERFACE library)
+ * which does NOT compile this file. Downstream plugins have their own
+ * entry point that handles initialization in that context.
+ *
+ * If you see "dual initialization" issues, the fix is in CMake configuration,
+ * NOT by gutting this file.
+ *
  * This file implements the Adobe Illustrator plugin entry point and lifecycle
  * management for the NUXP HTTP/JSON bridge plugin.
  *

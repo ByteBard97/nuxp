@@ -5,9 +5,9 @@
  */
 
 #include "SuitePointers.hpp"
+#include "AIAssertion.h"
 #include "AIFilePath.h"
 #include "SPBlocks.h"
-#include "AIAssertion.h"
 
 // External basic suite (set in Plugin.cpp)
 extern "C" {
@@ -34,7 +34,8 @@ AIDictionarySuite *SuitePointers::sAIDictionary = nullptr;
 AIEntrySuite *SuitePointers::sAIEntry = nullptr;
 AIArtboardSuite *SuitePointers::sAIArtboard = nullptr;
 AIBlendStyleSuite *SuitePointers::sAIBlendStyle = nullptr;
-// AIFontSuite *SuitePointers::sAIFont = nullptr;  // Disabled - ATE header conflicts
+// AIFontSuite *SuitePointers::sAIFont = nullptr;  // Disabled - ATE header
+// conflicts
 AIDocumentListSuite *SuitePointers::sAIDocumentList = nullptr;
 AIArtSetSuite *SuitePointers::sAIArtSet = nullptr;
 AIToolSuite *SuitePointers::sAITool = nullptr;
@@ -49,8 +50,8 @@ bool SuitePointers::sAcquired = false;
 // -------------------------------------------------------------------------
 // Global Suite Pointer Aliases for Generated Wrappers
 // -------------------------------------------------------------------------
-// The code generator produces extern declarations like "extern AIArtSuite* sArt"
-// (without the "AI" prefix). These aliases point to the class members.
+// The code generator produces extern declarations like "extern AIArtSuite*
+// sArt" (without the "AI" prefix). These aliases point to the class members.
 
 AIArtSuite *sArt = nullptr;
 AIDocumentSuite *sDocument = nullptr;
@@ -82,10 +83,11 @@ AITimerSuite *sTimer = nullptr;
 AIUnicodeStringSuite *sAIUnicodeString = nullptr;
 AIFilePathSuite *sAIFilePath = nullptr;
 SPBlocksSuite *sSPBlocks = nullptr;
-// Note: sAIArtboard is also expected by IAIArtboards.cpp - we alias our class member
-AIArtboardSuite* sAIArtboard = nullptr;
+// Note: sAIArtboard is also expected by IAIArtboards.cpp - we alias our class
+// member
+AIArtboardSuite *sAIArtboard = nullptr;
 // AIAssertionSuite is used by IAIArtboards.cpp for assertions
-AIAssertionSuite* sAIAssertion = nullptr;
+AIAssertionSuite *sAIAssertion = nullptr;
 
 // -------------------------------------------------------------------------
 // Helper Macro for Suite Acquisition
@@ -96,8 +98,8 @@ AIAssertionSuite* sAIAssertion = nullptr;
     const void *suite = nullptr;                                               \
     ASErr err = sSPBasic->AcquireSuite(name, version, &suite);                 \
     if (err == kNoErr && suite != nullptr) {                                   \
-      s##type = const_cast<type##Suite *>(                                     \
-          static_cast<const type##Suite *>(suite));                            \
+      s##type =                                                                \
+          const_cast<type##Suite *>(static_cast<const type##Suite *>(suite));  \
     }                                                                          \
   } while (0)
 
@@ -144,8 +146,10 @@ ASErr SuitePointers::Acquire() {
   ACQUIRE_SUITE(kAIEntrySuite, AIEntry, kAIEntrySuiteVersion);
   ACQUIRE_SUITE(kAIArtboardSuite, AIArtboard, kAIArtboardSuiteVersion);
   ACQUIRE_SUITE(kAIBlendStyleSuite, AIBlendStyle, kAIBlendStyleSuiteVersion);
-  // ACQUIRE_SUITE(kAIFontSuite, AIFont, kAIFontSuiteVersion);  // Disabled - ATE conflicts
-  ACQUIRE_SUITE(kAIDocumentListSuite, AIDocumentList, kAIDocumentListSuiteVersion);
+  // ACQUIRE_SUITE(kAIFontSuite, AIFont, kAIFontSuiteVersion);  // Disabled -
+  // ATE conflicts
+  ACQUIRE_SUITE(kAIDocumentListSuite, AIDocumentList,
+                kAIDocumentListSuiteVersion);
   ACQUIRE_SUITE(kAIArtSetSuite, AIArtSet, kAIArtSetSuiteVersion);
   ACQUIRE_SUITE(kAIToolSuite, AITool, kAIToolSuiteVersion);
   ACQUIRE_SUITE(kAIGroupSuite, AIGroup, kAIGroupSuiteVersion);
@@ -157,26 +161,39 @@ ASErr SuitePointers::Acquire() {
   // Acquire SDK implementation suites (for IAI*.cpp files)
   {
     const void *suite = nullptr;
-    if (sSPBasic->AcquireSuite(kAIUnicodeStringSuite, kAIUnicodeStringSuiteVersion, &suite) == kNoErr && suite) {
-      sAIUnicodeString = const_cast<AIUnicodeStringSuite*>(static_cast<const AIUnicodeStringSuite*>(suite));
+    if (sSPBasic->AcquireSuite(kAIUnicodeStringSuite,
+                               kAIUnicodeStringSuiteVersion,
+                               &suite) == kNoErr &&
+        suite) {
+      sAIUnicodeString = const_cast<AIUnicodeStringSuite *>(
+          static_cast<const AIUnicodeStringSuite *>(suite));
     }
   }
   {
     const void *suite = nullptr;
-    if (sSPBasic->AcquireSuite(kAIFilePathSuite, kAIFilePathSuiteVersion, &suite) == kNoErr && suite) {
-      sAIFilePath = const_cast<AIFilePathSuite*>(static_cast<const AIFilePathSuite*>(suite));
+    if (sSPBasic->AcquireSuite(kAIFilePathSuite, kAIFilePathSuiteVersion,
+                               &suite) == kNoErr &&
+        suite) {
+      sAIFilePath = const_cast<AIFilePathSuite *>(
+          static_cast<const AIFilePathSuite *>(suite));
     }
   }
   {
     const void *suite = nullptr;
-    if (sSPBasic->AcquireSuite(kSPBlocksSuite, kSPBlocksSuiteVersion, &suite) == kNoErr && suite) {
-      sSPBlocks = const_cast<SPBlocksSuite*>(static_cast<const SPBlocksSuite*>(suite));
+    if (sSPBasic->AcquireSuite(kSPBlocksSuite, kSPBlocksSuiteVersion, &suite) ==
+            kNoErr &&
+        suite) {
+      sSPBlocks = const_cast<SPBlocksSuite *>(
+          static_cast<const SPBlocksSuite *>(suite));
     }
   }
   {
     const void *suite = nullptr;
-    if (sSPBasic->AcquireSuite(kAIAssertionSuite, kAIAssertionSuiteVersion, &suite) == kNoErr && suite) {
-      sAIAssertion = const_cast<AIAssertionSuite*>(static_cast<const AIAssertionSuite*>(suite));
+    if (sSPBasic->AcquireSuite(kAIAssertionSuite, kAIAssertionSuiteVersion,
+                               &suite) == kNoErr &&
+        suite) {
+      sAIAssertion = const_cast<AIAssertionSuite *>(
+          static_cast<const AIAssertionSuite *>(suite));
     }
   }
 
@@ -233,8 +250,10 @@ void SuitePointers::Release() {
   RELEASE_SUITE(kAIEntrySuite, AIEntry, kAIEntrySuiteVersion);
   RELEASE_SUITE(kAIArtboardSuite, AIArtboard, kAIArtboardSuiteVersion);
   RELEASE_SUITE(kAIBlendStyleSuite, AIBlendStyle, kAIBlendStyleSuiteVersion);
-  // RELEASE_SUITE(kAIFontSuite, AIFont, kAIFontSuiteVersion);  // Disabled - ATE conflicts
-  RELEASE_SUITE(kAIDocumentListSuite, AIDocumentList, kAIDocumentListSuiteVersion);
+  // RELEASE_SUITE(kAIFontSuite, AIFont, kAIFontSuiteVersion);  // Disabled -
+  // ATE conflicts
+  RELEASE_SUITE(kAIDocumentListSuite, AIDocumentList,
+                kAIDocumentListSuiteVersion);
   RELEASE_SUITE(kAIArtSetSuite, AIArtSet, kAIArtSetSuiteVersion);
   RELEASE_SUITE(kAIToolSuite, AITool, kAIToolSuiteVersion);
   RELEASE_SUITE(kAIGroupSuite, AIGroup, kAIGroupSuiteVersion);
@@ -255,6 +274,10 @@ void SuitePointers::Release() {
   if (sSPBlocks) {
     sSPBasic->ReleaseSuite(kSPBlocksSuite, kSPBlocksSuiteVersion);
     sSPBlocks = nullptr;
+  }
+  if (sAIAssertion) {
+    sSPBasic->ReleaseSuite(kAIAssertionSuite, kAIAssertionSuiteVersion);
+    sAIAssertion = nullptr;
   }
 
   // Clear global aliases
@@ -323,7 +346,8 @@ AIArtboardSuite *SuitePointers::AIArtboard() { return sAIArtboard; }
 
 AIBlendStyleSuite *SuitePointers::AIBlendStyle() { return sAIBlendStyle; }
 
-// AIFontSuite *SuitePointers::AIFont() { return sAIFont; }  // Disabled - ATE conflicts
+// AIFontSuite *SuitePointers::AIFont() { return sAIFont; }  // Disabled - ATE
+// conflicts
 
 AIDocumentListSuite *SuitePointers::AIDocumentList() { return sAIDocumentList; }
 
