@@ -76,6 +76,7 @@ interface FunctionView {
     singleOutputName: string;
     callParams: string;
     returnsBooleanDirect: boolean; // For functions that return AIBoolean (not via output param)
+    returnsDirectValue: boolean;   // For functions that return a non-error value directly
 }
 
 /**
@@ -279,6 +280,24 @@ export class TypeScriptGenerator {
     }
 
     /**
+     * Get the TypeScript return type for a function that returns a value directly
+     * (not AIErr/ASErr/void/AIBoolean). Returns null if not a direct return type.
+     */
+    private getDirectReturnType(returnType: string): string | null {
+        // Check if return type is a handle -> number
+        if (this.config.handles[returnType]) return 'number';
+        // Check if return type is a primitive
+        if (this.config.primitives[returnType]) {
+            const jsonType = this.config.primitives[returnType];
+            if (jsonType === 'bool') return 'boolean';
+            return 'number';
+        }
+        // Check if return type is a string type
+        if (this.config.string_types.includes(returnType)) return 'string';
+        return null;
+    }
+
+    /**
      * Collects all struct types used in the suite
      * @param suite - The suite to analyze
      * @returns Set of struct type names used
@@ -348,6 +367,9 @@ export class TypeScriptGenerator {
 
         // Check if function returns AIBoolean directly (not via output param)
         const returnsBooleanDirect = func.returnType === 'AIBoolean';
+        // Check if function returns a non-error value directly (handle, primitive, string)
+        const directReturnTsType = this.getDirectReturnType(func.returnType);
+        const hasDirectReturn = !returnsBooleanDirect && directReturnTsType !== null;
 
         // Generate input parameter views
         const paramViews: ParamView[] = inputParams.map((param, index) => ({
@@ -364,15 +386,45 @@ export class TypeScriptGenerator {
             isLast: index === outputParams.length - 1
         }));
 
-        // Determine return type - if returns AIBoolean directly, override to boolean
-        let returnType = this.determineReturnType(outputParams);
+        // Determine return type and template flags
+        let returnType: string;
+        let hasMultipleOutputs: boolean;
+        let hasSingleOutput: boolean;
+        let singleOutputName: string;
+        let useDirectValue: boolean;
+
         if (returnsBooleanDirect) {
             returnType = 'boolean';
+            hasMultipleOutputs = false;
+            hasSingleOutput = false;
+            singleOutputName = '';
+            useDirectValue = false;
+        } else if (hasDirectReturn && outputParams.length > 0) {
+            // Direct return value + output params: combine into multi-output object
+            const resultField = `result: ${directReturnTsType!}`;
+            const outputFields = outputParams.map(p => `${p.name}: ${this.mapToTypeScript(p)}`);
+            returnType = `{ ${[resultField, ...outputFields].join('; ')} }`;
+            hasMultipleOutputs = true;
+            hasSingleOutput = false;
+            singleOutputName = '';
+            useDirectValue = false;
+        } else if (hasDirectReturn) {
+            // Simple direct return, no output params
+            returnType = directReturnTsType!;
+            hasMultipleOutputs = false;
+            hasSingleOutput = false;
+            singleOutputName = '';
+            useDirectValue = true;
+        } else {
+            // Standard: derive return type from output params
+            returnType = this.determineReturnType(outputParams);
+            hasMultipleOutputs = outputParams.length > 1;
+            hasSingleOutput = outputParams.length === 1;
+            singleOutputName = hasSingleOutput ? outputParams[0].name : '';
+            useDirectValue = false;
         }
+
         const hasReturn = returnType !== 'void';
-        const hasMultipleOutputs = outputParams.length > 1 && !returnsBooleanDirect;
-        const hasSingleOutput = outputParams.length === 1 && !returnsBooleanDirect;
-        const singleOutputName = hasSingleOutput ? outputParams[0].name : '';
 
         // Generate parameter list string for function signature
         const paramList = paramViews.map(p => `${p.name}: ${p.tsType}`).join(', ');
@@ -394,7 +446,8 @@ export class TypeScriptGenerator {
             outputParams: outputParamViews,
             singleOutputName,
             callParams,
-            returnsBooleanDirect
+            returnsBooleanDirect,
+            returnsDirectValue: useDirectValue
         };
     }
 
@@ -578,6 +631,23 @@ export class TypeScriptGenerator {
      * @returns The return description string
      */
     private generateReturnDescription(func: FunctionInfo, outputParams: ParamInfo[]): string {
+        // Handle direct value returns (non-error return types)
+        const directReturnType = this.getDirectReturnType(func.returnType);
+        if (directReturnType !== null && func.returnType !== 'AIBoolean') {
+            if (outputParams.length > 0) {
+                // Combined: direct return + output params
+                const outputNames = outputParams.map(p => p.name).join(', ');
+                return `An object containing: result (${func.returnType}), ${outputNames}`;
+            }
+            if (this.config.handles[func.returnType]) {
+                return `Handle ID for the returned ${func.returnType}`;
+            }
+            return `The ${func.returnType} value`;
+        }
+        if (func.returnType === 'AIBoolean') {
+            return 'True if the condition is met, false otherwise';
+        }
+
         if (outputParams.length === 0) {
             return '';
         }
@@ -692,6 +762,10 @@ export async function {{name}}({{paramList}}): Promise<{{returnType}}> {
     const result = await callCpp<{ result: boolean }>(SUITE_NAME, '{{name}}', { {{callParams}} });
     return result.result;
 {{/returnsBooleanDirect}}
+{{#returnsDirectValue}}
+    const result = await callCpp<{ result: {{returnType}} }>(SUITE_NAME, '{{name}}', { {{callParams}} });
+    return result.result;
+{{/returnsDirectValue}}
 {{#hasSingleOutput}}
     const result = await callCpp<{ {{singleOutputName}}: {{returnType}} }>(SUITE_NAME, '{{name}}', { {{callParams}} });
     return result.{{singleOutputName}};

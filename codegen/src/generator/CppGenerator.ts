@@ -25,7 +25,7 @@ interface TypeMapConfig {
 /**
  * Return type categories for code generation
  */
-type ReturnTypeCategory = 'Error' | 'Boolean' | 'Void';
+type ReturnTypeCategory = 'Error' | 'Boolean' | 'Void' | 'Handle' | 'Primitive' | 'String' | 'Unsupported';
 
 /**
  * Mustache templates for C++ code generation
@@ -52,6 +52,15 @@ namespace {{suiteName}} {
 {{#returnsBoolean}}
  * @returns ["result"] - bool (from AIBoolean return)
 {{/returnsBoolean}}
+{{#returnsHandle}}
+ * @returns ["result"] - handle ID (from {{returnCppType}} return)
+{{/returnsHandle}}
+{{#returnsPrimitive}}
+ * @returns ["result"] - {{returnCppType}} value
+{{/returnsPrimitive}}
+{{#returnsString}}
+ * @returns ["result"] - string (from {{returnCppType}} return)
+{{/returnsString}}
  */
 nlohmann::json {{name}}(const nlohmann::json& params);
 
@@ -103,6 +112,25 @@ nlohmann::json {{name}}(const nlohmann::json& params) {
     // Call SDK function (returns void)
     s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
 {{/returnsVoid}}
+{{#returnsHandle}}
+    // Call SDK function (returns handle)
+    {{returnCppType}} result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+    if (result) {
+        response["result"] = HandleManager::{{returnRegistryName}}.Register(result);
+    } else {
+        response["result"] = -1;
+    }
+{{/returnsHandle}}
+{{#returnsPrimitive}}
+    // Call SDK function (returns primitive)
+    {{returnCppType}} result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+    response["result"] = result;
+{{/returnsPrimitive}}
+{{#returnsString}}
+    // Call SDK function (returns string)
+    {{returnCppType}} result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+    response["result"] = {{{returnStringMarshalExpr}}};
+{{/returnsString}}
 
 {{#marshalCode}}
 {{{.}}}
@@ -232,26 +260,34 @@ export class CppGenerator {
     private prepareHeaderData(suite: SuiteInfo): object {
         return {
             suiteName: suite.name,
-            functions: suite.functions.map(func => ({
-                name: getSafeFunctionName(func.name),
-                sdkName: func.name,  // Original SDK name for documentation
-                inputParams: func.params
-                    .filter(p => !p.isOutput)
-                    .map(p => ({
-                        name: p.name,
-                        type: p.type,
-                        isHandle: p.classification?.category === 'Handle',
-                        isOptional: this.isOptionalHandle(p)
-                    })),
-                outputParams: func.params
-                    .filter(p => p.isOutput)
-                    .map(p => ({
-                        name: p.name,
-                        type: p.type,
-                        isHandle: p.classification?.category === 'Handle'
-                    })),
-                returnsBoolean: func.returnType === 'AIBoolean'
-            }))
+            functions: suite.functions.map(func => {
+                const returnTypeCategory = this.classifyReturnType(func);
+                return {
+                    name: getSafeFunctionName(func.name),
+                    sdkName: func.name,  // Original SDK name for documentation
+                    inputParams: func.params
+                        .filter(p => !p.isOutput)
+                        .map(p => ({
+                            name: p.name,
+                            type: p.type,
+                            isHandle: p.classification?.category === 'Handle',
+                            isOptional: this.isOptionalHandle(p)
+                        })),
+                    outputParams: func.params
+                        .filter(p => p.isOutput)
+                        .map(p => ({
+                            name: p.name,
+                            type: p.type,
+                            isHandle: p.classification?.category === 'Handle'
+                        })),
+                    returnsBoolean: returnTypeCategory === 'Boolean',
+                    returnsHandle: returnTypeCategory === 'Handle',
+                    returnsPrimitive: returnTypeCategory === 'Primitive',
+                    returnsString: returnTypeCategory === 'String',
+                    returnCppType: func.returnType,
+                    returnRegistryName: returnTypeCategory === 'Handle' ? (this.config.handles[func.returnType] || '') : '',
+                };
+            })
         };
     }
 
@@ -310,7 +346,6 @@ export class CppGenerator {
                 'AIPattern',     // Complex structure
                 'AIPathStyle',   // Complex nested structure
                 'AISuspendedAppContext', // Opaque type
-                'ai::FilePath',  // SDK implementation type - requires SDK library
                 'ArtboardList',  // SDK implementation type
                 'ArtboardProperties', // SDK implementation type
             ];
@@ -338,15 +373,7 @@ export class CppGenerator {
      * Returns true if function should be skipped
      */
     private hasUnsupportedReturnType(func: FunctionInfo): boolean {
-        // Supported return types:
-        // - AIErr/ASErr: Error codes that we check for errors
-        // - AIBoolean: Boolean values we wrap in {"result": true/false}
-        // - void: No return value, we just call the function
-        const supportedReturnTypes = ['AIErr', 'ASErr', 'AIBoolean', 'void'];
-        if (!supportedReturnTypes.includes(func.returnType)) {
-            return true;
-        }
-        return false;
+        return this.classifyReturnType(func) === 'Unsupported';
     }
 
     /**
@@ -359,7 +386,22 @@ export class CppGenerator {
         if (func.returnType === 'void') {
             return 'Void';
         }
-        return 'Error'; // AIErr, ASErr
+        if (func.returnType === 'AIErr' || func.returnType === 'ASErr') {
+            return 'Error';
+        }
+
+        // Use type-map.json for non-standard return types
+        if (this.config.handles[func.returnType]) {
+            return 'Handle';
+        }
+        if (this.config.primitives[func.returnType]) {
+            return 'Primitive';
+        }
+        if (this.config.string_types.includes(func.returnType)) {
+            return 'String';
+        }
+
+        return 'Unsupported';
     }
 
     /**
@@ -482,6 +524,26 @@ export class CppGenerator {
             }
         }
 
+        // For handle returns, get the registry name
+        let returnRegistryName = '';
+        const returnCppType = func.returnType;
+        if (returnTypeCategory === 'Handle') {
+            returnRegistryName = this.config.handles[func.returnType] || '';
+        }
+
+        // For string returns, determine the correct marshal expression
+        let returnStringMarshalExpr = '';
+        if (returnTypeCategory === 'String') {
+            if (func.returnType === 'ai::FilePath') {
+                returnStringMarshalExpr = 'result.GetFullPath().as_UTF8()';
+            } else if (func.returnType === 'ai::UnicodeString') {
+                returnStringMarshalExpr = 'result.as_UTF8()';
+            } else {
+                // const char* and similar pointer types
+                returnStringMarshalExpr = 'result ? std::string(result) : ""';
+            }
+        }
+
         return {
             name: safeName,           // Safe (prefixed) name for C++ function
             sdkName: func.name,       // Original SDK name for the actual call
@@ -492,7 +554,13 @@ export class CppGenerator {
             // Return type flags for template branching
             returnsError: returnTypeCategory === 'Error',
             returnsBoolean: returnTypeCategory === 'Boolean',
-            returnsVoid: returnTypeCategory === 'Void'
+            returnsVoid: returnTypeCategory === 'Void',
+            returnsHandle: returnTypeCategory === 'Handle',
+            returnsPrimitive: returnTypeCategory === 'Primitive',
+            returnsString: returnTypeCategory === 'String',
+            returnCppType,
+            returnRegistryName,
+            returnStringMarshalExpr,
         };
     }
 
@@ -537,6 +605,9 @@ export class CppGenerator {
                 if (baseType === 'ai::UnicodeString') {
                     lines.push(`    // Input string: ${param.name}`);
                     lines.push(`    ai::UnicodeString ${param.name}(params["${param.name}"].get<std::string>());`);
+                } else if (baseType === 'ai::FilePath') {
+                    lines.push(`    // Input file path: ${param.name}`);
+                    lines.push(`    ai::FilePath ${param.name}(ai::UnicodeString(params["${param.name}"].get<std::string>()));`);
                 } else {
                     // const char* or other string types
                     lines.push(`    // Input string: ${param.name}`);
@@ -606,6 +677,9 @@ export class CppGenerator {
                 if (baseType === 'ai::UnicodeString') {
                     lines.push(`    // Output string: ${param.name}`);
                     lines.push(`    ai::UnicodeString ${param.name};`);
+                } else if (baseType === 'ai::FilePath') {
+                    lines.push(`    // Output file path: ${param.name}`);
+                    lines.push(`    ai::FilePath ${param.name};`);
                 } else if (baseType === 'char*') {
                     // char** output - SDK allocates and manages the string
                     // Use non-const char* since SDK expects char** not const char**
@@ -671,6 +745,9 @@ export class CppGenerator {
                 if (baseType === 'ai::UnicodeString') {
                     lines.push(`    // Marshal output string: ${param.name}`);
                     lines.push(`    response["${param.name}"] = ${param.name}.as_UTF8();`);
+                } else if (baseType === 'ai::FilePath') {
+                    lines.push(`    // Marshal output file path: ${param.name}`);
+                    lines.push(`    response["${param.name}"] = ${param.name}.GetFullPath().as_UTF8();`);
                 } else if (baseType === 'char*') {
                     // char** output - copy SDK-managed string to JSON
                     lines.push(`    // Marshal output string pointer: ${param.name}`);

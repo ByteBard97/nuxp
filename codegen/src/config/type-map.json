@@ -23,7 +23,9 @@
         "AIReal": "double",
         "ASReal": "double",
         "AIToolType": "int32_t",
-        "AIToolTime": "uint32_t"
+        "AIToolTime": "uint32_t",
+        "AIBlendingMode": "int32_t",
+        "AIKnockout": "int32_t"
     },
     "structs": {
         "AIRealRect": "rect",
@@ -32,7 +34,8 @@
     },
     "string_types": [
         "ai::UnicodeString",
-        "const char*"
+        "const char*",
+        "ai::FilePath"
     ],
     "ignored_types": [
         "SPBasicSuite",
