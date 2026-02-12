@@ -5,6 +5,7 @@ export interface ParamInfo {
     type: string;
     isPointer: boolean;
     isConst: boolean;
+    isReference: boolean;
     isOutput: boolean;
     classification?: TypeDefinition;
 }

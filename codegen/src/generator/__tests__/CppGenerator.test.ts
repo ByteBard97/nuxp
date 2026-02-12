@@ -14,6 +14,7 @@ function mockParam(
     options: {
         isPointer?: boolean;
         isConst?: boolean;
+        isReference?: boolean;
         isOutput?: boolean;
         category?: TypeCategory;
         registryName?: string;
@@ -23,6 +24,7 @@ function mockParam(
     const {
         isPointer = false,
         isConst = false,
+        isReference = false,
         isOutput = false,
         category,
         registryName,
@@ -37,7 +39,7 @@ function mockParam(
         category: category,
         isPointer,
         isConst,
-        isReference: false,
+        isReference,
         registryName,
         cppType: effectiveBaseType,
         jsonType: getJsonType(category, effectiveBaseType)
@@ -48,6 +50,7 @@ function mockParam(
         type,
         isPointer,
         isConst,
+        isReference,
         isOutput,
         classification
     };
@@ -281,7 +284,7 @@ describe('CppGenerator', () => {
             expect(source.content).toContain('HandleManager::art.Get');
         });
 
-        it('should use _ptr variable for handle lookup', () => {
+        it('should use direct _val variable for handle lookup', () => {
             const func = mockFunction('GetArtType', [
                 mockParam('art', 'AIArtHandle', {
                     category: 'Handle',
@@ -292,7 +295,8 @@ describe('CppGenerator', () => {
             const suite = mockSuite([func]);
             const [, source] = generator.generate(suite);
 
-            expect(source.content).toContain('art_ptr');
+            // Generator uses a single-step pattern: _val = HandleManager::registry.Get(...)
+            expect(source.content).toContain('art_val = HandleManager::art.Get');
         });
 
         it('should throw error for invalid handles', () => {
@@ -310,7 +314,7 @@ describe('CppGenerator', () => {
             expect(source.content).toContain('Invalid AIArtHandle handle');
         });
 
-        it('should extract handle value with _val suffix', () => {
+        it('should assign handle directly from registry Get', () => {
             const func = mockFunction('GetArtType', [
                 mockParam('art', 'AIArtHandle', {
                     category: 'Handle',
@@ -321,7 +325,8 @@ describe('CppGenerator', () => {
             const suite = mockSuite([func]);
             const [, source] = generator.generate(suite);
 
-            expect(source.content).toContain('art_val = *art_ptr');
+            // Generator assigns _val directly from HandleManager::Get (no intermediate _ptr)
+            expect(source.content).toContain('AIArtHandle art_val = HandleManager::art.Get(params["art"].get<int32_t>())');
         });
 
         it('should pass _val variable to SDK function call', () => {
@@ -471,34 +476,34 @@ describe('CppGenerator', () => {
     });
 
     describe('String marshaling', () => {
-        it('should construct ai::UnicodeString from JSON string', () => {
-            const func = mockFunction('SetArtName', [
+        it('should generate correct marshaling for ai::UnicodeString params', () => {
+            const func = mockFunction('GetArtName', [
+                mockParam('art', 'AIArtHandle', {
+                    category: 'Handle',
+                    baseType: 'AIArtHandle',
+                    registryName: 'art',
+                    isPointer: true,
+                    isOutput: false,
+                }),
                 mockParam('name', 'ai::UnicodeString', {
                     category: 'String',
-                    baseType: 'ai::UnicodeString'
-                })
-            ]);
-
-            const suite = mockSuite([func]);
-            const [, source] = generator.generate(suite);
-
-            expect(source.content).toContain('ai::UnicodeString name(params["name"].get<std::string>())');
-        });
-
-        it('should use .as_UTF8() for output UnicodeString', () => {
-            const func = mockFunction('GetArtName', [
-                mockParam('name', 'ai::UnicodeString*', {
-                    isPointer: true,
+                    baseType: 'ai::UnicodeString',
+                    isReference: true,
                     isOutput: true,
-                    category: 'String',
-                    baseType: 'ai::UnicodeString'
-                })
+                    isPointer: false,
+                    isConst: false,
+                }),
             ]);
 
             const suite = mockSuite([func]);
             const [, source] = generator.generate(suite);
 
+            // UnicodeString functions should now be generated (not blocked)
+            expect(source.content).toContain('GetArtName');
+            // Output UnicodeString should use .as_UTF8() for marshaling
             expect(source.content).toContain('.as_UTF8()');
+            // Output reference param should NOT have & prefix in call args
+            expect(source.content).not.toContain('&name');
         });
 
         it('should handle const char* input strings', () => {
@@ -518,20 +523,32 @@ describe('CppGenerator', () => {
             expect(source.content).toContain('const char* str = str_str.c_str()');
         });
 
-        it('should declare output UnicodeString properly', () => {
-            const func = mockFunction('GetArtName', [
-                mockParam('name', 'ai::UnicodeString*', {
+        it('should generate correct input marshaling for ai::UnicodeString', () => {
+            const func = mockFunction('SetArtName', [
+                mockParam('art', 'AIArtHandle', {
+                    category: 'Handle',
+                    baseType: 'AIArtHandle',
+                    registryName: 'art',
                     isPointer: true,
-                    isOutput: true,
+                    isOutput: false,
+                }),
+                mockParam('name', 'const ai::UnicodeString&', {
                     category: 'String',
-                    baseType: 'ai::UnicodeString'
-                })
+                    baseType: 'ai::UnicodeString',
+                    isReference: true,
+                    isConst: true,
+                    isOutput: false,
+                    isPointer: false,
+                }),
             ]);
 
             const suite = mockSuite([func]);
             const [, source] = generator.generate(suite);
 
-            expect(source.content).toContain('ai::UnicodeString name;');
+            // UnicodeString input functions should be generated (not blocked)
+            expect(source.content).toContain('SetArtName');
+            // Input UnicodeString should construct from std::string
+            expect(source.content).toContain('ai::UnicodeString');
         });
     });
 

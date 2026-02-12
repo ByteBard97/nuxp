@@ -14,6 +14,7 @@ function mockParam(
     options: {
         isPointer?: boolean;
         isConst?: boolean;
+        isReference?: boolean;
         isOutput?: boolean;
         category?: TypeCategory;
         registryName?: string;
@@ -24,6 +25,7 @@ function mockParam(
     const {
         isPointer = false,
         isConst = false,
+        isReference = false,
         isOutput = false,
         category,
         registryName,
@@ -50,6 +52,7 @@ function mockParam(
         type,
         isPointer,
         isConst,
+        isReference,
         isOutput,
         classification
     };
@@ -713,6 +716,7 @@ describe('TypeScriptGenerator', () => {
                 type: 'AIReal',
                 isPointer: false,
                 isConst: false,
+                isReference: false,
                 isOutput: false
                 // No classification
             };
@@ -799,6 +803,7 @@ describe('TypeScriptGenerator', () => {
                 type: 'AIArtHandle',
                 isPointer: false,
                 isConst: false,
+                isReference: false,
                 isOutput: false
                 // No classification - relies on raw type mapping
             };
@@ -831,6 +836,7 @@ describe('TypeScriptGenerator', () => {
                 type: 'AIRealRect',
                 isPointer: false,
                 isConst: false,
+                isReference: false,
                 isOutput: false
                 // No classification
             };
@@ -848,6 +854,7 @@ describe('TypeScriptGenerator', () => {
                 type: 'AIErr',
                 isPointer: false,
                 isConst: false,
+                isReference: false,
                 isOutput: true
                 // No classification
             };

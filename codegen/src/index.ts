@@ -110,6 +110,7 @@ const BLOCKED_SUITES: Set<string> = new Set([
  * - void/void* parameters (callbacks, user data)
  * - char** outputs (SDK-managed strings)
  * - complex struct types (AIColor, AIGradient, etc.)
+ * - unmapped types (enums, complex structs, SPPluginRef)
  * - array parameters
  * - conditionally compiled (ILLUSTRATOR_MINIMAL)
  * - triple-pointer outputs (AIArtHandle***)
@@ -135,55 +136,50 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
     'ResumeAppContext',
     'SuspendAppContext',
 
-    // AIArtSuite - non-AIErr returns, complex types
-    'ArtHasFill',
-    'ArtHasStroke',
-    'ArtsHaveEqualPaths',
-    'CancelKeyArt',
+    // AIArtSuite - complex types (XMP, dictionary, etc. - NOT return type issues)
+    'ArtsHaveEqualPaths', // Complex comparison
+    'CancelKeyArt', // void return but special semantics
     'DeleteNote',
-    'GetArtXMP',
-    'GetDictionary',
+    'GetArtXMP', // XMP complex type
+    'GetDictionary', // Dictionary complex type
     'GetGlobalTimeStamp',
-    'HasDictionary',
-    'HasNote',
-    'IsArtClipping',
-    'IsArtStyledArt',
-    'IsDictionaryEmpty',
-    'IsPixelPerfect',
-    'ObjectsAreEquivalent',
-    'ValidArt',
+    'ObjectsAreEquivalent', // Complex comparison
+    // Note: These AIBoolean-returning functions are now supported via code generator:
+    // 'ArtHasFill', 'ArtHasStroke', 'HasDictionary', 'HasNote',
+    // 'IsArtClipping', 'IsArtStyledArt', 'IsDictionaryEmpty', 'IsPixelPerfect', 'ValidArt'
 
     // AIArtboardSuite - complex types (AIColor)
     'GetColor',
     'SetColor',
 
-    // AIBlendStyleSuite - non-AIErr returns
-    'ContainsNonIsolatedBlending',
-    'GetAlphaIsShape',
-    'GetBlendingMode',
-    'GetDocumentIsolated',
-    'GetDocumentKnockout',
-    'GetInheritedKnockout',
-    'GetIsolated',
-    'GetKnockout',
-    'GetOpacity',
+    // AIBlendStyleSuite - these return non-AIErr types but are now handled:
+    // Functions returning AIBoolean are now supported, others may have output params
+    // Keeping GetBlendingMode and GetOpacity blocked as they return non-bool non-error types
+    'GetBlendingMode', // Returns enum/int, needs output param pattern instead
+    'GetOpacity', // Returns AIReal, needs output param pattern instead
+    // Note: These AIBoolean-returning functions are now supported via code generator:
+    // 'ContainsNonIsolatedBlending', 'GetAlphaIsShape', 'GetDocumentIsolated',
+    // 'GetDocumentKnockout', 'GetInheritedKnockout', 'GetIsolated', 'GetKnockout'
 
-    // AIDictionarySuite - non-AIErr returns
+    // AIDictionarySuite - non-AIErr returns and const char** outputs
     'AddRef',
     'Get',
     'GetBinaryEntry',
+    'GetStringEntry',  // const char** output parameter misclassified as input
     'IsKnown',
     'Key',
     'Release',
     'SetBinaryEntry',
     'Size',
 
-    // AIDocumentSuite - complex types, non-AIErr returns
+    // AIDocumentSuite - complex types, non-AIErr returns, const char** outputs
     'GetAIVersion',
     // 'GetDictionary', // already added above
     'GetDocumentAssetMgmtInfo',
     'GetDocumentPixelPerfectStatus',
     'GetDocumentProfiles',
+    'GetDocumentURL',   // const char** output parameter misclassified as input
+    'GetDocumentXAP',   // const char** output parameter misclassified as input
     'GetEffectiveScaleFactor',
     'GetNonRecordedDictionary',
     'GetNonRecordedDictionaryForDocument',
@@ -192,8 +188,10 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
     'SetDocumentProfiles',
     'SyncDocument',
 
-    // AIEntrySuite - non-AIErr returns, complex types
+    // AIEntrySuite - non-AIErr returns, complex types, const char** outputs
     // 'AddRef', // already added
+    'AsString', // const char** output parameter misclassified
+    'ToString', // const char** output parameter misclassified
     'Equiv',
     'FromArray',
     'FromArtStyle',
@@ -234,18 +232,17 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
 
     // AIMaskSuite - non-AIErr returns
     // 'AddRef', // already added
-    'GetArt',
-    'GetClipping',
-    'GetDisabled',
-    'GetInverted',
-    'GetLinked',
-    'IsEditingArt',
+    'GetArt', // Returns AIArtHandle, needs different handling
     // 'Release', // already added
+    // Note: These AIBoolean-returning functions are now supported via code generator:
+    // 'GetClipping', 'GetDisabled', 'GetInverted', 'GetLinked', 'IsEditingArt'
 
     // AIMdMemorySuite - void* params
     'MdMemoryLock',
 
-    // AINotifierSuite - void* params
+    // AINotifierSuite - void* params, const char** outputs
+    'GetNotifierName', // const char** output parameter misclassified
+    'GetNotifierType', // const char** output parameter misclassified
     'Notify',
 
     // AIRealMathSuite - all return void or non-AIErr
@@ -319,17 +316,21 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
     'RestrictAngleToRange',
     'ShortRatio',
 
-    // AITimerSuite - char** outputs
-    'GetTimerName',
+    // AITimerSuite - char** outputs are now supported via code generator
+    // 'GetTimerName',
 
-    // AIToolSuite - char** outputs, array params, void* params
-    'GetAlternateSelectionToolName',
-    'GetLastUsedSelectionTool',
-    'GetToolIcons',
-    'GetToolName',
-    'GetToolNameFromNumber',
-    'SetToolInfoVarValues',
-    'SetToolInfoVars',
+    // AIToolSuite - complex types, array params, void* params, const char** outputs
+    'AddTool',  // AIAddToolData has explicit constructor
+    'AddToolPrivate',  // AIAddToolDataPrivate has explicit constructor
+    'GetAlternateSelectionToolName', // May have other issues beyond char**
+    'GetCurrentToolName',  // const char** output parameter misclassified
+    'GetCurrentEffectiveToolName',  // const char** output parameter misclassified
+    'GetLastUsedSelectionTool', // void* params
+    'GetToolIcons', // Array params
+    'SetToolInfoVarValues', // void* params
+    'SetToolInfoVars', // void* params
+    // Note: These char**-output functions are now supported via code generator:
+    // 'GetToolName', 'GetToolNameFromNumber', 'GetTimerName'
 
     // AIUndoSuite - void params
     'RevertAndForgetLastTransaction',
@@ -379,6 +380,60 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
     'UpdateProgress',
     'WarningAlert',
     'YesNoAlert',
+
+    // AIBlendStyleSuite - enum params (AIBlendingMode, AIKnockout) and unmapped types (AIDictionaryRef, AIArtStyleHandle)
+    'SetBlendingMode',
+    'SetKnockout',
+    'GetBlendStyleAttrs',
+    'SetBlendStyleAttrs',
+    'GetFocalFillBlendStyleAttrs',
+    'SetFocalFillBlendStyleAttrs',
+    'GetFocalStrokeBlendStyleAttrs',
+    'SetFocalStrokeBlendStyleAttrs',
+    'GetBlendStyleAllAttrs',
+    'SetBlendStyleAllAttrs',
+    'GetFocalBlendStyleAllAttrs',
+    'SetFocalBlendStyleAllAttrs',
+    'GetFocalFillBlendStyleAllAttrs',
+    'SetFocalFillBlendStyleAllAttrs',
+
+    // AIAppContextSuite - SPPluginRef, AIAppContextHandle, enum types
+    'PushAppContext',
+    'PopAppContext',
+    'GetAppContextKind',
+    'SetAppContextKind',
+
+    // AINotifierSuite - SPPluginRef
+    'AddNotifier',
+
+    // AITimerSuite - SPPluginRef
+    'AddTimer',
+
+    // AILayerSuite - unmapped types (AIRGBColor struct, AIPaintOrder enum)
+    'SetLayerColor',
+    'InsertLayerAtPaintOrder',
+
+    // AIGroupSuite - enum (AINormalizeCompoundPathAlgorithm)
+    'NormalizeCompoundPath',
+
+    // AIDocumentSuite - complex/enum types
+    'SetCropStyle',
+    'GetPrintRecord',
+    'WriteDocumentWithOptions',
+    'GetDocumentFileFormatParameters',
+    'SetMiPrintRecord',
+    'GetMiPrintRecord',
+    'GetTextSelection',
+    'SetDocumentSpotColorMode',
+
+    // AIToolSuite - unmapped compound types
+    'SetToolDocInkParams',
+
+    // AIUserSuite - SPPluginRef, AIResourceManagerHandle
+    'CreateCursorResourceMgr',
+    'GetCursorID',
+    'DisposeCursorResourceMgr',
+    'SetCursorID',
 ]);
 
 // Configure logger with colored output

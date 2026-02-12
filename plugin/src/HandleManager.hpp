@@ -17,10 +17,10 @@ public:
   static HandleRegistry<ArtObject> art;              // AIArtHandle = ArtObject*
   static HandleRegistry<_t_AILayerOpaque> layers;    // AILayerHandle = _t_AILayerOpaque*
   static HandleRegistry<_t_AIDocument> documents;    // AIDocumentHandle = _t_AIDocument*
-
-  // Add more as needed:
-  // static HandleRegistry<...>   patterns;
-  // static HandleRegistry<...>   symbols;
+  static HandleRegistry<_AIMask> masks;                  // AIMaskRef = _AIMask*
+  static HandleRegistry<_t_AIToolOpaque> tools;          // AIToolHandle = _t_AIToolOpaque*
+  static HandleRegistry<_t_AITimerOpaque> timers;        // AITimerHandle = _t_AITimerOpaque*
+  static HandleRegistry<_t_AINotifierOpaque> notifiers;  // AINotifierHandle = _t_AINotifierOpaque*
 
   // Bump all registries at once (document switch, undo/redo)
   static void InvalidateAll();

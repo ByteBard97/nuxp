@@ -117,6 +117,7 @@ export class SuiteParser {
           const text = child.text;
           const isPointer = text.includes('*');
           const isConst = text.includes('const');
+          const isReference = text.includes('&');
 
           // Heuristic: Name is usually the last identifier
           // But types can be complex "AIArtHandle *art"
@@ -153,7 +154,8 @@ export class SuiteParser {
             type: typeName,
             isPointer,
             isConst,
-            isOutput: isPointer && !isConst,
+            isReference,
+            isOutput: !isConst && (isPointer || isReference),
             classification
           });
         }

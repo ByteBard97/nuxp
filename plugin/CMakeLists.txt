@@ -105,6 +105,8 @@ set(CORE_SOURCES
     src/utils/ColorUtils.cpp
     src/utils/DocumentUtils.cpp
     src/utils/SelectionUtils.cpp
+    src/utils/ToolUtils.cpp
+    src/utils/XMPUtils.cpp
 )
 
 # SDK implementation files for ai:: classes
@@ -136,6 +138,8 @@ set(CORE_HEADERS
     src/utils/ColorUtils.hpp
     src/utils/DocumentUtils.hpp
     src/utils/SelectionUtils.hpp
+    src/utils/ToolUtils.hpp
+    src/utils/XMPUtils.hpp
 )
 
 # Hand-written endpoint files (manually created endpoints)
@@ -249,6 +253,8 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ColorUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/DocumentUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/SelectionUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ToolUtils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/XMPUtils.cpp
     # Endpoints
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/DemoEndpoints.cpp
     ${NUXP_GENERATED_ENDPOINTS}

@@ -66,6 +66,17 @@ export class TypeClassifier {
             return result;
         }
 
+        // Check for char/char* types
+        // Note: "char **name" gets parsed as type="char *" or type="char" with isPointer=true
+        // These can be either input strings or output string pointers depending on context
+        // The CppGenerator checks isOutput to determine which case applies
+        if (base === 'char' || base === 'char *') {
+            result.category = 'String';
+            result.baseType = 'char*';
+            result.jsonType = 'std::string';
+            return result;
+        }
+
         // Check Handles
         if (this.config.handles[base]) {
             result.category = 'Handle';
