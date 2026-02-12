@@ -22,6 +22,7 @@ import { SuiteParser } from './parser/SuiteParser';
 import { CppGenerator } from './generator/CppGenerator';
 import { TypeScriptGenerator } from './generator/TypeScriptGenerator';
 import { SSEGenerator } from './generator/SSEGenerator';
+import { CustomRouteGenerator } from './generator/CustomRouteGenerator';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as glob from 'glob';
@@ -739,6 +740,47 @@ async function main(): Promise<void> {
         }
     } else {
         logger.debug('No events.json found, skipping SSE generation');
+    }
+
+    // Generate custom routes if routes.json exists
+    const routesConfigPath = path.resolve(srcDir, 'config', 'routes.json');
+    const hasRoutesConfig = await fs.pathExists(routesConfigPath);
+
+    if (hasRoutesConfig) {
+        logger.info('Generating custom routes...');
+
+        try {
+            const routeGen = new CustomRouteGenerator(routesConfigPath);
+
+            // Generate C++ CustomRouteRegistration.cpp
+            if (!options.tsOnly) {
+                const regFile = routeGen.generateCppRegistration();
+                const regPath = path.join(cppOutputDir, regFile.filename);
+                await fs.writeFile(regPath, regFile.content, 'utf-8');
+                logger.debug(`  Wrote ${regFile.filename}`);
+
+                const declFile = routeGen.generateCppDeclarations();
+                const declPath = path.join(cppOutputDir, declFile.filename);
+                await fs.writeFile(declPath, declFile.content, 'utf-8');
+                logger.debug(`  Wrote ${declFile.filename}`);
+            }
+
+            // Generate TypeScript customRoutes.ts
+            if (!options.cppOnly) {
+                const tsFile = routeGen.generateTypeScript();
+                const tsPath = path.join(tsOutputDir, tsFile.filename);
+                await fs.writeFile(tsPath, tsFile.content, 'utf-8');
+                logger.debug(`  Wrote ${tsFile.filename}`);
+            }
+
+            logger.info('Custom routes generated successfully');
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            logger.error(`Error generating custom routes: ${errorMessage}`);
+            errors.push({ header: 'routes.json', error: errorMessage });
+        }
+    } else {
+        logger.debug('No routes.json found, skipping custom route generation');
     }
 
     // Generate CMake include file for C++ sources (after CentralDispatcher so it's included)
