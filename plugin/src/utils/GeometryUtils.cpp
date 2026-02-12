@@ -5,7 +5,7 @@
  */
 
 #include "GeometryUtils.hpp"
-#include "../SuitePointers.hpp"
+#include "SuitePointers.hpp"
 
 namespace GeometryUtils {
 
@@ -26,16 +26,14 @@ static const AIReal kCircleKappa = 0.5522847498;
 // -------------------------------------------------------------------------
 
 AIArtHandle CreateCircle(AIReal centerX, AIReal centerY, AIReal radius) {
-  AIArtSuite *artSuite = SuitePointers::AIArt();
-  AIPathSuite *pathSuite = SuitePointers::AIPath();
-
-  if (artSuite == nullptr || pathSuite == nullptr) {
+  if (!SuitePointers::AIArt() || !SuitePointers::AIPath()) {
     return nullptr;
   }
 
   // Create a new path art object
   AIArtHandle path = nullptr;
-  ASErr error = artSuite->NewArt(kPathArt, kPlaceAboveAll, nullptr, &path);
+  ASErr error =
+      SuitePointers::AIArt()->NewArt(kPathArt, kPlaceAboveAll, nullptr, &path);
   if (error != kNoErr || path == nullptr) {
     return nullptr;
   }
@@ -84,16 +82,16 @@ AIArtHandle CreateCircle(AIReal centerX, AIReal centerY, AIReal radius) {
   segments[3].corner = false;
 
   // Set the path segments
-  error = pathSuite->SetPathSegments(path, 0, 4, segments);
+  error = SuitePointers::AIPath()->SetPathSegments(path, 0, 4, segments);
   if (error != kNoErr) {
-    artSuite->DisposeArt(path);
+    SuitePointers::AIArt()->DisposeArt(path);
     return nullptr;
   }
 
   // Close the path to complete the circle
-  error = pathSuite->SetPathClosed(path, true);
+  error = SuitePointers::AIPath()->SetPathClosed(path, true);
   if (error != kNoErr) {
-    artSuite->DisposeArt(path);
+    SuitePointers::AIArt()->DisposeArt(path);
     return nullptr;
   }
 
@@ -106,16 +104,14 @@ AIArtHandle CreateCircle(AIReal centerX, AIReal centerY, AIReal radius) {
 
 AIArtHandle CreateRectangle(AIReal left, AIReal top, AIReal right,
                             AIReal bottom) {
-  AIArtSuite *artSuite = SuitePointers::AIArt();
-  AIPathSuite *pathSuite = SuitePointers::AIPath();
-
-  if (artSuite == nullptr || pathSuite == nullptr) {
+  if (!SuitePointers::AIArt() || !SuitePointers::AIPath()) {
     return nullptr;
   }
 
   // Create a new path art object
   AIArtHandle path = nullptr;
-  ASErr error = artSuite->NewArt(kPathArt, kPlaceAboveAll, nullptr, &path);
+  ASErr error =
+      SuitePointers::AIArt()->NewArt(kPathArt, kPlaceAboveAll, nullptr, &path);
   if (error != kNoErr || path == nullptr) {
     return nullptr;
   }
@@ -161,16 +157,16 @@ AIArtHandle CreateRectangle(AIReal left, AIReal top, AIReal right,
   segments[3].corner = true;
 
   // Set the path segments
-  error = pathSuite->SetPathSegments(path, 0, 4, segments);
+  error = SuitePointers::AIPath()->SetPathSegments(path, 0, 4, segments);
   if (error != kNoErr) {
-    artSuite->DisposeArt(path);
+    SuitePointers::AIArt()->DisposeArt(path);
     return nullptr;
   }
 
   // Close the path to complete the rectangle
-  error = pathSuite->SetPathClosed(path, true);
+  error = SuitePointers::AIPath()->SetPathClosed(path, true);
   if (error != kNoErr) {
-    artSuite->DisposeArt(path);
+    SuitePointers::AIArt()->DisposeArt(path);
     return nullptr;
   }
 
@@ -268,12 +264,12 @@ void MoveArt(AIArtHandle art, AIReal dx, AIReal dy) {
 
   // Create a translation matrix
   AIRealMatrix matrix;
-  matrix.a = 1.0;  // Scale X
-  matrix.b = 0.0;  // Shear Y
-  matrix.c = 0.0;  // Shear X
-  matrix.d = 1.0;  // Scale Y
-  matrix.tx = dx;  // Translate X
-  matrix.ty = dy;  // Translate Y
+  matrix.a = 1.0; // Scale X
+  matrix.b = 0.0; // Shear Y
+  matrix.c = 0.0; // Shear X
+  matrix.d = 1.0; // Scale Y
+  matrix.tx = dx; // Translate X
+  matrix.ty = dy; // Translate Y
 
   // Apply the transformation
   // Flags: 0 means transform the art itself (not patterns, etc.)
@@ -306,12 +302,12 @@ void ScaleArt(AIArtHandle art, AIReal scaleFactor) {
   // This is equivalent to: translate to origin, scale, translate back
   // Combined matrix: [s, 0, 0, s, cx*(1-s), cy*(1-s)]
   AIRealMatrix matrix;
-  matrix.a = scaleFactor;  // Scale X
-  matrix.b = 0.0;          // Shear Y
-  matrix.c = 0.0;          // Shear X
-  matrix.d = scaleFactor;  // Scale Y
-  matrix.tx = centerX * (1.0 - scaleFactor);  // Translate X
-  matrix.ty = centerY * (1.0 - scaleFactor);  // Translate Y
+  matrix.a = scaleFactor;                    // Scale X
+  matrix.b = 0.0;                            // Shear Y
+  matrix.c = 0.0;                            // Shear X
+  matrix.d = scaleFactor;                    // Scale Y
+  matrix.tx = centerX * (1.0 - scaleFactor); // Translate X
+  matrix.ty = centerY * (1.0 - scaleFactor); // Translate Y
 
   // Apply the transformation
   transformSuite->TransformArt(art, &matrix, 1.0, kTransformObjects);
