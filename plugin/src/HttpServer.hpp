@@ -42,12 +42,29 @@ enum class HttpMethod {
 using RouteHandler = std::function<std::string(const std::string& body)>;
 
 /**
+ * Handler function type for pattern routes with path parameters.
+ * Takes request body and a vector of extracted path parameters.
+ * For pattern R"(/plant/([a-f0-9-]+))", params[0] would be the UUID.
+ */
+using PatternRouteHandler = std::function<std::string(const std::string& body,
+                                                       const std::vector<std::string>& params)>;
+
+/**
  * Route registration entry
  */
 struct RouteEntry {
     HttpMethod method;
     std::string path;
     RouteHandler handler;
+};
+
+/**
+ * Pattern route registration entry (for routes with path parameters)
+ */
+struct PatternRouteEntry {
+    HttpMethod method;
+    std::string pattern;  // Regex pattern, e.g., R"(/plant/([a-f0-9-]+))"
+    PatternRouteHandler handler;
 };
 
 class HttpServer {
@@ -76,6 +93,26 @@ public:
      * Convenience: Register a DELETE route
      */
     static void Delete(const std::string& path, RouteHandler handler);
+
+    /**
+     * Register a GET route with regex pattern for path parameters.
+     * Pattern uses regex groups to capture path segments.
+     * Example: R"(/plant/([a-f0-9-]+))" captures UUID from /plant/abc-123
+     *
+     * @param pattern Regex pattern with capture groups
+     * @param handler Function receiving body and extracted params
+     */
+    static void GetWithPattern(const std::string& pattern, PatternRouteHandler handler);
+
+    /**
+     * Register a POST route with regex pattern for path parameters.
+     */
+    static void PostWithPattern(const std::string& pattern, PatternRouteHandler handler);
+
+    /**
+     * Register a DELETE route with regex pattern for path parameters.
+     */
+    static void DeleteWithPattern(const std::string& pattern, PatternRouteHandler handler);
 
     /**
      * Start the HTTP server on a background thread.
@@ -140,4 +177,7 @@ private:
 
     // Registered custom routes (populated before Start())
     static std::vector<RouteEntry> customRoutes_;
+
+    // Registered pattern routes with path parameters (populated before Start())
+    static std::vector<PatternRouteEntry> patternRoutes_;
 };
