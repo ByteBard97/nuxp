@@ -6,8 +6,8 @@
  */
 
 #include "DemoEndpoints.hpp"
-#include "../SuitePointers.hpp"
 #include "IllustratorSDK.h"
+#include "SuitePointers.hpp"
 
 namespace DemoEndpoints {
 
@@ -64,8 +64,7 @@ json GetDocumentInfo() {
 
 json GetLayers() {
   if (!SuitePointers::AILayer()) {
-    return json{{"success", false},
-                {"error", "AILayer suite not available"}};
+    return json{{"success", false}, {"error", "AILayer suite not available"}};
   }
 
   json layers = json::array();
@@ -119,16 +118,14 @@ json GetLayers() {
 
 json GetSelection() {
   if (!SuitePointers::AIMatchingArt() || !SuitePointers::AIArt()) {
-    return json{{"success", false},
-                {"error", "Required suites not available"}};
+    return json{{"success", false}, {"error", "Required suites not available"}};
   }
 
   // Get selected art using GetSelectedArt
   AIArtHandle **matches = nullptr;
   ai::int32 count = 0;
 
-  ASErr err =
-      SuitePointers::AIMatchingArt()->GetSelectedArt(&matches, &count);
+  ASErr err = SuitePointers::AIMatchingArt()->GetSelectedArt(&matches, &count);
   if (err != kNoErr) {
     return json{{"success", false},
                 {"error", "Failed to get selected art"},
@@ -203,8 +200,8 @@ json GetSelection() {
     // memory management for now.
   }
 
-  return json{
-      {"success", true}, {"selection", {{"count", count}, {"items", items}}}};
+  return json{{"success", true},
+              {"selection", {{"count", count}, {"items", items}}}};
 }
 
 // -------------------------------------------------------------------------
@@ -213,8 +210,7 @@ json GetSelection() {
 
 json CreateRectangle(const json &params) {
   if (!SuitePointers::AIArt() || !SuitePointers::AIPath()) {
-    return json{{"success", false},
-                {"error", "Required suites not available"}};
+    return json{{"success", false}, {"error", "Required suites not available"}};
   }
 
   // Parse parameters with defaults
@@ -231,8 +227,8 @@ json CreateRectangle(const json &params) {
 
   // Create a new path art
   AIArtHandle newArt = nullptr;
-  ASErr err =
-      SuitePointers::AIArt()->NewArt(kPathArt, kPlaceAboveAll, nullptr, &newArt);
+  ASErr err = SuitePointers::AIArt()->NewArt(kPathArt, kPlaceAboveAll, nullptr,
+                                             &newArt);
   if (err != kNoErr || newArt == nullptr) {
     return json{{"success", false},
                 {"error", "Failed to create art object"},
@@ -283,10 +279,10 @@ json CreateRectangle(const json &params) {
     // Non-fatal, continue
   }
 
-  return json{{"success", true},
-              {"message", "Rectangle created"},
-              {"bounds",
-               {{"x", x}, {"y", y}, {"width", width}, {"height", height}}}};
+  return json{
+      {"success", true},
+      {"message", "Rectangle created"},
+      {"bounds", {{"x", x}, {"y", y}, {"width", width}, {"height", height}}}};
 }
 
 } // namespace DemoEndpoints

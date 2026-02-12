@@ -47,20 +47,21 @@ static std::mutex gServerMutex;
  * Route Registration Functions
  ******************************************************************************/
 
-void HttpServer::RegisterRoute(HttpMethod method, const std::string& path, RouteHandler handler) {
-    customRoutes_.push_back({method, path, handler});
+void HttpServer::RegisterRoute(HttpMethod method, const std::string &path,
+                               RouteHandler handler) {
+  customRoutes_.push_back({method, path, handler});
 }
 
-void HttpServer::Get(const std::string& path, RouteHandler handler) {
-    RegisterRoute(HttpMethod::GET, path, handler);
+void HttpServer::Get(const std::string &path, RouteHandler handler) {
+  RegisterRoute(HttpMethod::GET, path, handler);
 }
 
-void HttpServer::Post(const std::string& path, RouteHandler handler) {
-    RegisterRoute(HttpMethod::POST, path, handler);
+void HttpServer::Post(const std::string &path, RouteHandler handler) {
+  RegisterRoute(HttpMethod::POST, path, handler);
 }
 
-void HttpServer::Delete(const std::string& path, RouteHandler handler) {
-    RegisterRoute(HttpMethod::DELETE, path, handler);
+void HttpServer::Delete(const std::string &path, RouteHandler handler) {
+  RegisterRoute(HttpMethod::DELETE, path, handler);
 }
 
 /*******************************************************************************
@@ -199,23 +200,20 @@ void HttpServer::ConfigureRoutes() {
 
   // GET /config - Get current configuration
   svr.Get("/config", [](const httplib::Request &, httplib::Response &res) {
-    json response = {
-        {"success", true},
-        {"config", ConfigManager::Instance().GetConfig()}
-    };
+    json response = {{"success", true},
+                     {"config", ConfigManager::Instance().GetConfig()}};
     res.set_content(response.dump(), "application/json");
   });
 
   // POST /config/port - Change server port
-  svr.Post("/config/port", [](const httplib::Request &req, httplib::Response &res) {
+  svr.Post("/config/port", [](const httplib::Request &req,
+                              httplib::Response &res) {
     try {
       auto body = json::parse(req.body);
 
       if (!body.contains("port")) {
-        json errorResponse = {
-            {"success", false},
-            {"error", "Missing required field: 'port'"}
-        };
+        json errorResponse = {{"success", false},
+                              {"error", "Missing required field: 'port'"}};
         res.status = 400;
         res.set_content(errorResponse.dump(), "application/json");
         return;
@@ -224,12 +222,13 @@ void HttpServer::ConfigureRoutes() {
       int newPort = body["port"].get<int>();
 
       // Validate port range
-      if (newPort < ConfigManager::MIN_PORT || newPort > ConfigManager::MAX_PORT) {
+      if (newPort < ConfigManager::MIN_PORT ||
+          newPort > ConfigManager::MAX_PORT) {
         json errorResponse = {
             {"success", false},
-            {"error", "Port must be between " + std::to_string(ConfigManager::MIN_PORT) +
-                      " and " + std::to_string(ConfigManager::MAX_PORT)}
-        };
+            {"error", "Port must be between " +
+                          std::to_string(ConfigManager::MIN_PORT) + " and " +
+                          std::to_string(ConfigManager::MAX_PORT)}};
         res.status = 400;
         res.set_content(errorResponse.dump(), "application/json");
         return;
@@ -246,23 +245,27 @@ void HttpServer::ConfigureRoutes() {
           {"success", true},
           {"previousPort", oldPort},
           {"newPort", newPort},
-          {"message", "Server restarting on port " + std::to_string(newPort)}
-      };
+          {"message", "Server restarting on port " + std::to_string(newPort)}};
       res.set_content(response.dump(), "application/json");
 
       // Schedule server restart after response is sent
       // Use a short delay so the HTTP response can complete
-      std::thread([newPort]() {
+      // Schedule server restart after response is sent
+      // Use a static thread to avoid detached thread hazards
+      static std::thread restartThread;
+      if (restartThread.joinable()) {
+        restartThread.join();
+      }
+      restartThread = std::thread([newPort]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         HttpServer::Stop();
         HttpServer::Start(newPort);
-      }).detach();
+      });
 
     } catch (const json::parse_error &e) {
       json errorResponse = {
           {"success", false},
-          {"error", "Invalid JSON: " + std::string(e.what())}
-      };
+          {"error", "Invalid JSON: " + std::string(e.what())}};
       res.status = 400;
       res.set_content(errorResponse.dump(), "application/json");
     } catch (const std::exception &e) {
@@ -326,8 +329,9 @@ void HttpServer::ConfigureRoutes() {
   // IMPORTANT: Must be registered BEFORE the generic suite dispatcher
   // so specific paths like /doc/info don't match /{suite}/{method}
   // -------------------------------------------------------------------------
-  for (const auto& route : customRoutes_) {
-    auto handler = [route](const httplib::Request &req, httplib::Response &res) {
+  for (const auto &route : customRoutes_) {
+    auto handler = [route](const httplib::Request &req,
+                           httplib::Response &res) {
       try {
         std::string result = route.handler(req.body);
         res.set_content(result, "application/json");
@@ -339,21 +343,21 @@ void HttpServer::ConfigureRoutes() {
     };
 
     switch (route.method) {
-      case HttpMethod::GET:
-        svr.Get(route.path, handler);
-        break;
-      case HttpMethod::POST:
-        svr.Post(route.path, handler);
-        break;
-      case HttpMethod::PUT:
-        svr.Put(route.path, handler);
-        break;
-      case HttpMethod::DELETE:
-        svr.Delete(route.path, handler);
-        break;
-      case HttpMethod::PATCH:
-        svr.Patch(route.path, handler);
-        break;
+    case HttpMethod::GET:
+      svr.Get(route.path, handler);
+      break;
+    case HttpMethod::POST:
+      svr.Post(route.path, handler);
+      break;
+    case HttpMethod::PUT:
+      svr.Put(route.path, handler);
+      break;
+    case HttpMethod::DELETE:
+      svr.Delete(route.path, handler);
+      break;
+    case HttpMethod::PATCH:
+      svr.Patch(route.path, handler);
+      break;
     }
   }
 
@@ -453,12 +457,11 @@ void HttpServer::ConfigureRoutes() {
           });
 
   // GET /demo/layers - List all layers in the document
-  svr.Get("/demo/layers",
-          [](const httplib::Request &, httplib::Response &res) {
-            json result = MainThreadDispatch::Run(
-                []() -> json { return DemoEndpoints::GetLayers(); });
-            res.set_content(result.dump(), "application/json");
-          });
+  svr.Get("/demo/layers", [](const httplib::Request &, httplib::Response &res) {
+    json result = MainThreadDispatch::Run(
+        []() -> json { return DemoEndpoints::GetLayers(); });
+    res.set_content(result.dump(), "application/json");
+  });
 
   // GET /demo/selection - Get information about selected art
   svr.Get("/demo/selection",
@@ -469,29 +472,29 @@ void HttpServer::ConfigureRoutes() {
           });
 
   // POST /demo/create-rectangle - Create a rectangle in the document
-  svr.Post("/demo/create-rectangle",
-           [](const httplib::Request &req, httplib::Response &res) {
-             try {
-               json params =
-                   req.body.empty() ? json::object() : json::parse(req.body);
-               json result = MainThreadDispatch::Run([&params]() -> json {
-                 return DemoEndpoints::CreateRectangle(params);
-               });
-               res.set_content(result.dump(), "application/json");
-             } catch (const json::parse_error &e) {
-               json errorResponse = {
-                   {"success", false},
-                   {"error", "Invalid JSON: " + std::string(e.what())}};
-               res.status = 400;
-               res.set_content(errorResponse.dump(), "application/json");
-             }
-           });
+  svr.Post("/demo/create-rectangle", [](const httplib::Request &req,
+                                        httplib::Response &res) {
+    try {
+      json params = req.body.empty() ? json::object() : json::parse(req.body);
+      json result = MainThreadDispatch::Run([&params]() -> json {
+        return DemoEndpoints::CreateRectangle(params);
+      });
+      res.set_content(result.dump(), "application/json");
+    } catch (const json::parse_error &e) {
+      json errorResponse = {
+          {"success", false},
+          {"error", "Invalid JSON: " + std::string(e.what())}};
+      res.status = 400;
+      res.set_content(errorResponse.dump(), "application/json");
+    }
+  });
 
   // -------------------------------------------------------------------------
   // Custom Routes - Registered by downstream plugins via RegisterRoute()
   // -------------------------------------------------------------------------
-  for (const auto& route : customRoutes_) {
-    auto handler = [route](const httplib::Request &req, httplib::Response &res) {
+  for (const auto &route : customRoutes_) {
+    auto handler = [route](const httplib::Request &req,
+                           httplib::Response &res) {
       try {
         std::string result = route.handler(req.body);
         res.set_content(result, "application/json");
@@ -503,21 +506,21 @@ void HttpServer::ConfigureRoutes() {
     };
 
     switch (route.method) {
-      case HttpMethod::GET:
-        svr.Get(route.path, handler);
-        break;
-      case HttpMethod::POST:
-        svr.Post(route.path, handler);
-        break;
-      case HttpMethod::PUT:
-        svr.Put(route.path, handler);
-        break;
-      case HttpMethod::DELETE:
-        svr.Delete(route.path, handler);
-        break;
-      case HttpMethod::PATCH:
-        svr.Patch(route.path, handler);
-        break;
+    case HttpMethod::GET:
+      svr.Get(route.path, handler);
+      break;
+    case HttpMethod::POST:
+      svr.Post(route.path, handler);
+      break;
+    case HttpMethod::PUT:
+      svr.Put(route.path, handler);
+      break;
+    case HttpMethod::DELETE:
+      svr.Delete(route.path, handler);
+      break;
+    case HttpMethod::PATCH:
+      svr.Patch(route.path, handler);
+      break;
     }
   }
 }
