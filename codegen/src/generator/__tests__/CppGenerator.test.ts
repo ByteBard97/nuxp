@@ -966,6 +966,226 @@ describe('CppGenerator', () => {
         });
     });
 
+    describe('FilePath marshaling', () => {
+        it('should generate double-wrap constructor for ai::FilePath input', () => {
+            const func = mockFunction('WriteDocument', [
+                mockParam('path', 'ai::FilePath', {
+                    category: 'String',
+                    baseType: 'ai::FilePath',
+                    isReference: true,
+                    isConst: true,
+                    isOutput: false,
+                }),
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('WriteDocument');
+            expect(source.content).toContain('ai::FilePath path(ai::UnicodeString(params["path"].get<std::string>()))');
+        });
+
+        it('should generate GetFullPath().as_UTF8() for ai::FilePath output', () => {
+            const func = mockFunction('GetDocumentFileSpecification', [
+                mockParam('path', 'ai::FilePath', {
+                    category: 'String',
+                    baseType: 'ai::FilePath',
+                    isReference: true,
+                    isOutput: true,
+                    isPointer: false,
+                }),
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('GetDocumentFileSpecification');
+            expect(source.content).toContain('ai::FilePath path;');
+            expect(source.content).toContain('path.GetFullPath().as_UTF8()');
+        });
+
+        it('should not filter out ai::FilePath functions (appears in dispatch)', () => {
+            const func = mockFunction('WriteDocument', [
+                mockParam('path', 'ai::FilePath', {
+                    category: 'String',
+                    baseType: 'ai::FilePath',
+                    isConst: true,
+                    isReference: true,
+                }),
+            ]);
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('method == "WriteDocument"');
+        });
+    });
+
+    describe('Non-standard return types', () => {
+        it('should generate response["result"] = result for AIReal return', () => {
+            const func: FunctionInfo = {
+                name: 'GetOpacity',
+                returnType: 'AIReal',
+                params: [
+                    mockParam('art', 'AIArtHandle', {
+                        category: 'Handle',
+                        registryName: 'art',
+                    }),
+                ],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('GetOpacity');
+            expect(source.content).toContain('AIReal result = sMask->GetOpacity(');
+            expect(source.content).toContain('response["result"] = result');
+        });
+
+        it('should generate HandleManager::Register for AIArtHandle return', () => {
+            const func: FunctionInfo = {
+                name: 'GetArt',
+                returnType: 'AIArtHandle',
+                params: [],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('GetArt');
+            expect(source.content).toContain('AIArtHandle result = sMask->GetArt(');
+            expect(source.content).toContain('HandleManager::art.Register(result)');
+            expect(source.content).toContain('response["result"] = -1');
+        });
+
+        it('should generate response["result"] = result for primitive enum return (AIKnockout)', () => {
+            const func: FunctionInfo = {
+                name: 'GetKnockout',
+                returnType: 'AIKnockout',
+                params: [
+                    mockParam('art', 'AIArtHandle', {
+                        category: 'Handle',
+                        registryName: 'art',
+                    }),
+                ],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('GetKnockout');
+            expect(source.content).toContain('AIKnockout result = sMask->GetKnockout(');
+            expect(source.content).toContain('response["result"] = result');
+        });
+
+        it('should generate response["result"] = result for ai::int32 return', () => {
+            const func: FunctionInfo = {
+                name: 'AddRef',
+                returnType: 'ai::int32',
+                params: [],
+                suiteName: 'AIDictionarySuite',
+            };
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('AddRef');
+            expect(source.content).toContain('ai::int32 result = sDictionary->AddRef(');
+            expect(source.content).toContain('response["result"] = result');
+        });
+
+        it('should still filter out unknown return types', () => {
+            const func: FunctionInfo = {
+                name: 'GetSomething',
+                returnType: 'SomeUnknownType',
+                params: [],
+                suiteName: 'AIArtSuite',
+            };
+
+            const suite = mockSuite([func]);
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).not.toContain('GetSomething');
+        });
+
+        it('should document non-standard return types in header', () => {
+            const func: FunctionInfo = {
+                name: 'GetOpacity',
+                returnType: 'AIReal',
+                params: [],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const [header] = generator.generate(suite);
+
+            expect(header.content).toContain('@returns ["result"] - AIReal value');
+        });
+
+        it('should use as_UTF8() for ai::UnicodeString return', () => {
+            const func: FunctionInfo = {
+                name: 'GetName',
+                returnType: 'ai::UnicodeString',
+                params: [],
+                suiteName: 'AIDictionarySuite',
+            };
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('ai::UnicodeString result = sDictionary->GetName(');
+            expect(source.content).toContain('result.as_UTF8()');
+            expect(source.content).not.toContain('std::string(result)');
+        });
+
+        it('should use GetFullPath().as_UTF8() for ai::FilePath return', () => {
+            const func: FunctionInfo = {
+                name: 'GetPath',
+                returnType: 'ai::FilePath',
+                params: [],
+                suiteName: 'AIDictionarySuite',
+            };
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('ai::FilePath result = sDictionary->GetPath(');
+            expect(source.content).toContain('result.GetFullPath().as_UTF8()');
+            expect(source.content).not.toContain('std::string(result)');
+        });
+
+        it('should use std::string(result) for const char* return', () => {
+            const func: FunctionInfo = {
+                name: 'GetCString',
+                returnType: 'const char*',
+                params: [],
+                suiteName: 'AIDictionarySuite',
+            };
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const [, source] = generator.generate(suite);
+
+            expect(source.content).toContain('result ? std::string(result) : ""');
+        });
+
+        it('should document handle return types in header', () => {
+            const func: FunctionInfo = {
+                name: 'GetArt',
+                returnType: 'AIArtHandle',
+                params: [],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const [header] = generator.generate(suite);
+
+            expect(header.content).toContain('@returns ["result"] - handle ID (from AIArtHandle return)');
+        });
+    });
+
     describe('Multiple functions in suite', () => {
         it('should generate wrappers for all functions', () => {
             const func1 = mockFunction('GetArtType', [

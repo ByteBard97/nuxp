@@ -866,4 +866,138 @@ describe('TypeScriptGenerator', () => {
             expect(file.content).toContain('Promise<number>');
         });
     });
+
+    describe('Direct value return types', () => {
+        it('should return number for function returning AIReal', () => {
+            const func: FunctionInfo = {
+                name: 'GetOpacity',
+                returnType: 'AIReal',
+                params: [
+                    mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
+                ],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('Promise<number>');
+            expect(file.content).toContain('return result.result');
+        });
+
+        it('should return number for function returning AIArtHandle', () => {
+            const func: FunctionInfo = {
+                name: 'GetArt',
+                returnType: 'AIArtHandle',
+                params: [],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('Promise<number>');
+            expect(file.content).toContain('return result.result');
+        });
+
+        it('should return number for function returning ai::int32', () => {
+            const func: FunctionInfo = {
+                name: 'AddRef',
+                returnType: 'ai::int32',
+                params: [],
+                suiteName: 'AIDictionarySuite',
+            };
+
+            const suite = mockSuite([func], 'AIDictionarySuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('Promise<number>');
+            expect(file.content).toContain('return result.result');
+        });
+
+        it('should return string for function returning ai::FilePath', () => {
+            const func: FunctionInfo = {
+                name: 'GetFilePath',
+                returnType: 'ai::FilePath',
+                params: [],
+                suiteName: 'AIDocumentSuite',
+            };
+
+            const suite = mockSuite([func], 'AIDocumentSuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('Promise<string>');
+            expect(file.content).toContain('return result.result');
+        });
+
+        it('should not use direct return pattern for AIErr functions', () => {
+            const func = mockFunction('GetArtType', [
+                mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
+                mockParam('type', 'short', { isOutput: true, category: 'Primitive', baseType: 'short' }),
+            ]);
+
+            const suite = mockSuite([func]);
+            const file = generator.generate(suite);
+
+            // Should use single output pattern, not direct return
+            expect(file.content).toContain('return result.type');
+            expect(file.content).not.toContain('return result.result');
+        });
+
+        it('should include return description for direct value returns', () => {
+            const func: FunctionInfo = {
+                name: 'GetOpacity',
+                returnType: 'AIReal',
+                params: [],
+                suiteName: 'AIMaskSuite',
+            };
+
+            const suite = mockSuite([func], 'AIMaskSuite');
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain('@returns');
+        });
+
+        it('should combine direct return with output params into object type', () => {
+            const func: FunctionInfo = {
+                name: 'GetKnockoutWithInfo',
+                returnType: 'AIKnockout',
+                params: [
+                    mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
+                    mockParam('info', 'ai::int32', { isOutput: true, isPointer: true, category: 'Primitive', baseType: 'ai::int32' }),
+                ],
+                suiteName: 'AIBlendStyleSuite',
+            };
+
+            const suite = mockSuite([func], 'AIBlendStyleSuite');
+            const file = generator.generate(suite);
+
+            // Should produce a combined return type with result + output params
+            expect(file.content).toContain('result: number');
+            expect(file.content).toContain('info: number');
+            // Should NOT use the simple direct return pattern
+            expect(file.content).not.toContain('return result.result;');
+            // Should use multi-output pattern (return result)
+            expect(file.content).toContain('return result;');
+        });
+
+        it('should describe combined return with output params', () => {
+            const func: FunctionInfo = {
+                name: 'GetKnockoutWithInfo',
+                returnType: 'AIKnockout',
+                params: [
+                    mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
+                    mockParam('info', 'ai::int32', { isOutput: true, isPointer: true, category: 'Primitive', baseType: 'ai::int32' }),
+                ],
+                suiteName: 'AIBlendStyleSuite',
+            };
+
+            const suite = mockSuite([func], 'AIBlendStyleSuite');
+            const file = generator.generate(suite);
+
+            // Return description should mention both result and output params
+            expect(file.content).toContain('result');
+            expect(file.content).toContain('info');
+        });
+    });
 });
