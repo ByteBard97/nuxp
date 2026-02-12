@@ -8,6 +8,7 @@ import { TypeCategory } from '../parser/TypeClassifier';
  */
 interface TypeMapConfig {
     handles: Record<string, string>;
+    managed_handles?: Record<string, string>;
     primitives: Record<string, string>;
     structs: Record<string, string>;
     string_types: string[];
@@ -186,6 +187,10 @@ export class TypeScriptGenerator {
                 // All handles are represented as numeric IDs
                 return 'number';
 
+            case 'ManagedHandle':
+                // All managed handles are represented as numeric IDs
+                return 'number';
+
             case 'Primitive':
                 return this.mapPrimitiveToTypeScript(baseType);
 
@@ -223,6 +228,11 @@ export class TypeScriptGenerator {
 
         // Check handles
         if (this.config.handles[cleaned]) {
+            return 'number';
+        }
+
+        // Check managed handles
+        if (this.config.managed_handles && this.config.managed_handles[cleaned]) {
             return 'number';
         }
 
@@ -286,6 +296,8 @@ export class TypeScriptGenerator {
     private getDirectReturnType(returnType: string): string | null {
         // Check if return type is a handle -> number
         if (this.config.handles[returnType]) return 'number';
+        // Check if return type is a managed handle -> number
+        if (this.config.managed_handles && this.config.managed_handles[returnType]) return 'number';
         // Check if return type is a primitive
         if (this.config.primitives[returnType]) {
             const jsonType = this.config.primitives[returnType];
