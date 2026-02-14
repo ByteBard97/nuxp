@@ -11,5 +11,15 @@
     "AITransformArt.h",
     "AIDictionary.h",
     "AIMenu.h",
-    "AIUndo.h"
+    "AIUndo.h",
+    "AITool.h",
+    "AIBlendStyle.h",
+    "AIEntry.h",
+    "AIMask.h",
+    "AILayerList.h",
+    "AITimer.h",
+    "AIAppContext.h",
+    "AINotifier.h",
+    "AIMdMemory.h",
+    "AIGroup.h"
 ]
