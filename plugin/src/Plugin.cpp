@@ -35,6 +35,9 @@
 #include "AIMenu.h"
 
 #include <cstring>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 /*******************************************************************************
  * Global Suite Pointers
@@ -66,6 +69,7 @@ static AINotifierHandle gArtPropertiesChangedNotifier = nullptr;
 static AINotifierHandle gDocumentChangedNotifier = nullptr;
 static AINotifierHandle gDocumentClosedNotifier = nullptr;
 static AINotifierHandle gDocumentOpenedNotifier = nullptr;
+static AINotifierHandle gDocumentNewNotifier = nullptr;
 static AINotifierHandle gLayerListChangedNotifier = nullptr;
 
 // Plugin reference (from startup message)
@@ -208,6 +212,14 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
     gDocumentOpenedNotifier = nullptr;
   }
 
+  // Document new (created from scratch, not opened from file)
+  error = sAINotifier->AddNotifier(
+      gPluginRef, NUXP_NOTIFIER_NAME " Document New",
+      kAIDocumentNewNotifier, &gDocumentNewNotifier);
+  if (error != kNoErr) {
+    gDocumentNewNotifier = nullptr;
+  }
+
   // Layer list changed
   error = sAINotifier->AddNotifier(
       gPluginRef, NUXP_NOTIFIER_NAME " Layer List",
@@ -280,6 +292,10 @@ ASErr ShutdownPlugin(SPInterfaceMessage *message) {
       sAINotifier->SetNotifierActive(gDocumentOpenedNotifier, false);
       gDocumentOpenedNotifier = nullptr;
     }
+    if (gDocumentNewNotifier != nullptr) {
+      sAINotifier->SetNotifierActive(gDocumentNewNotifier, false);
+      gDocumentNewNotifier = nullptr;
+    }
     if (gLayerListChangedNotifier != nullptr) {
       sAINotifier->SetNotifierActive(gLayerListChangedNotifier, false);
       gLayerListChangedNotifier = nullptr;
@@ -340,7 +356,18 @@ ASErr HandleNotifier(AINotifierMessage *message) {
 
   // Push event to the mapper for the frontend to consume
   if (message != nullptr) {
-    EventMapper::Instance().Push(message->type, json::object());
+    // Include action metadata for document lifecycle events
+    json eventData = json::object();
+
+    if (message->notifier == gDocumentNewNotifier) {
+      eventData["action"] = "created";
+    } else if (message->notifier == gDocumentOpenedNotifier) {
+      eventData["action"] = "opened";
+    } else if (message->notifier == gDocumentClosedNotifier) {
+      eventData["action"] = "closed";
+    }
+
+    EventMapper::Instance().Push(message->type, eventData);
   }
 
   return kNoErr;

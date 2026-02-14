@@ -442,7 +442,7 @@ export class CustomRouteGenerator {
             for (const match of pathParamMatches) {
                 const paramName = match.slice(1, -1);
                 const paramDef = route.pathParams?.[paramName];
-                const regex = paramDef?.pattern || '[^/]+';
+                const regex = paramDef?.pattern || '[a-zA-Z0-9_.-]+';
                 pattern = pattern.replace(match, `(${regex})`);
             }
         }
