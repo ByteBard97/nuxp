@@ -75,6 +75,9 @@ const ALLOWED_SUITES: Set<string> = new Set([
     'AIBlendStyleSuite',
     'AIMaskSuite',
 
+    // Document view control (zoom, scroll, screen mode)
+    'AIDocumentViewSuite',
+
     // Note: These suites were removed due to generator limitations:
     // - AIPathSuite: array parameters (AIPathSegment[])
     // - AIMatchingArtSuite: triple-pointer outputs (AIArtHandle***)
@@ -153,12 +156,10 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
     'GetColor',
     'SetColor',
 
-    // AIBlendStyleSuite - these return non-AIErr types but are now handled:
-    // Functions returning AIBoolean are now supported, others may have output params
-    // Keeping GetBlendingMode and GetOpacity blocked as they return non-bool non-error types
-    'GetBlendingMode', // Returns enum/int, needs output param pattern instead
-    'GetOpacity', // Returns AIReal, needs output param pattern instead
-    // Note: These AIBoolean-returning functions are now supported via code generator:
+    // AIBlendStyleSuite - previously blocked non-standard return types, now supported:
+    // GetBlendingMode (returns AIBlendingMode/int32_t) and GetOpacity (returns AIReal/double)
+    // are now handled via Primitive return classification in CppGenerator.
+    // Note: These AIBoolean-returning functions are also supported via code generator:
     // 'ContainsNonIsolatedBlending', 'GetAlphaIsShape', 'GetDocumentIsolated',
     // 'GetDocumentKnockout', 'GetInheritedKnockout', 'GetIsolated', 'GetKnockout'
 
@@ -233,7 +234,7 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
 
     // AIMaskSuite - non-AIErr returns
     // 'AddRef', // already added
-    'GetArt', // Returns AIArtHandle, needs different handling
+    // GetArt (returns AIArtHandle) now supported via Handle return classification
     // 'Release', // already added
     // Note: These AIBoolean-returning functions are now supported via code generator:
     // 'GetClipping', 'GetDisabled', 'GetInverted', 'GetLinked', 'IsEditingArt'

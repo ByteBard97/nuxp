@@ -92,6 +92,223 @@
       "response": {
         "success": { "type": "boolean", "description": "Whether segments were set" }
       }
+    },
+    {
+      "name": "CheckBounds",
+      "method": "POST",
+      "path": "/api/artboard/check-bounds",
+      "description": "Check if a rectangle fits within the active artboard bounds and compute clamped coordinates. Uses AIArtboardSuite to get artboard geometry and GeometryUtils for intersection.",
+      "request": {
+        "x": { "type": "number", "description": "X coordinate of the rectangle origin" },
+        "y": { "type": "number", "description": "Y coordinate of the rectangle origin" },
+        "width": { "type": "number", "description": "Width of the rectangle" },
+        "height": { "type": "number", "description": "Height of the rectangle" }
+      },
+      "response": {
+        "fits": { "type": "boolean", "description": "Whether the rectangle fits entirely within the artboard" },
+        "clampedX": { "type": "number", "description": "X coordinate clamped to artboard bounds" },
+        "clampedY": { "type": "number", "description": "Y coordinate clamped to artboard bounds" }
+      }
+    },
+    {
+      "name": "DeselectAll",
+      "method": "POST",
+      "path": "/api/selection/deselect-all",
+      "description": "Deselect all currently selected art objects. Wraps AIMatchingArtSuite iteration + AIArtSuite::SetArtUserAttr to clear kArtSelected flag.",
+      "response": {
+        "success": { "type": "boolean", "description": "Whether deselection completed successfully" }
+      }
+    },
+    {
+      "name": "SelectByHandles",
+      "method": "POST",
+      "path": "/api/selection/select",
+      "description": "Select art objects by their handle IDs. Resolves handles from HandleManager::art, then sets kArtSelected attribute via AIArtSuite::SetArtUserAttr.",
+      "request": {
+        "handles": { "type": "number[]", "description": "Array of art handle IDs to select" }
+      },
+      "response": {
+        "selected": { "type": "number", "description": "Number of objects successfully selected" }
+      }
+    },
+    {
+      "name": "QueryTextFrames",
+      "method": "GET",
+      "path": "/api/query/text-frames",
+      "description": "Query all text frame art objects in the current document. Wraps AIMatchingArtSuite::GetMatchingArt with type=kTextFrameArt. Returns handles and basic properties for each frame.",
+      "response": {
+        "frames": { "type": "object", "description": "Array of { handle: number, name: string, bounds: {left,top,right,bottom} }" },
+        "count": { "type": "number", "description": "Number of text frames found" }
+      }
+    },
+    {
+      "name": "QueryLayers",
+      "method": "GET",
+      "path": "/api/query/layers",
+      "description": "Query all layers in the current document with their properties. Wraps AILayerSuite iteration (CountLayers + GetNthLayer + layer property getters).",
+      "response": {
+        "layers": { "type": "object", "description": "Array of { handle: number, title: string, visible: boolean, editable: boolean, printed: boolean }" },
+        "count": { "type": "number", "description": "Number of layers" }
+      }
+    },
+    {
+      "name": "FindArtByName",
+      "method": "POST",
+      "path": "/api/query/find",
+      "description": "Find art objects by name. Iterates document art tree using AIArtSuite::GetArtFirstChild/GetArtSibling, checking GetArtName against the query string.",
+      "request": {
+        "name": { "type": "string", "description": "Name to search for (case-sensitive substring match)" }
+      },
+      "response": {
+        "items": { "type": "object", "description": "Array of { handle: number, name: string, type: number, bounds: {left,top,right,bottom} }" },
+        "count": { "type": "number", "description": "Number of matching items" }
+      }
+    },
+    {
+      "name": "CalculatePathArea",
+      "method": "GET",
+      "path": "/api/art/{id}/area",
+      "pathParams": {
+        "id": { "type": "string", "description": "Art handle ID (must be path art)" }
+      },
+      "description": "Calculate the area of a path art object using the shoelace formula on linearized bezier segments. Uses GeometryUtils::CalculatePathArea.",
+      "response": {
+        "area": { "type": "number", "description": "Absolute area in square points (always positive)" },
+        "signed_area": { "type": "number", "description": "Signed area (positive for CCW, negative for CW winding)" }
+      }
+    },
+
+    {
+      "name": "CreateTextFrame",
+      "method": "POST",
+      "path": "/api/text/create",
+      "description": "Create a new point text frame. Uses AITextFrameSuite::NewPointText via forward-declared vtable (avoids ATE header conflicts).",
+      "request": {
+        "x": { "type": "number", "description": "Anchor point X coordinate in points" },
+        "y": { "type": "number", "description": "Anchor point Y coordinate in points (Illustrator coordinates)" },
+        "orientation": { "type": "number", "description": "0 = horizontal (default), 1 = vertical", "optional": true },
+        "contents": { "type": "string", "description": "Initial text content (requires ATE bridge)", "optional": true }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether the text frame was created" },
+        "artId": { "type": "number", "description": "Handle ID registered with HandleManager::art" }
+      }
+    },
+    {
+      "name": "GetTextContent",
+      "method": "GET",
+      "path": "/api/text/{id}/content",
+      "pathParams": {
+        "id": { "type": "string", "description": "Art handle ID (must be text frame art)" }
+      },
+      "description": "Get text content from a text frame via ATE TextRangeRef.",
+      "response": {
+        "success": { "type": "boolean", "description": "Whether content was retrieved" },
+        "artId": { "type": "number", "description": "The art handle ID" },
+        "contents": { "type": "string", "description": "Text content of the frame" }
+      }
+    },
+    {
+      "name": "SetTextContent",
+      "method": "POST",
+      "path": "/api/text/{id}/content",
+      "pathParams": {
+        "id": { "type": "string", "description": "Art handle ID (must be text frame art)" }
+      },
+      "description": "Set text content on a text frame. Replaces all existing text.",
+      "request": {
+        "contents": { "type": "string", "description": "New text content to set" }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether content was set" },
+        "artId": { "type": "number", "description": "The art handle ID" }
+      }
+    },
+
+    {
+      "name": "GetDocumentXmp",
+      "method": "GET",
+      "path": "/api/xmp",
+      "description": "Get full document XMP metadata as an XML packet string. Uses AIDocumentSuite to retrieve the XMP metadata.",
+      "response": {
+        "success": { "type": "boolean", "description": "Whether retrieval succeeded" },
+        "xmp": { "type": "string", "description": "XMP metadata XML packet (null if no metadata)" }
+      }
+    },
+    {
+      "name": "SetDocumentXmp",
+      "method": "POST",
+      "path": "/api/xmp",
+      "description": "Set full document XMP metadata from an XML packet string. Pass xmp as null to clear metadata.",
+      "request": {
+        "xmp": { "type": "string", "description": "XMP metadata XML packet string, or null to clear" }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether the metadata was set" },
+        "message": { "type": "string", "description": "Status message" }
+      }
+    },
+    {
+      "name": "GetXmpStatus",
+      "method": "GET",
+      "path": "/api/xmp/status",
+      "description": "Check XMP availability and capabilities. Reports whether document-level and property-level XMP access is available.",
+      "response": {
+        "success": { "type": "boolean", "description": "Whether status check succeeded" },
+        "available": { "type": "boolean", "description": "Whether XMP is available (AIDocument suite acquired)" },
+        "propertyAccess": { "type": "boolean", "description": "Whether property-level XMP access is available (XMP Toolkit)" },
+        "capabilities": { "type": "object", "description": "{ getDocumentXMP: boolean, setDocumentXMP: boolean, getProperty: boolean, setProperty: boolean, registerNamespace: boolean }" }
+      }
+    },
+    {
+      "name": "GetXmpProperty",
+      "method": "POST",
+      "path": "/api/xmp/property",
+      "description": "Get a specific XMP property by namespace URI and property name. Uses POST because GET with body is non-standard. Requires XMP Toolkit SDK.",
+      "request": {
+        "namespace": { "type": "string", "description": "XMP namespace URI" },
+        "name": { "type": "string", "description": "XMP property name" }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether property was retrieved" },
+        "namespace": { "type": "string", "description": "The namespace URI queried" },
+        "name": { "type": "string", "description": "The property name queried" },
+        "value": { "type": "string", "description": "Property value (null if not found)" },
+        "found": { "type": "boolean", "description": "Whether the property exists" }
+      }
+    },
+    {
+      "name": "SetXmpProperty",
+      "method": "POST",
+      "path": "/api/xmp/property/set",
+      "description": "Set a specific XMP property value. Requires XMP Toolkit SDK for property-level access.",
+      "request": {
+        "namespace": { "type": "string", "description": "XMP namespace URI" },
+        "name": { "type": "string", "description": "XMP property name" },
+        "value": { "type": "string", "description": "Value to set" }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether the property was set" },
+        "namespace": { "type": "string", "description": "The namespace URI" },
+        "name": { "type": "string", "description": "The property name" },
+        "value": { "type": "string", "description": "The value that was set" }
+      }
+    },
+    {
+      "name": "RegisterXmpNamespace",
+      "method": "POST",
+      "path": "/api/xmp/namespace",
+      "description": "Register a custom XMP namespace with a suggested prefix. The actual prefix may differ if already registered. Requires XMP Toolkit SDK.",
+      "request": {
+        "uri": { "type": "string", "description": "Namespace URI to register" },
+        "prefix": { "type": "string", "description": "Suggested namespace prefix" }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether registration succeeded" },
+        "uri": { "type": "string", "description": "The registered namespace URI" },
+        "requestedPrefix": { "type": "string", "description": "The prefix that was requested" },
+        "actualPrefix": { "type": "string", "description": "The actual prefix assigned (may differ from requested)" }
+      }
     }
   ]
 }

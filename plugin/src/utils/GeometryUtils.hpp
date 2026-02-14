@@ -18,6 +18,19 @@
 namespace GeometryUtils {
 
 /**
+ * Result of a path area calculation.
+ *
+ * The signed area indicates winding direction:
+ * - Positive: counter-clockwise (CCW) winding
+ * - Negative: clockwise (CW) winding
+ * The absolute area is always positive regardless of winding.
+ */
+struct PathAreaResult {
+  double area;        ///< Absolute area (always positive)
+  double signed_area; ///< Signed area (positive=CCW, negative=CW)
+};
+
+/**
  * Create a circle path at the specified center with given radius.
  *
  * Uses 4 bezier curves with kappa = 0.5522847498 for smooth circle
@@ -86,6 +99,20 @@ void MoveArt(AIArtHandle art, AIReal dx, AIReal dy);
  * @param scaleFactor Scale factor (1.0 = no change, 2.0 = double size)
  */
 void ScaleArt(AIArtHandle art, AIReal scaleFactor);
+
+/**
+ * Calculate the area of a closed path using the shoelace formula.
+ *
+ * Bezier curve segments are linearized by sampling points along each
+ * segment, then the shoelace formula is applied to the resulting polygon.
+ * This provides an approximation that is accurate for paths with many
+ * sample points per bezier segment.
+ *
+ * @param art Handle to a path art item (must be kPathArt)
+ * @return PathAreaResult with absolute and signed area.
+ *         Returns {0.0, 0.0} on failure (null handle, non-path art, etc.)
+ */
+PathAreaResult CalculatePathArea(AIArtHandle art);
 
 } // namespace GeometryUtils
 
