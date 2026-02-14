@@ -201,12 +201,14 @@ set(CORE_HEADERS
 )
 
 # Hand-written endpoint files (manually created endpoints)
+# These live in endpoints/handwritten/ to clearly separate them from
+# auto-generated code. See endpoints/README.md for the boundary explanation.
 file(GLOB HANDWRITTEN_ENDPOINT_SOURCES
-    "src/endpoints/*.cpp"
+    "src/endpoints/handwritten/*.cpp"
 )
 file(GLOB HANDWRITTEN_ENDPOINT_HEADERS
-    "src/endpoints/*.hpp"
-    "src/endpoints/*.h"
+    "src/endpoints/handwritten/*.hpp"
+    "src/endpoints/handwritten/*.h"
 )
 
 # Generated endpoint files (from codegen)
@@ -264,6 +266,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
 )
 
@@ -326,11 +329,11 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/SelectionUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ToolUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/XMPUtils.cpp
-    # Endpoints
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/DemoEndpoints.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/NUXPHandlers.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/TextEndpoints.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/XMPEndpoints.cpp
+    # Endpoints (hand-written)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/DemoEndpoints.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/NUXPHandlers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/TextEndpoints.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/XMPEndpoints.cpp
     ${NUXP_GENERATED_ENDPOINTS}
 )
 
@@ -349,6 +352,7 @@ target_include_directories(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
 )
 

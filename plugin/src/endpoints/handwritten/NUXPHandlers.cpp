@@ -10,7 +10,8 @@
  * Route wiring is in generated/CustomRouteRegistration.cpp.
  */
 
-#include "generated/CustomRouteHandlers.h"
+// Handler signatures are declared in the generated header — we only write the bodies here.
+#include "CustomRouteHandlers.h"
 #include "IllustratorSDK.h"
 #include "SuitePointers.hpp"
 #include "HandleManager.hpp"
@@ -1036,6 +1037,556 @@ std::string HandleCalculatePathArea(const std::string& id) {
         return {{"success", true},
                 {"area", areaResult.area},
                 {"signed_area", areaResult.signed_area}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/doc/info — Aggregated document info
+// ---------------------------------------------------------------------------
+std::string HandleGetDocumentInfo() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AIDocument()) {
+            return {{"success", false},
+                    {"error", "AIDocument suite not available"}};
+        }
+
+        json info;
+
+        // Document name (no extension)
+        ai::UnicodeString nameNoExt;
+        ASErr err = SuitePointers::AIDocument()->GetDocumentFileNameNoExt(nameNoExt);
+        if (err == kNoErr) {
+            info["name"] = nameNoExt.as_UTF8();
+        } else {
+            info["name"] = "";
+        }
+
+        // File path info
+        ai::FilePath filePath;
+        err = SuitePointers::AIDocument()->GetDocumentFileSpecification(filePath);
+        if (err == kNoErr) {
+            info["fullPath"] = filePath.GetFullPath().as_UTF8();
+            info["path"] = filePath.GetDirectory().as_UTF8();
+        } else {
+            info["fullPath"] = "";
+            info["path"] = "";
+        }
+
+        // Saved state
+        AIBoolean modified = false;
+        err = SuitePointers::AIDocument()->GetDocumentModified(&modified);
+        info["saved"] = (err == kNoErr) ? !static_cast<bool>(modified) : false;
+
+        // Artboards
+        json artboards = json::array();
+
+        if (SuitePointers::AIArtboard()) {
+            ai::ArtboardList artboardList;
+            err = SuitePointers::AIArtboard()->GetArtboardList(artboardList);
+            if (err == kNoErr) {
+                ai::ArtboardID count = 0;
+                SuitePointers::AIArtboard()->GetCount(artboardList, count);
+
+                for (ai::ArtboardID i = 0; i < count; ++i) {
+                    ai::ArtboardProperties props;
+                    SuitePointers::AIArtboard()->Init(props);
+                    err = SuitePointers::AIArtboard()->GetArtboardProperties(
+                        artboardList, i, props);
+                    if (err != kNoErr) {
+                        SuitePointers::AIArtboard()->Dispose(props);
+                        continue;
+                    }
+
+                    AIRealRect bounds;
+                    SuitePointers::AIArtboard()->GetPosition(props, bounds);
+
+                    double widthPts = bounds.right - bounds.left;
+                    double heightPts = bounds.top - bounds.bottom;
+
+                    // Get artboard name
+                    ai::UnicodeString abName;
+                    SuitePointers::AIArtboard()->GetName(props, abName);
+
+                    artboards.push_back({
+                        {"index", static_cast<int>(i)},
+                        {"name", abName.as_UTF8()},
+                        {"bounds", {{"left", bounds.left},
+                                    {"top", bounds.top},
+                                    {"right", bounds.right},
+                                    {"bottom", bounds.bottom}}},
+                        {"widthPoints", widthPts},
+                        {"heightPoints", heightPts},
+                        {"widthInches", widthPts / 72.0},
+                        {"heightInches", heightPts / 72.0}
+                    });
+
+                    SuitePointers::AIArtboard()->Dispose(props);
+                }
+
+                SuitePointers::AIArtboard()->ReleaseArtboardList(artboardList);
+            }
+        }
+
+        info["artboards"] = artboards;
+        return info;
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/view/zoom — Get current view zoom level
+// ---------------------------------------------------------------------------
+std::string HandleGetViewZoom() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AIDocumentView()) {
+            return {{"success", false},
+                    {"error", "AIDocumentView suite not available"}};
+        }
+
+        AIReal zoom = 1.0;
+        ASErr err = SuitePointers::AIDocumentView()->GetDocumentViewZoom(
+            nullptr, &zoom);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "GetDocumentViewZoom failed"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        // SDK uses 1.0 = 100%, convert to percentage for API
+        return {{"zoom", zoom * 100.0}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/view/zoom — Set view zoom level
+// ---------------------------------------------------------------------------
+std::string HandleSetViewZoom(const std::string& body) {
+    json params;
+    try {
+        params = json::parse(body);
+    } catch (const json::parse_error& e) {
+        return json{{"success", false},
+                    {"error", std::string("Invalid JSON: ") + e.what()}}.dump();
+    }
+
+    if (!params.contains("zoom")) {
+        return json{{"success", false},
+                    {"error", "Missing required field: zoom"}}.dump();
+    }
+
+    json result = MainThreadDispatch::Run([&params]() -> json {
+        if (!SuitePointers::AIDocumentView()) {
+            return {{"success", false},
+                    {"error", "AIDocumentView suite not available"}};
+        }
+
+        // Convert percentage to SDK factor (100% → 1.0)
+        AIReal zoom = params["zoom"].get<double>() / 100.0;
+
+        ASErr err = SuitePointers::AIDocumentView()->SetDocumentViewZoom(
+            nullptr, zoom);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "SetDocumentViewZoom failed"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        // Read back actual zoom (SDK clamps to min/max)
+        AIReal actualZoom = zoom;
+        SuitePointers::AIDocumentView()->GetDocumentViewZoom(
+            nullptr, &actualZoom);
+
+        return {{"success", true},
+                {"zoom", actualZoom * 100.0}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/view/center — Center view on a point
+// ---------------------------------------------------------------------------
+std::string HandleSetViewCenter(const std::string& body) {
+    json params;
+    try {
+        params = json::parse(body);
+    } catch (const json::parse_error& e) {
+        return json{{"success", false},
+                    {"error", std::string("Invalid JSON: ") + e.what()}}.dump();
+    }
+
+    json result = MainThreadDispatch::Run([&params]() -> json {
+        if (!SuitePointers::AIDocumentView()) {
+            return {{"success", false},
+                    {"error", "AIDocumentView suite not available"}};
+        }
+
+        AIRealPoint center;
+        center.h = params.value("x", 0.0);
+        center.v = params.value("y", 0.0);
+
+        ASErr err = SuitePointers::AIDocumentView()->SetDocumentViewCenter(
+            nullptr, &center);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "SetDocumentViewCenter failed"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        return {{"success", true}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/view/fit-artboard — Zoom to fit active artboard
+// ---------------------------------------------------------------------------
+std::string HandleFitArtboardInView() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AIDocumentView() || !SuitePointers::AIArtboard()) {
+            return {{"success", false},
+                    {"error", "Required suites not available"}};
+        }
+
+        // Get active artboard bounds
+        ai::ArtboardList artboardList;
+        ASErr err = SuitePointers::AIArtboard()->GetArtboardList(artboardList);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "Failed to get artboard list"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        ai::ArtboardID active = 0;
+        SuitePointers::AIArtboard()->GetActive(artboardList, active);
+
+        ai::ArtboardProperties props;
+        SuitePointers::AIArtboard()->Init(props);
+        err = SuitePointers::AIArtboard()->GetArtboardProperties(
+            artboardList, active, props);
+        if (err != kNoErr) {
+            SuitePointers::AIArtboard()->Dispose(props);
+            SuitePointers::AIArtboard()->ReleaseArtboardList(artboardList);
+            return {{"success", false},
+                    {"error", "Failed to get artboard properties"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        AIRealRect abBounds;
+        SuitePointers::AIArtboard()->GetPosition(props, abBounds);
+        SuitePointers::AIArtboard()->Dispose(props);
+        SuitePointers::AIArtboard()->ReleaseArtboardList(artboardList);
+
+        // Get view bounds to know visible area dimensions
+        AIRealRect viewBounds;
+        err = SuitePointers::AIDocumentView()->GetDocumentViewBounds(
+            nullptr, &viewBounds);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "Failed to get view bounds"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        AIReal currentZoom = 1.0;
+        SuitePointers::AIDocumentView()->GetDocumentViewZoom(
+            nullptr, &currentZoom);
+
+        // View bounds are in artwork coords; convert to window pixels
+        double viewWidthPx = (viewBounds.right - viewBounds.left) * currentZoom;
+        double viewHeightPx = (viewBounds.top - viewBounds.bottom) * currentZoom;
+
+        double abWidth = abBounds.right - abBounds.left;
+        double abHeight = abBounds.top - abBounds.bottom;
+
+        if (abWidth <= 0 || abHeight <= 0) {
+            return {{"success", false},
+                    {"error", "Artboard has zero dimensions"}};
+        }
+
+        // Calculate zoom to fit with a small margin (95% of view)
+        double zoomH = viewWidthPx / abWidth * 0.95;
+        double zoomV = viewHeightPx / abHeight * 0.95;
+        AIReal newZoom = static_cast<AIReal>(std::min(zoomH, zoomV));
+
+        // Center on artboard center
+        AIRealPoint center;
+        center.h = (abBounds.left + abBounds.right) / 2.0;
+        center.v = (abBounds.top + abBounds.bottom) / 2.0;
+
+        SuitePointers::AIDocumentView()->SetDocumentViewZoom(nullptr, newZoom);
+        SuitePointers::AIDocumentView()->SetDocumentViewCenter(nullptr, &center);
+
+        return {{"success", true}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/view/fit-selection — Zoom to fit current selection
+// ---------------------------------------------------------------------------
+std::string HandleFitSelectionInView() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AIDocumentView() ||
+            !SuitePointers::AIMatchingArt() ||
+            !SuitePointers::AIArt()) {
+            return {{"success", false},
+                    {"error", "Required suites not available"}};
+        }
+
+        // Get selected art
+        AIArtHandle** matches = nullptr;
+        ai::int32 numMatches = 0;
+
+        ASErr err = SuitePointers::AIMatchingArt()->GetSelectedArt(
+            &matches, &numMatches);
+        if (err != kNoErr || numMatches == 0) {
+            return {{"success", false},
+                    {"error", "No selection or GetSelectedArt failed"}};
+        }
+
+        // Compute combined bounds of all selected objects
+        AIRealRect combined;
+        bool first = true;
+
+        for (ai::int32 i = 0; i < numMatches; ++i) {
+            AIArtHandle art = (*matches)[i];
+            if (!art) continue;
+
+            AIRealRect bounds;
+            err = SuitePointers::AIArt()->GetArtBounds(art, &bounds);
+            if (err != kNoErr) continue;
+
+            if (first) {
+                combined = bounds;
+                first = false;
+            } else {
+                if (bounds.left < combined.left) combined.left = bounds.left;
+                if (bounds.right > combined.right) combined.right = bounds.right;
+                if (bounds.top > combined.top) combined.top = bounds.top;
+                if (bounds.bottom < combined.bottom) combined.bottom = bounds.bottom;
+            }
+        }
+
+        // Free SDK-allocated memory
+        if (SuitePointers::AIMdMemory()) {
+            SuitePointers::AIMdMemory()->MdMemoryDisposeHandle(
+                reinterpret_cast<AIMdMemoryHandle>(matches));
+        }
+
+        if (first) {
+            return {{"success", false},
+                    {"error", "Could not compute selection bounds"}};
+        }
+
+        // Get current view info to compute zoom
+        AIRealRect viewBounds;
+        SuitePointers::AIDocumentView()->GetDocumentViewBounds(
+            nullptr, &viewBounds);
+
+        AIReal currentZoom = 1.0;
+        SuitePointers::AIDocumentView()->GetDocumentViewZoom(
+            nullptr, &currentZoom);
+
+        double viewWidthPx = (viewBounds.right - viewBounds.left) * currentZoom;
+        double viewHeightPx = (viewBounds.top - viewBounds.bottom) * currentZoom;
+
+        double selWidth = combined.right - combined.left;
+        double selHeight = combined.top - combined.bottom;
+
+        if (selWidth <= 0 || selHeight <= 0) {
+            return {{"success", false},
+                    {"error", "Selection has zero dimensions"}};
+        }
+
+        // Zoom to fit with margin
+        double zoomH = viewWidthPx / selWidth * 0.90;
+        double zoomV = viewHeightPx / selHeight * 0.90;
+        AIReal newZoom = static_cast<AIReal>(std::min(zoomH, zoomV));
+
+        // Center on selection center
+        AIRealPoint center;
+        center.h = (combined.left + combined.right) / 2.0;
+        center.v = (combined.top + combined.bottom) / 2.0;
+
+        SuitePointers::AIDocumentView()->SetDocumentViewZoom(nullptr, newZoom);
+        SuitePointers::AIDocumentView()->SetDocumentViewCenter(nullptr, &center);
+
+        return {{"success", true}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/query/path-items — Get all path items with bounds and style info
+// ---------------------------------------------------------------------------
+std::string HandleQueryPathItems() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AIMatchingArt() ||
+            !SuitePointers::AIArt() ||
+            !SuitePointers::AIPathStyle()) {
+            return {{"success", false},
+                    {"error", "Required suites not available"}};
+        }
+
+        AIMatchingArtSpec spec;
+        spec.type      = kPathArt;
+        spec.whichAttr = 0;
+        spec.attr      = 0;
+
+        AIArtHandle** matches = nullptr;
+        ai::int32 numMatches = 0;
+
+        ASErr err = SuitePointers::AIMatchingArt()->GetMatchingArt(
+            &spec, 1, &matches, &numMatches);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "GetMatchingArt failed"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        json items = json::array();
+
+        if (matches != nullptr && numMatches > 0) {
+            for (ai::int32 i = 0; i < numMatches; ++i) {
+                AIArtHandle art = (*matches)[i];
+                if (!art) continue;
+
+                json item;
+                item["handle"] = HandleManager::art.Register(art);
+
+                // Name
+                ai::UnicodeString nameUni;
+                err = SuitePointers::AIArt()->GetArtName(art, nameUni, nullptr);
+                item["name"] = (err == kNoErr && !nameUni.empty())
+                    ? nameUni.as_UTF8() : "";
+
+                // Bounds
+                AIRealRect bounds;
+                err = SuitePointers::AIArt()->GetArtBounds(art, &bounds);
+                if (err == kNoErr) {
+                    item["bounds"] = {{"left", bounds.left},
+                                      {"top", bounds.top},
+                                      {"right", bounds.right},
+                                      {"bottom", bounds.bottom}};
+                }
+
+                // Fill/stroke summary
+                AIPathStyle style;
+                style.Init();
+                AIBoolean hasAdvFill = false;
+                err = SuitePointers::AIPathStyle()->GetPathStyle(
+                    art, &style, &hasAdvFill);
+                if (err == kNoErr) {
+                    item["hasFill"] = static_cast<bool>(style.fillPaint);
+                    item["hasStroke"] = static_cast<bool>(style.strokePaint);
+                    if (style.fillPaint) {
+                        item["fillColor"] = SerializeColor(style.fill.color);
+                    }
+                    if (style.strokePaint) {
+                        item["strokeColor"] = SerializeColor(style.stroke.color);
+                        item["strokeWidth"] = style.stroke.width;
+                    }
+                }
+
+                items.push_back(item);
+            }
+
+            if (SuitePointers::AIMdMemory()) {
+                SuitePointers::AIMdMemory()->MdMemoryDisposeHandle(
+                    reinterpret_cast<AIMdMemoryHandle>(matches));
+            }
+        }
+
+        return {{"success", true},
+                {"items", items},
+                {"count", static_cast<int>(numMatches)}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/query/count — Count art items on a specific layer
+// ---------------------------------------------------------------------------
+std::string HandleCountItemsOnLayer(const std::string& body) {
+    json params;
+    try {
+        params = json::parse(body);
+    } catch (const json::parse_error& e) {
+        return json{{"success", false},
+                    {"error", std::string("Invalid JSON: ") + e.what()}}.dump();
+    }
+
+    if (!params.contains("layer") || !params["layer"].is_string()) {
+        return json{{"success", false},
+                    {"error", "Missing required field: layer (string)"}}.dump();
+    }
+
+    json result = MainThreadDispatch::Run([&params]() -> json {
+        if (!SuitePointers::AILayer() || !SuitePointers::AIArt()) {
+            return {{"success", false},
+                    {"error", "Required suites not available"}};
+        }
+
+        std::string targetLayer = params["layer"].get<std::string>();
+
+        // Find layer by name
+        ai::int32 layerCount = 0;
+        SuitePointers::AILayer()->CountLayers(&layerCount);
+
+        AILayerHandle foundLayer = nullptr;
+        for (ai::int32 i = 0; i < layerCount; ++i) {
+            AILayerHandle layer = nullptr;
+            ASErr err = SuitePointers::AILayer()->GetNthLayer(i, &layer);
+            if (err != kNoErr || !layer) continue;
+
+            ai::UnicodeString titleUni;
+            SuitePointers::AILayer()->GetLayerTitle(layer, titleUni);
+            if (titleUni.as_UTF8() == targetLayer) {
+                foundLayer = layer;
+                break;
+            }
+        }
+
+        if (!foundLayer) {
+            return {{"success", false},
+                    {"error", "Layer not found: " + targetLayer}};
+        }
+
+        // Walk art tree and count items
+        int count = 0;
+        std::function<void(AIArtHandle)> countArt = [&](AIArtHandle art) {
+            while (art) {
+                ++count;
+
+                // Recurse into children
+                AIArtHandle child = nullptr;
+                SuitePointers::AIArt()->GetArtFirstChild(art, &child);
+                if (child) {
+                    countArt(child);
+                }
+
+                // Move to sibling
+                AIArtHandle sibling = nullptr;
+                SuitePointers::AIArt()->GetArtSibling(art, &sibling);
+                art = sibling;
+            }
+        };
+
+        AIArtHandle firstArt = nullptr;
+        ASErr err = SuitePointers::AIArt()->GetFirstArtOfLayer(
+            foundLayer, &firstArt);
+        if (err == kNoErr && firstArt) {
+            // GetFirstArtOfLayer returns the layer group; walk its children
+            AIArtHandle child = nullptr;
+            SuitePointers::AIArt()->GetArtFirstChild(firstArt, &child);
+            if (child) {
+                countArt(child);
+            }
+        }
+
+        return {{"count", count},
+                {"layer", targetLayer}};
     });
     return result.dump();
 }
