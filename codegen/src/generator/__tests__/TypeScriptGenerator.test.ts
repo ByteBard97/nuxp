@@ -366,8 +366,8 @@ describe('TypeScriptGenerator', () => {
         });
     });
 
-    describe('Struct interface generation', () => {
-        it('should generate AIRealRect interface with correct fields', () => {
+    describe('Struct type imports', () => {
+        it('should import AIRealRect from types module', () => {
             const func = mockFunction('GetArtBounds', [
                 mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
                 mockParam('bounds', 'AIRealRect', { isOutput: true, category: 'Struct', baseType: 'AIRealRect' })
@@ -376,14 +376,11 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('interface AIRealRect');
-            expect(file.content).toContain('left: number');
-            expect(file.content).toContain('top: number');
-            expect(file.content).toContain('right: number');
-            expect(file.content).toContain('bottom: number');
+            expect(file.content).toContain("import { AIRealRect } from './types'");
+            expect(file.content).not.toContain('interface AIRealRect');
         });
 
-        it('should generate AIRealPoint interface with correct fields', () => {
+        it('should import AIRealPoint from types module', () => {
             const func = mockFunction('GetPoint', [
                 mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
                 mockParam('point', 'AIRealPoint', { isOutput: true, category: 'Struct', baseType: 'AIRealPoint' })
@@ -392,12 +389,11 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('interface AIRealPoint');
-            expect(file.content).toContain('h: number');
-            expect(file.content).toContain('v: number');
+            expect(file.content).toContain("import { AIRealPoint } from './types'");
+            expect(file.content).not.toContain('interface AIRealPoint');
         });
 
-        it('should generate AIRealMatrix interface with correct fields', () => {
+        it('should import AIRealMatrix from types module', () => {
             const func = mockFunction('GetTransform', [
                 mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
                 mockParam('matrix', 'AIRealMatrix', { isOutput: true, category: 'Struct', baseType: 'AIRealMatrix' })
@@ -406,38 +402,11 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('interface AIRealMatrix');
-            expect(file.content).toContain('a: number');
-            expect(file.content).toContain('b: number');
-            expect(file.content).toContain('c: number');
-            expect(file.content).toContain('d: number');
-            expect(file.content).toContain('tx: number');
-            expect(file.content).toContain('ty: number');
+            expect(file.content).toContain("import { AIRealMatrix } from './types'");
+            expect(file.content).not.toContain('interface AIRealMatrix');
         });
 
-        it('should generate export keyword for struct interfaces', () => {
-            const func = mockFunction('GetBounds', [
-                mockParam('bounds', 'AIRealRect', { isOutput: true, category: 'Struct', baseType: 'AIRealRect' })
-            ]);
-
-            const suite = mockSuite([func]);
-            const file = generator.generate(suite);
-
-            expect(file.content).toContain('export interface AIRealRect');
-        });
-
-        it('should include struct description as JSDoc comment', () => {
-            const func = mockFunction('GetBounds', [
-                mockParam('bounds', 'AIRealRect', { isOutput: true, category: 'Struct', baseType: 'AIRealRect' })
-            ]);
-
-            const suite = mockSuite([func]);
-            const file = generator.generate(suite);
-
-            expect(file.content).toContain('Rectangle structure');
-        });
-
-        it('should only generate structs that are used in the suite', () => {
+        it('should import only used structs', () => {
             const func = mockFunction('GetPoint', [
                 mockParam('point', 'AIRealPoint', { isOutput: true, category: 'Struct', baseType: 'AIRealPoint' })
             ]);
@@ -445,12 +414,25 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('interface AIRealPoint');
-            expect(file.content).not.toContain('interface AIRealRect');
-            expect(file.content).not.toContain('interface AIRealMatrix');
+            expect(file.content).toContain('AIRealPoint');
+            expect(file.content).not.toContain('AIRealRect');
+            expect(file.content).not.toContain('AIRealMatrix');
         });
 
-        it('should not generate struct section if no structs are used', () => {
+        it('should import multiple structs in one import', () => {
+            const func = mockFunction('GetArtGeometry', [
+                mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
+                mockParam('bounds', 'AIRealRect', { isOutput: true, category: 'Struct', baseType: 'AIRealRect' }),
+                mockParam('center', 'AIRealPoint', { isOutput: true, category: 'Struct', baseType: 'AIRealPoint' })
+            ]);
+
+            const suite = mockSuite([func]);
+            const file = generator.generate(suite);
+
+            expect(file.content).toContain("import { AIRealPoint, AIRealRect } from './types'");
+        });
+
+        it('should not add import when no structs are used', () => {
             const func = mockFunction('GetCount', [
                 mockParam('count', 'ai::int32', { isOutput: true, category: 'Primitive', baseType: 'ai::int32' })
             ]);
@@ -458,10 +440,10 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).not.toContain('Struct type definitions');
+            expect(file.content).not.toContain("from './types'");
         });
 
-        it('should generate generic struct for unknown struct types', () => {
+        it('should use any for unknown struct types', () => {
             const func = mockFunction('GetCustomData', [
                 mockParam('data', 'AICustomStruct', { isOutput: true, category: 'Struct', baseType: 'AICustomStruct' })
             ]);
@@ -469,8 +451,24 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('interface AICustomStruct');
-            expect(file.content).toContain('data: any');
+            // Unknown structs are NOT in the shared types file
+            expect(file.content).not.toContain("import { AICustomStruct } from './types'");
+            // The return type falls back to any
+            expect(file.content).toContain('Promise<any>');
+        });
+    });
+
+    describe('Shared types file generation', () => {
+        it('should generate types.ts with all known struct definitions', () => {
+            const typesFile = generator.generateTypesFile();
+
+            expect(typesFile.filename).toBe('types.ts');
+            expect(typesFile.content).toContain('export interface AIRealRect');
+            expect(typesFile.content).toContain('left: number');
+            expect(typesFile.content).toContain('export interface AIRealPoint');
+            expect(typesFile.content).toContain('h: number');
+            expect(typesFile.content).toContain('export interface AIRealMatrix');
+            expect(typesFile.content).toContain('a: number');
         });
     });
 
@@ -841,7 +839,7 @@ describe('TypeScriptGenerator', () => {
             expect(file.content).toContain('export async function GetArtParent');
         });
 
-        it('should generate multiple struct interfaces when needed', () => {
+        it('should import multiple struct types when needed', () => {
             const func = mockFunction('GetArtGeometry', [
                 mockParam('art', 'AIArtHandle', { category: 'Handle', registryName: 'art' }),
                 mockParam('bounds', 'AIRealRect', { isOutput: true, category: 'Struct', baseType: 'AIRealRect' }),
@@ -851,8 +849,7 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([func]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain('interface AIRealRect');
-            expect(file.content).toContain('interface AIRealPoint');
+            expect(file.content).toContain("import { AIRealPoint, AIRealRect } from './types'");
         });
 
         it('should handle layer parameter descriptions', () => {
