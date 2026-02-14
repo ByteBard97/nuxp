@@ -309,6 +309,95 @@
         "requestedPrefix": { "type": "string", "description": "The prefix that was requested" },
         "actualPrefix": { "type": "string", "description": "The actual prefix assigned (may differ from requested)" }
       }
+    },
+    {
+      "name": "GetDocumentInfo",
+      "method": "GET",
+      "path": "/api/doc/info",
+      "description": "Aggregated document info: name (no extension), directory path, saved state, artboard dimensions in points and inches.",
+      "response": {
+        "name": { "type": "string", "description": "Document name without extension" },
+        "path": { "type": "string", "description": "Directory path" },
+        "fullPath": { "type": "string", "description": "Full file path including filename" },
+        "saved": { "type": "boolean", "description": "Whether document has been saved" },
+        "artboards": { "type": "object", "description": "Array of artboard info with bounds, widthPoints, heightPoints, widthInches, heightInches" }
+      }
+    },
+    {
+      "name": "GetViewZoom",
+      "method": "GET",
+      "path": "/api/view/zoom",
+      "description": "Get current view zoom level as percentage.",
+      "response": {
+        "zoom": { "type": "number", "description": "Zoom percentage (100 = 100%)" }
+      }
+    },
+    {
+      "name": "SetViewZoom",
+      "method": "POST",
+      "path": "/api/view/zoom",
+      "description": "Set view zoom level.",
+      "request": {
+        "zoom": { "type": "number", "description": "Zoom percentage (100 = 100%)" }
+      },
+      "response": {
+        "success": { "type": "boolean" },
+        "zoom": { "type": "number", "description": "Actual zoom after setting" }
+      }
+    },
+    {
+      "name": "SetViewCenter",
+      "method": "POST",
+      "path": "/api/view/center",
+      "description": "Center the view on a point in artwork coordinates.",
+      "request": {
+        "x": { "type": "number", "description": "X coordinate in points" },
+        "y": { "type": "number", "description": "Y coordinate in points" }
+      },
+      "response": {
+        "success": { "type": "boolean" }
+      }
+    },
+    {
+      "name": "FitArtboardInView",
+      "method": "POST",
+      "path": "/api/view/fit-artboard",
+      "description": "Zoom to fit the active artboard in the view.",
+      "response": {
+        "success": { "type": "boolean" }
+      }
+    },
+    {
+      "name": "FitSelectionInView",
+      "method": "POST",
+      "path": "/api/view/fit-selection",
+      "description": "Zoom to fit the current selection in the view.",
+      "response": {
+        "success": { "type": "boolean" }
+      }
+    },
+    {
+      "name": "QueryPathItems",
+      "method": "GET",
+      "path": "/api/query/path-items",
+      "description": "Get all path items with bounds, fill, stroke info.",
+      "response": {
+        "items": { "type": "object", "description": "Array of path item info with handles" },
+        "count": { "type": "number" }
+      }
+    },
+    {
+      "name": "CountItemsOnLayer",
+      "method": "POST",
+      "path": "/api/query/count",
+      "description": "Count art items on a specific layer.",
+      "request": {
+        "layer": { "type": "string", "description": "Layer name" }
+      },
+      "response": {
+        "count": { "type": "number" },
+        "layer": { "type": "string" }
+      }
     }
   ]
 }

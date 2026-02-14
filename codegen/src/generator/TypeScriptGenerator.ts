@@ -373,8 +373,8 @@ export class TypeScriptGenerator {
      * @returns The function view for template rendering
      */
     private generateFunctionView(func: FunctionInfo): FunctionView {
-        // Separate input and output parameters
-        const inputParams = func.params.filter(p => !p.isOutput);
+        // Separate input and output parameters, filtering C-style void params
+        const inputParams = func.params.filter(p => !p.isOutput && !(p.name === 'void' && p.type === 'void'));
         const outputParams = func.params.filter(p => p.isOutput);
 
         // Check if function returns a boolean directly (AIBoolean, ASBoolean, bool)
