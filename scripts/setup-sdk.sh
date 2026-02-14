@@ -55,7 +55,7 @@ fi
 
 # Create temp mount point
 MOUNT_POINT=$(mktemp -d)
-trap "hdiutil detach '$MOUNT_POINT' 2>/dev/null || true; rm -rf '$MOUNT_POINT'" EXIT
+trap "hdiutil detach '$MOUNT_POINT' 2>/dev/null || true; trash '$MOUNT_POINT'" EXIT
 
 print_step "Mounting SDK DMG..."
 hdiutil attach "$DMG_PATH" -mountpoint "$MOUNT_POINT" -nobrowse -quiet
@@ -91,7 +91,7 @@ fi
 
 # Clear and recreate destination
 print_step "Setting up plugin/sdk directory..."
-rm -rf "$SDK_DEST"
+trash "$SDK_DEST"
 mkdir -p "$SDK_DEST"
 
 # Copy Illustrator API headers
