@@ -15,9 +15,9 @@
 #include "HandleManager.hpp"
 #include "MainThreadDispatch.hpp"
 #include "SSE.hpp"
-#include "endpoints/DemoEndpoints.hpp"
-#include "endpoints/TextEndpoints.hpp"
-#include "endpoints/XMPEndpoints.hpp"
+#include "endpoints/handwritten/DemoEndpoints.hpp"
+#include "endpoints/handwritten/TextEndpoints.hpp"
+#include "endpoints/handwritten/XMPEndpoints.hpp"
 #include "endpoints/generated/CentralDispatcher.h"
 
 // cpp-httplib (header-only HTTP library)
