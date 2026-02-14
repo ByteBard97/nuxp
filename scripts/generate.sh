@@ -129,7 +129,8 @@ if [ -d "$CPP_SRC" ] && [ "$(ls -A "$CPP_SRC" 2>/dev/null)" ]; then
     mkdir -p "$CPP_DEST"
 
     # Clean old generated files (preserve non-generated files if any)
-    rm -f "$CPP_DEST"/*.cpp "$CPP_DEST"/*.h "$CPP_DEST"/*.hpp "$CPP_DEST"/*.cmake 2>/dev/null || true
+    # Move old generated files to trash
+    find "$CPP_DEST" -maxdepth 1 \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.cmake" \) -exec trash {} + 2>/dev/null || true
 
     # Create marker file to indicate these are generated
     echo "# This directory contains auto-generated files" > "$CPP_DEST/.generated"
@@ -182,7 +183,8 @@ if [ -d "$TS_SRC" ] && [ "$(ls -A "$TS_SRC" 2>/dev/null)" ]; then
     mkdir -p "$TS_DEST"
 
     # Clean old generated files
-    rm -f "$TS_DEST"/*.ts 2>/dev/null || true
+    # Move old generated files to trash
+    find "$TS_DEST" -maxdepth 1 -name "*.ts" -exec trash {} + 2>/dev/null || true
 
     # Create marker file to indicate these are generated
     echo "// This directory contains auto-generated files" > "$TS_DEST/.generated"
