@@ -7,8 +7,14 @@
       "path": "/api/selection",
       "description": "Get all currently selected art objects as handle IDs. Wraps AIMatchingArtSuite::GetSelectedArt (AIArtHandle*** output). Handler must iterate, register each handle, and free with MdMemoryDisposeHandle.",
       "response": {
-        "handles": { "type": "number[]", "description": "Array of art handle IDs registered with HandleManager::art" },
-        "count": { "type": "number", "description": "Number of selected objects" }
+        "handles": {
+          "type": "number[]",
+          "description": "Array of art handle IDs registered with HandleManager::art"
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of selected objects"
+        }
       }
     },
     {
@@ -17,13 +23,30 @@
       "path": "/api/selection/match",
       "description": "Get art objects matching type and attribute filters. Wraps AIMatchingArtSuite::GetMatchingArt with AIMatchingArtSpec.",
       "request": {
-        "type": { "type": "number", "description": "AIArtType enum: 0=unknown, 1=group, 2=path, 3=compoundPath, 7=placed, 9=raster, 10=plugin, 11=mesh, 12=textFrame, 13=symbol, -1=any" },
-        "whichAttr": { "type": "number", "description": "Which attribute to filter on (bitmask). 0 means no attribute filter.", "optional": true },
-        "attr": { "type": "number", "description": "Attribute value to match. 0 = NOT set, nonzero = set.", "optional": true }
+        "type": {
+          "type": "number",
+          "description": "AIArtType enum: 0=unknown, 1=group, 2=path, 3=compoundPath, 7=placed, 9=raster, 10=plugin, 11=mesh, 12=textFrame, 13=symbol, -1=any"
+        },
+        "whichAttr": {
+          "type": "number",
+          "description": "Which attribute to filter on (bitmask). 0 means no attribute filter.",
+          "optional": true
+        },
+        "attr": {
+          "type": "number",
+          "description": "Attribute value to match. 0 = NOT set, nonzero = set.",
+          "optional": true
+        }
       },
       "response": {
-        "handles": { "type": "number[]", "description": "Array of matching art handle IDs" },
-        "count": { "type": "number", "description": "Number of matching objects" }
+        "handles": {
+          "type": "number[]",
+          "description": "Array of matching art handle IDs"
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of matching objects"
+        }
       }
     },
     {
@@ -31,16 +54,37 @@
       "method": "GET",
       "path": "/api/art/{id}/style",
       "pathParams": {
-        "id": { "type": "string", "description": "Art handle ID from HandleManager::art" }
+        "id": {
+          "type": "string",
+          "description": "Art handle ID from HandleManager::art"
+        }
       },
       "description": "Get fill and stroke style of an art object. Wraps AIPathStyleSuite::GetPathStyle. Color is a tagged union — check color.kind to determine which fields are present (gray/rgb/cmyk/pattern/gradient/custom/none).",
       "response": {
-        "fillPaint": { "type": "boolean", "description": "Whether the object has a fill" },
-        "strokePaint": { "type": "boolean", "description": "Whether the object has a stroke" },
-        "fill": { "type": "object", "description": "{ color: { kind: string, ...variant fields }, overprint: boolean }" },
-        "stroke": { "type": "object", "description": "{ color: { kind: string, ... }, overprint: boolean, width: number, cap: number, join: number, miterLimit: number, dash: { length: number, offset: number, array: number[] } }" },
-        "evenodd": { "type": "boolean", "description": "Even-odd fill rule (vs non-zero winding)" },
-        "resolution": { "type": "number", "description": "Path output resolution (default 800.0)" }
+        "fillPaint": {
+          "type": "boolean",
+          "description": "Whether the object has a fill"
+        },
+        "strokePaint": {
+          "type": "boolean",
+          "description": "Whether the object has a stroke"
+        },
+        "fill": {
+          "type": "object",
+          "description": "{ color: { kind: string, ...variant fields }, overprint: boolean }"
+        },
+        "stroke": {
+          "type": "object",
+          "description": "{ color: { kind: string, ... }, overprint: boolean, width: number, cap: number, join: number, miterLimit: number, dash: { length: number, offset: number, array: number[] } }"
+        },
+        "evenodd": {
+          "type": "boolean",
+          "description": "Even-odd fill rule (vs non-zero winding)"
+        },
+        "resolution": {
+          "type": "number",
+          "description": "Path output resolution (default 800.0)"
+        }
       }
     },
     {
@@ -48,18 +92,44 @@
       "method": "POST",
       "path": "/api/art/{id}/style",
       "pathParams": {
-        "id": { "type": "string", "description": "Art handle ID from HandleManager::art" }
+        "id": {
+          "type": "string",
+          "description": "Art handle ID from HandleManager::art"
+        }
       },
       "description": "Set fill and stroke style for an art object. Wraps AIPathStyleSuite::SetPathStyle. All fields optional — only provided fields are changed. For color, include kind + variant fields.",
       "request": {
-        "fillPaint": { "type": "boolean", "description": "Whether to fill", "optional": true },
-        "strokePaint": { "type": "boolean", "description": "Whether to stroke", "optional": true },
-        "fill": { "type": "object", "description": "{ color: { kind, ...variant }, overprint?: boolean }", "optional": true },
-        "stroke": { "type": "object", "description": "{ color?: { kind, ... }, overprint?: boolean, width?: number, cap?: number, join?: number, miterLimit?: number, dash?: { length, offset, array } }", "optional": true },
-        "evenodd": { "type": "boolean", "description": "Even-odd fill rule", "optional": true }
+        "fillPaint": {
+          "type": "boolean",
+          "description": "Whether to fill",
+          "optional": true
+        },
+        "strokePaint": {
+          "type": "boolean",
+          "description": "Whether to stroke",
+          "optional": true
+        },
+        "fill": {
+          "type": "object",
+          "description": "{ color: { kind, ...variant }, overprint?: boolean }",
+          "optional": true
+        },
+        "stroke": {
+          "type": "object",
+          "description": "{ color?: { kind, ... }, overprint?: boolean, width?: number, cap?: number, join?: number, miterLimit?: number, dash?: { length, offset, array } }",
+          "optional": true
+        },
+        "evenodd": {
+          "type": "boolean",
+          "description": "Even-odd fill rule",
+          "optional": true
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether the style was applied" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether the style was applied"
+        }
       }
     },
     {
@@ -67,13 +137,25 @@
       "method": "GET",
       "path": "/api/art/{id}/segments",
       "pathParams": {
-        "id": { "type": "string", "description": "Art handle ID (must be path art)" }
+        "id": {
+          "type": "string",
+          "description": "Art handle ID (must be path art)"
+        }
       },
       "description": "Get all path segments for a path art object. Wraps AIPathSuite::GetPathSegmentCount + GetPathSegments. Each segment has anchor (p), incoming handle (in), outgoing handle (out), and corner flag.",
       "response": {
-        "count": { "type": "number", "description": "Number of segments" },
-        "closed": { "type": "boolean", "description": "Whether the path is closed" },
-        "segments": { "type": "object", "description": "Array of { p: {h,v}, in: {h,v}, out: {h,v}, corner: boolean }" }
+        "count": {
+          "type": "number",
+          "description": "Number of segments"
+        },
+        "closed": {
+          "type": "boolean",
+          "description": "Whether the path is closed"
+        },
+        "segments": {
+          "type": "object",
+          "description": "Array of { p: {h,v}, in: {h,v}, out: {h,v}, corner: boolean }"
+        }
       }
     },
     {
@@ -81,16 +163,33 @@
       "method": "POST",
       "path": "/api/art/{id}/segments",
       "pathParams": {
-        "id": { "type": "string", "description": "Art handle ID (must be path art)" }
+        "id": {
+          "type": "string",
+          "description": "Art handle ID (must be path art)"
+        }
       },
       "description": "Set path segments for a path art object. Wraps AIPathSuite::SetPathSegments. Replaces segments starting at given index.",
       "request": {
-        "startIndex": { "type": "number", "description": "Starting segment index (0-based)", "optional": true },
-        "segments": { "type": "object", "description": "Array of { p: {h,v}, in: {h,v}, out: {h,v}, corner: boolean }" },
-        "closed": { "type": "boolean", "description": "Set path closed/open state", "optional": true }
+        "startIndex": {
+          "type": "number",
+          "description": "Starting segment index (0-based)",
+          "optional": true
+        },
+        "segments": {
+          "type": "object",
+          "description": "Array of { p: {h,v}, in: {h,v}, out: {h,v}, corner: boolean }"
+        },
+        "closed": {
+          "type": "boolean",
+          "description": "Set path closed/open state",
+          "optional": true
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether segments were set" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether segments were set"
+        }
       }
     },
     {
@@ -99,15 +198,36 @@
       "path": "/api/artboard/check-bounds",
       "description": "Check if a rectangle fits within the active artboard bounds and compute clamped coordinates. Uses AIArtboardSuite to get artboard geometry and GeometryUtils for intersection.",
       "request": {
-        "x": { "type": "number", "description": "X coordinate of the rectangle origin" },
-        "y": { "type": "number", "description": "Y coordinate of the rectangle origin" },
-        "width": { "type": "number", "description": "Width of the rectangle" },
-        "height": { "type": "number", "description": "Height of the rectangle" }
+        "x": {
+          "type": "number",
+          "description": "X coordinate of the rectangle origin"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate of the rectangle origin"
+        },
+        "width": {
+          "type": "number",
+          "description": "Width of the rectangle"
+        },
+        "height": {
+          "type": "number",
+          "description": "Height of the rectangle"
+        }
       },
       "response": {
-        "fits": { "type": "boolean", "description": "Whether the rectangle fits entirely within the artboard" },
-        "clampedX": { "type": "number", "description": "X coordinate clamped to artboard bounds" },
-        "clampedY": { "type": "number", "description": "Y coordinate clamped to artboard bounds" }
+        "fits": {
+          "type": "boolean",
+          "description": "Whether the rectangle fits entirely within the artboard"
+        },
+        "clampedX": {
+          "type": "number",
+          "description": "X coordinate clamped to artboard bounds"
+        },
+        "clampedY": {
+          "type": "number",
+          "description": "Y coordinate clamped to artboard bounds"
+        }
       }
     },
     {
@@ -116,7 +236,10 @@
       "path": "/api/selection/deselect-all",
       "description": "Deselect all currently selected art objects. Wraps AIMatchingArtSuite iteration + AIArtSuite::SetArtUserAttr to clear kArtSelected flag.",
       "response": {
-        "success": { "type": "boolean", "description": "Whether deselection completed successfully" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether deselection completed successfully"
+        }
       }
     },
     {
@@ -125,10 +248,16 @@
       "path": "/api/selection/select",
       "description": "Select art objects by their handle IDs. Resolves handles from HandleManager::art, then sets kArtSelected attribute via AIArtSuite::SetArtUserAttr.",
       "request": {
-        "handles": { "type": "number[]", "description": "Array of art handle IDs to select" }
+        "handles": {
+          "type": "number[]",
+          "description": "Array of art handle IDs to select"
+        }
       },
       "response": {
-        "selected": { "type": "number", "description": "Number of objects successfully selected" }
+        "selected": {
+          "type": "number",
+          "description": "Number of objects successfully selected"
+        }
       }
     },
     {
@@ -137,8 +266,14 @@
       "path": "/api/query/text-frames",
       "description": "Query all text frame art objects in the current document. Wraps AIMatchingArtSuite::GetMatchingArt with type=kTextFrameArt. Returns handles and basic properties for each frame.",
       "response": {
-        "frames": { "type": "object", "description": "Array of { handle: number, name: string, bounds: {left,top,right,bottom} }" },
-        "count": { "type": "number", "description": "Number of text frames found" }
+        "frames": {
+          "type": "object",
+          "description": "Array of { handle: number, name: string, bounds: {left,top,right,bottom} }"
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of text frames found"
+        }
       }
     },
     {
@@ -147,8 +282,14 @@
       "path": "/api/query/layers",
       "description": "Query all layers in the current document with their properties. Wraps AILayerSuite iteration (CountLayers + GetNthLayer + layer property getters).",
       "response": {
-        "layers": { "type": "object", "description": "Array of { handle: number, title: string, visible: boolean, editable: boolean, printed: boolean }" },
-        "count": { "type": "number", "description": "Number of layers" }
+        "layers": {
+          "type": "object",
+          "description": "Array of { handle: number, title: string, visible: boolean, editable: boolean, printed: boolean }"
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of layers"
+        }
       }
     },
     {
@@ -157,11 +298,20 @@
       "path": "/api/query/find",
       "description": "Find art objects by name. Iterates document art tree using AIArtSuite::GetArtFirstChild/GetArtSibling, checking GetArtName against the query string.",
       "request": {
-        "name": { "type": "string", "description": "Name to search for (case-sensitive substring match)" }
+        "name": {
+          "type": "string",
+          "description": "Name to search for (case-sensitive substring match)"
+        }
       },
       "response": {
-        "items": { "type": "object", "description": "Array of { handle: number, name: string, type: number, bounds: {left,top,right,bottom} }" },
-        "count": { "type": "number", "description": "Number of matching items" }
+        "items": {
+          "type": "object",
+          "description": "Array of { handle: number, name: string, type: number, bounds: {left,top,right,bottom} }"
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of matching items"
+        }
       }
     },
     {
@@ -169,29 +319,57 @@
       "method": "GET",
       "path": "/api/art/{id}/area",
       "pathParams": {
-        "id": { "type": "string", "description": "Art handle ID (must be path art)" }
+        "id": {
+          "type": "string",
+          "description": "Art handle ID (must be path art)"
+        }
       },
       "description": "Calculate the area of a path art object using the shoelace formula on linearized bezier segments. Uses GeometryUtils::CalculatePathArea.",
       "response": {
-        "area": { "type": "number", "description": "Absolute area in square points (always positive)" },
-        "signed_area": { "type": "number", "description": "Signed area (positive for CCW, negative for CW winding)" }
+        "area": {
+          "type": "number",
+          "description": "Absolute area in square points (always positive)"
+        },
+        "signed_area": {
+          "type": "number",
+          "description": "Signed area (positive for CCW, negative for CW winding)"
+        }
       }
     },
-
     {
       "name": "CreateTextFrame",
       "method": "POST",
       "path": "/api/text/create",
       "description": "Create a new point text frame. Uses AITextFrameSuite::NewPointText via forward-declared vtable (avoids ATE header conflicts).",
       "request": {
-        "x": { "type": "number", "description": "Anchor point X coordinate in points" },
-        "y": { "type": "number", "description": "Anchor point Y coordinate in points (Illustrator coordinates)" },
-        "orientation": { "type": "number", "description": "0 = horizontal (default), 1 = vertical", "optional": true },
-        "contents": { "type": "string", "description": "Initial text content (requires ATE bridge)", "optional": true }
+        "x": {
+          "type": "number",
+          "description": "Anchor point X coordinate in points"
+        },
+        "y": {
+          "type": "number",
+          "description": "Anchor point Y coordinate in points (Illustrator coordinates)"
+        },
+        "orientation": {
+          "type": "number",
+          "description": "0 = horizontal (default), 1 = vertical",
+          "optional": true
+        },
+        "contents": {
+          "type": "string",
+          "description": "Initial text content (requires ATE bridge)",
+          "optional": true
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether the text frame was created" },
-        "artId": { "type": "number", "description": "Handle ID registered with HandleManager::art" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether the text frame was created"
+        },
+        "artId": {
+          "type": "number",
+          "description": "Handle ID registered with HandleManager::art"
+        }
       }
     },
     {
@@ -199,13 +377,25 @@
       "method": "GET",
       "path": "/api/text/{id}/content",
       "pathParams": {
-        "id": { "type": "string", "description": "Art handle ID (must be text frame art)" }
+        "id": {
+          "type": "string",
+          "description": "Art handle ID (must be text frame art)"
+        }
       },
       "description": "Get text content from a text frame via ATE TextRangeRef.",
       "response": {
-        "success": { "type": "boolean", "description": "Whether content was retrieved" },
-        "artId": { "type": "number", "description": "The art handle ID" },
-        "contents": { "type": "string", "description": "Text content of the frame" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether content was retrieved"
+        },
+        "artId": {
+          "type": "number",
+          "description": "The art handle ID"
+        },
+        "contents": {
+          "type": "string",
+          "description": "Text content of the frame"
+        }
       }
     },
     {
@@ -213,26 +403,43 @@
       "method": "POST",
       "path": "/api/text/{id}/content",
       "pathParams": {
-        "id": { "type": "string", "description": "Art handle ID (must be text frame art)" }
+        "id": {
+          "type": "string",
+          "description": "Art handle ID (must be text frame art)"
+        }
       },
       "description": "Set text content on a text frame. Replaces all existing text.",
       "request": {
-        "contents": { "type": "string", "description": "New text content to set" }
+        "contents": {
+          "type": "string",
+          "description": "New text content to set"
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether content was set" },
-        "artId": { "type": "number", "description": "The art handle ID" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether content was set"
+        },
+        "artId": {
+          "type": "number",
+          "description": "The art handle ID"
+        }
       }
     },
-
     {
       "name": "GetDocumentXmp",
       "method": "GET",
       "path": "/api/xmp",
       "description": "Get full document XMP metadata as an XML packet string. Uses AIDocumentSuite to retrieve the XMP metadata.",
       "response": {
-        "success": { "type": "boolean", "description": "Whether retrieval succeeded" },
-        "xmp": { "type": "string", "description": "XMP metadata XML packet (null if no metadata)" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether retrieval succeeded"
+        },
+        "xmp": {
+          "type": "string",
+          "description": "XMP metadata XML packet (null if no metadata)"
+        }
       }
     },
     {
@@ -241,11 +448,20 @@
       "path": "/api/xmp",
       "description": "Set full document XMP metadata from an XML packet string. Pass xmp as null to clear metadata.",
       "request": {
-        "xmp": { "type": "string", "description": "XMP metadata XML packet string, or null to clear" }
+        "xmp": {
+          "type": "string",
+          "description": "XMP metadata XML packet string, or null to clear"
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether the metadata was set" },
-        "message": { "type": "string", "description": "Status message" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether the metadata was set"
+        },
+        "message": {
+          "type": "string",
+          "description": "Status message"
+        }
       }
     },
     {
@@ -254,10 +470,22 @@
       "path": "/api/xmp/status",
       "description": "Check XMP availability and capabilities. Reports whether document-level and property-level XMP access is available.",
       "response": {
-        "success": { "type": "boolean", "description": "Whether status check succeeded" },
-        "available": { "type": "boolean", "description": "Whether XMP is available (AIDocument suite acquired)" },
-        "propertyAccess": { "type": "boolean", "description": "Whether property-level XMP access is available (XMP Toolkit)" },
-        "capabilities": { "type": "object", "description": "{ getDocumentXMP: boolean, setDocumentXMP: boolean, getProperty: boolean, setProperty: boolean, registerNamespace: boolean }" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether status check succeeded"
+        },
+        "available": {
+          "type": "boolean",
+          "description": "Whether XMP is available (AIDocument suite acquired)"
+        },
+        "propertyAccess": {
+          "type": "boolean",
+          "description": "Whether property-level XMP access is available (XMP Toolkit)"
+        },
+        "capabilities": {
+          "type": "object",
+          "description": "{ getDocumentXMP: boolean, setDocumentXMP: boolean, getProperty: boolean, setProperty: boolean, registerNamespace: boolean }"
+        }
       }
     },
     {
@@ -266,15 +494,36 @@
       "path": "/api/xmp/property",
       "description": "Get a specific XMP property by namespace URI and property name. Uses POST because GET with body is non-standard. Requires XMP Toolkit SDK.",
       "request": {
-        "namespace": { "type": "string", "description": "XMP namespace URI" },
-        "name": { "type": "string", "description": "XMP property name" }
+        "namespace": {
+          "type": "string",
+          "description": "XMP namespace URI"
+        },
+        "name": {
+          "type": "string",
+          "description": "XMP property name"
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether property was retrieved" },
-        "namespace": { "type": "string", "description": "The namespace URI queried" },
-        "name": { "type": "string", "description": "The property name queried" },
-        "value": { "type": "string", "description": "Property value (null if not found)" },
-        "found": { "type": "boolean", "description": "Whether the property exists" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether property was retrieved"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "The namespace URI queried"
+        },
+        "name": {
+          "type": "string",
+          "description": "The property name queried"
+        },
+        "value": {
+          "type": "string",
+          "description": "Property value (null if not found)"
+        },
+        "found": {
+          "type": "boolean",
+          "description": "Whether the property exists"
+        }
       }
     },
     {
@@ -283,15 +532,36 @@
       "path": "/api/xmp/property/set",
       "description": "Set a specific XMP property value. Requires XMP Toolkit SDK for property-level access.",
       "request": {
-        "namespace": { "type": "string", "description": "XMP namespace URI" },
-        "name": { "type": "string", "description": "XMP property name" },
-        "value": { "type": "string", "description": "Value to set" }
+        "namespace": {
+          "type": "string",
+          "description": "XMP namespace URI"
+        },
+        "name": {
+          "type": "string",
+          "description": "XMP property name"
+        },
+        "value": {
+          "type": "string",
+          "description": "Value to set"
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether the property was set" },
-        "namespace": { "type": "string", "description": "The namespace URI" },
-        "name": { "type": "string", "description": "The property name" },
-        "value": { "type": "string", "description": "The value that was set" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether the property was set"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "The namespace URI"
+        },
+        "name": {
+          "type": "string",
+          "description": "The property name"
+        },
+        "value": {
+          "type": "string",
+          "description": "The value that was set"
+        }
       }
     },
     {
@@ -300,14 +570,70 @@
       "path": "/api/xmp/namespace",
       "description": "Register a custom XMP namespace with a suggested prefix. The actual prefix may differ if already registered. Requires XMP Toolkit SDK.",
       "request": {
-        "uri": { "type": "string", "description": "Namespace URI to register" },
-        "prefix": { "type": "string", "description": "Suggested namespace prefix" }
+        "uri": {
+          "type": "string",
+          "description": "Namespace URI to register"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Suggested namespace prefix"
+        }
       },
       "response": {
-        "success": { "type": "boolean", "description": "Whether registration succeeded" },
-        "uri": { "type": "string", "description": "The registered namespace URI" },
-        "requestedPrefix": { "type": "string", "description": "The prefix that was requested" },
-        "actualPrefix": { "type": "string", "description": "The actual prefix assigned (may differ from requested)" }
+        "success": {
+          "type": "boolean",
+          "description": "Whether registration succeeded"
+        },
+        "uri": {
+          "type": "string",
+          "description": "The registered namespace URI"
+        },
+        "requestedPrefix": {
+          "type": "string",
+          "description": "The prefix that was requested"
+        },
+        "actualPrefix": {
+          "type": "string",
+          "description": "The actual prefix assigned (may differ from requested)"
+        }
+      }
+    },
+    {
+      "name": "CreatePlantLabel",
+      "method": "POST",
+      "path": "/api/labels/create-v2",
+      "description": "Create a new text frame label for a plant using the manual vtable pattern (to bypass ATE header conflicts).",
+      "request": {
+        "uuid": {
+          "type": "string",
+          "description": "Plant UUID (optional, for grouping)"
+        },
+        "text": {
+          "type": "string",
+          "description": "Label text content (e.g. 'A')"
+        },
+        "fontName": {
+          "type": "string",
+          "description": "Font family name"
+        },
+        "fontSize": {
+          "type": "number",
+          "description": "Font size in points"
+        },
+        "position": {
+          "type": "object",
+          "description": "{x, y} coordinates"
+        }
+      },
+      "response": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the label was created"
+        },
+        "artId": {
+          "type": "number",
+          "description": "Handle ID of the created text frame"
+        }
       }
     }
   ]
