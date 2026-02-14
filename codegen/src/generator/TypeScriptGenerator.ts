@@ -87,6 +87,8 @@ interface SuiteView {
     suiteName: string;
     structs: StructDefinition[];
     hasStructs: boolean;
+    structImportList: string;
+    hasStructImports: boolean;
     functions: FunctionView[];
 }
 
@@ -149,13 +151,15 @@ export class TypeScriptGenerator {
      */
     generate(suite: SuiteInfo): GeneratedFile {
         const usedStructs = this.collectUsedStructs(suite);
-        const structDefs = this.generateStructDefinitions(usedStructs);
+        const structNames = Array.from(usedStructs).filter(s => STRUCT_DEFINITIONS[s]).sort();
         const functions = this.generateFunctionViews(suite);
 
         const view: SuiteView = {
             suiteName: suite.name,
-            structs: structDefs,
-            hasStructs: structDefs.length > 0,
+            structs: [],
+            hasStructs: false,
+            structImportList: structNames.join(', '),
+            hasStructImports: structNames.length > 0,
             functions
         };
 
@@ -164,6 +168,39 @@ export class TypeScriptGenerator {
         return {
             filename: `${suite.name}.ts`,
             content
+        };
+    }
+
+    /**
+     * Generates a shared types.ts file containing all struct definitions
+     * @returns The generated types file
+     */
+    generateTypesFile(): GeneratedFile {
+        const allStructs = Object.values(STRUCT_DEFINITIONS).sort((a, b) => a.name.localeCompare(b.name));
+
+        const lines = [
+            '/**',
+            ' * Shared type definitions',
+            ' * Auto-generated from Adobe Illustrator SDK',
+            ' */',
+            '',
+        ];
+
+        for (const struct of allStructs) {
+            lines.push(`/**`);
+            lines.push(` * ${struct.description}`);
+            lines.push(` */`);
+            lines.push(`export interface ${struct.name} {`);
+            for (const field of struct.fields) {
+                lines.push(`    ${field.name}: ${field.type};`);
+            }
+            lines.push(`}`);
+            lines.push('');
+        }
+
+        return {
+            filename: 'types.ts',
+            content: lines.join('\n')
         };
     }
 
@@ -198,8 +235,8 @@ export class TypeScriptGenerator {
                 return 'string';
 
             case 'Struct':
-                // Return the struct type name - we generate interfaces for these
-                return baseType;
+                // Known structs are imported from ./types; unknown structs fall back to any
+                return STRUCT_DEFINITIONS[baseType] ? baseType : 'any';
 
             case 'Enum':
                 // Enums are represented as numbers in TypeScript
@@ -739,21 +776,9 @@ export class TypeScriptGenerator {
  */
 
 import { callCpp } from '@/sdk/bridge';
-{{#hasStructs}}
-
-// Struct type definitions
-{{#structs}}
-
-/**
- * {{description}}
- */
-export interface {{name}} {
-{{#fields}}
-    {{name}}: {{type}};
-{{/fields}}
-}
-{{/structs}}
-{{/hasStructs}}
+{{#hasStructImports}}
+import { {{{structImportList}}} } from './types';
+{{/hasStructImports}}
 
 const SUITE_NAME = '{{suiteName}}';
 {{#functions}}

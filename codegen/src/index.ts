@@ -706,8 +706,11 @@ async function main(): Promise<void> {
         }
     }
 
-    // Generate index file for TypeScript exports
+    // Generate shared types file and index for TypeScript exports
     if (!options.cppOnly && totalTsFiles > 0) {
+        const typesFile = tsGen.generateTypesFile();
+        await fs.writeFile(path.join(tsOutputDir, typesFile.filename), typesFile.content, 'utf-8');
+        logger.debug(`  Wrote ${typesFile.filename}`);
         await generateTypeScriptIndex(tsOutputDir);
     }
 
@@ -801,30 +804,77 @@ async function main(): Promise<void> {
 }
 
 /**
- * Generates an index.ts file that re-exports all generated TypeScript modules
+ * Generates an index.ts file that re-exports all generated TypeScript modules.
+ * Detects duplicate export names across files and emits explicit named
+ * re-exports to avoid TS2308 conflicts.
  */
 async function generateTypeScriptIndex(tsOutputDir: string): Promise<void> {
-    const tsFiles = glob.sync(path.join(tsOutputDir, '*.ts'));
-    const exports: string[] = [];
+    const tsFiles = glob.sync(path.join(tsOutputDir, '*.ts'))
+        .map(f => path.basename(f, '.ts'))
+        .filter(b => b !== 'index')
+        .sort();
 
-    for (const file of tsFiles) {
-        const basename = path.basename(file, '.ts');
-        if (basename !== 'index') {
-            exports.push(`export * from './${basename}';`);
+    if (tsFiles.length === 0) return;
+
+    // Collect exported names from each file
+    const exportsByFile = new Map<string, string[]>();
+    for (const basename of tsFiles) {
+        const content = await fs.readFile(path.join(tsOutputDir, `${basename}.ts`), 'utf-8');
+        const names: string[] = [];
+        // Match: export interface Foo, export async function Foo, export function Foo,
+        //        export type Foo, export const Foo, export class Foo
+        const re = /^export\s+(?:async\s+)?(?:interface|function|type|const|class)\s+(\w+)/gm;
+        let m;
+        while ((m = re.exec(content)) !== null) {
+            names.push(m[1]);
         }
+        exportsByFile.set(basename, names);
     }
 
-    if (exports.length > 0) {
-        const indexContent = `/**
+    // Find names exported by multiple files
+    const nameToFiles = new Map<string, string[]>();
+    for (const [file, names] of exportsByFile) {
+        for (const name of names) {
+            const files = nameToFiles.get(name) || [];
+            files.push(file);
+            nameToFiles.set(name, files);
+        }
+    }
+    const duplicateNames = new Set<string>();
+    for (const [name, files] of nameToFiles) {
+        if (files.length > 1) duplicateNames.add(name);
+    }
+
+    // Build export lines
+    const lines: string[] = [];
+    const emittedNames = new Set<string>();
+
+    for (const basename of tsFiles) {
+        const names = exportsByFile.get(basename) || [];
+        const conflicting = names.filter(n => duplicateNames.has(n));
+
+        if (conflicting.length === 0) {
+            // No conflicts — safe to use export *
+            lines.push(`export * from './${basename}';`);
+        } else {
+            // Some names conflict — use explicit named exports, skipping already-emitted names
+            const safeNames = names.filter(n => !emittedNames.has(n));
+            if (safeNames.length > 0) {
+                lines.push(`export { ${safeNames.join(', ')} } from './${basename}';`);
+            }
+        }
+        for (const n of names) emittedNames.add(n);
+    }
+
+    const indexContent = `/**
  * NUXP SDK Client - Auto-generated index
  * Re-exports all generated suite modules
  */
 
-${exports.sort().join('\n')}
+${lines.join('\n')}
 `;
-        await fs.writeFile(path.join(tsOutputDir, 'index.ts'), indexContent, 'utf-8');
-        logger.debug('Generated TypeScript index.ts');
-    }
+    await fs.writeFile(path.join(tsOutputDir, 'index.ts'), indexContent, 'utf-8');
+    logger.debug('Generated TypeScript index.ts');
 }
 
 /**
