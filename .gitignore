@@ -77,3 +77,5 @@ shell/src/sdk/defaults.ts
 docs/api/generated/
 shell/src-tauri/target/
 shell/src-tauri/gen/
+/plugin/build-xcode/build
+/plugin/build-xcode

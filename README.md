@@ -1,11 +1,25 @@
 # NUXP ("Not UXP")
 
+<p align="center">
+  <img src="docs/images/nuxp-crunch.webp" alt="NUXP Crunch — Actually Ships!" width="400">
+</p>
+
 **No UXP? No problem.**
 
 Adobe refuses to port UXP to Illustrator, leaving us stuck with the ancient, deprecated CEP framework from 2013.
 **NUXP** is a modern alternative that lets you build native-feeling Illustrator plugins using **Vue**, **TypeScript**, and the **Adobe C++ SDK**, completely bypassing the limitations of CEP.
 
 *"If Adobe won't build it, we will."*
+
+## Why NUXP?
+
+<p align="center">
+  <img src="docs/images/uxp-os.webp" alt="UXP-Os — Part of an INCOMPLETE breakfast" width="600">
+</p>
+
+Adobe has promised UXP for Illustrator for years. It's been in roadmap presentations, developer previews, and "coming soon" announcements — but it never ships. Meanwhile, the CEP framework it's supposed to replace was deprecated in 2013 and hasn't seen meaningful updates since.
+
+NUXP stops waiting. Instead of shoehorning modern web apps into a decade-old embedded browser, NUXP runs a local HTTP server inside a C++ plugin and talks to a standalone frontend. You get full SDK access, modern tooling, and a development experience that doesn't feel like 2013.
 
 ## Architecture
 
