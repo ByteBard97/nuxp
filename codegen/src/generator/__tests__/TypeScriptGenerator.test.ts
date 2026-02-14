@@ -790,6 +790,20 @@ describe('TypeScriptGenerator', () => {
             expect(file.content).toContain('Promise<number>');
         });
 
+        it('should filter C-style void parameters', () => {
+            const func = mockFunction('GetDocumentIsolated', [
+                mockParam('void', 'void', { category: 'Void' as TypeCategory })
+            ]);
+            func.returnType = 'AIBoolean';
+
+            const suite = mockSuite([func]);
+            const file = generator.generate(suite);
+
+            // Should emit no parameters, not "void: void"
+            expect(file.content).toContain('export async function GetDocumentIsolated()');
+            expect(file.content).not.toContain('void: void');
+        });
+
         it('should handle parameters without classification (fallback to raw type)', () => {
             const param: ParamInfo = {
                 name: 'value',
