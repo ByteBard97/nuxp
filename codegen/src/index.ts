@@ -239,6 +239,16 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
     // Note: These AIBoolean-returning functions are now supported via code generator:
     // 'GetClipping', 'GetDisabled', 'GetInverted', 'GetLinked', 'IsEditingArt'
 
+    // AIDocumentViewSuite - const pointer-to-struct params misclassified as by-value
+    'ViewPointToArtworkPoint',
+    'ViewPointToArtworkPointUnrotated',
+    'ViewRectToArtworkRect',
+    'ViewRectToArtworkRectUnrotated',
+    // AIDocumentViewSuite - ai::ColorSpace requires unlinked symbols
+    'GetNthOPPPlate',
+    'GetOPPPlateState',
+    'SetOPPPlateState',
+
     // AIMdMemorySuite - void* params
     'MdMemoryLock',
 

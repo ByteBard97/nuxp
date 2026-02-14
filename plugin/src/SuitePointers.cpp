@@ -44,6 +44,7 @@ AILayerListSuite *SuitePointers::sAILayerList = nullptr;
 AIMaskSuite *SuitePointers::sAIMask = nullptr;
 AINotifierSuite *SuitePointers::sAINotifier = nullptr;
 AITimerSuite *SuitePointers::sAITimer = nullptr;
+AIDocumentViewSuite *SuitePointers::sAIDocumentView = nullptr;
 
 bool SuitePointers::sAcquired = false;
 
@@ -73,6 +74,7 @@ AILayerListSuite *sLayerList = nullptr;
 AIMaskSuite *sMask = nullptr;
 AINotifierSuite *sNotifier = nullptr;
 AITimerSuite *sTimer = nullptr;
+AIDocumentViewSuite *sDocumentView = nullptr;
 
 // -------------------------------------------------------------------------
 // Global Suite Pointers for SDK Implementation Files (IAI*.cpp)
@@ -157,6 +159,8 @@ ASErr SuitePointers::Acquire() {
   ACQUIRE_SUITE(kAIMaskSuite, AIMask, kAIMaskSuiteVersion);
   ACQUIRE_SUITE(kAINotifierSuite, AINotifier, kAINotifierSuiteVersion);
   ACQUIRE_SUITE(kAITimerSuite, AITimer, kAITimerSuiteVersion);
+  ACQUIRE_SUITE(kAIDocumentViewSuite, AIDocumentView,
+                kAIDocumentViewSuiteVersion);
 
   // Acquire SDK implementation suites (for IAI*.cpp files)
   {
@@ -223,6 +227,7 @@ ASErr SuitePointers::Acquire() {
   sMask = sAIMask;
   sNotifier = sAINotifier;
   sTimer = sAITimer;
+  sDocumentView = sAIDocumentView;
 
   sAcquired = true;
   return kNoErr;
@@ -261,6 +266,8 @@ void SuitePointers::Release() {
   RELEASE_SUITE(kAIMaskSuite, AIMask, kAIMaskSuiteVersion);
   RELEASE_SUITE(kAINotifierSuite, AINotifier, kAINotifierSuiteVersion);
   RELEASE_SUITE(kAITimerSuite, AITimer, kAITimerSuiteVersion);
+  RELEASE_SUITE(kAIDocumentViewSuite, AIDocumentView,
+                kAIDocumentViewSuiteVersion);
 
   // Release SDK implementation suites
   if (sAIUnicodeString) {
@@ -301,6 +308,7 @@ void SuitePointers::Release() {
   sMask = nullptr;
   sNotifier = nullptr;
   sTimer = nullptr;
+  sDocumentView = nullptr;
 
   sAcquired = false;
 }
@@ -364,6 +372,10 @@ AIMaskSuite *SuitePointers::AIMask() { return sAIMask; }
 AINotifierSuite *SuitePointers::AINotifier() { return sAINotifier; }
 
 AITimerSuite *SuitePointers::AITimer() { return sAITimer; }
+
+AIDocumentViewSuite *SuitePointers::AIDocumentView() {
+  return sAIDocumentView;
+}
 
 // -------------------------------------------------------------------------
 // Cleanup Macros

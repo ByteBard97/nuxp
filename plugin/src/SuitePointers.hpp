@@ -19,6 +19,7 @@
 // Additional SDK headers for suite types not included by IllustratorSDK.h
 #include "AIArtboard.h"
 #include "AIDocumentList.h"
+#include "AIDocumentView.h"
 #include "AIGroup.h"
 #include "AITransformArt.h"
 
@@ -129,6 +130,9 @@ public:
   /** Timer suite - periodic callbacks */
   static AITimerSuite *AITimer();
 
+  /** Document view suite - zoom, scroll, screen mode */
+  static AIDocumentViewSuite *AIDocumentView();
+
 private:
   // Prevent instantiation
   SuitePointers() = delete;
@@ -160,6 +164,7 @@ private:
   static AIMaskSuite *sAIMask;
   static AINotifierSuite *sAINotifier;
   static AITimerSuite *sAITimer;
+  static AIDocumentViewSuite *sAIDocumentView;
 
   // Track if suites are acquired
   static bool sAcquired;
