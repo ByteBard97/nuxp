@@ -51,7 +51,7 @@ namespace {{suiteName}} {
  * @returns ["{{name}}"] - {{type}}{{#isHandle}} (handle ID){{/isHandle}}
 {{/outputParams}}
 {{#returnsBoolean}}
- * @returns ["result"] - bool (from AIBoolean return)
+ * @returns ["result"] - bool (from {{returnCppType}} return)
 {{/returnsBoolean}}
 {{#returnsHandle}}
  * @returns ["result"] - handle ID (from {{returnCppType}} return)
@@ -108,8 +108,8 @@ nlohmann::json {{name}}(const nlohmann::json& params) {
     }
 {{/returnsError}}
 {{#returnsBoolean}}
-    // Call SDK function (returns AIBoolean)
-    AIBoolean result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
+    // Call SDK function (returns boolean)
+    {{returnCppType}} result = s{{suiteShortName}}->{{sdkName}}({{#callArgs}}{{{argName}}}{{#hasMore}}, {{/hasMore}}{{/callArgs}});
     response["result"] = static_cast<bool>(result);
 {{/returnsBoolean}}
 {{#returnsVoid}}
@@ -392,7 +392,9 @@ export class CppGenerator {
      * Classify the return type of a function
      */
     private classifyReturnType(func: FunctionInfo): ReturnTypeCategory {
-        if (func.returnType === 'AIBoolean') {
+        // Check all boolean primitive types (AIBoolean, ASBoolean, bool)
+        if (func.returnType === 'AIBoolean' ||
+            this.config.primitives[func.returnType] === 'bool') {
             return 'Boolean';
         }
         if (func.returnType === 'void') {

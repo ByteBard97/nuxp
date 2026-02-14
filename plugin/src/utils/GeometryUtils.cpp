@@ -7,6 +7,9 @@
 #include "GeometryUtils.hpp"
 #include "SuitePointers.hpp"
 
+#include <cmath>
+#include <vector>
+
 namespace GeometryUtils {
 
 // -------------------------------------------------------------------------
@@ -311,6 +314,160 @@ void ScaleArt(AIArtHandle art, AIReal scaleFactor) {
 
   // Apply the transformation
   transformSuite->TransformArt(art, &matrix, 1.0, kTransformObjects);
+}
+
+// -------------------------------------------------------------------------
+// CalculatePathArea Helpers
+// -------------------------------------------------------------------------
+
+/**
+ * Number of sample points per bezier curve segment for linearization.
+ * Higher values give more accurate area at the cost of computation.
+ * 16 provides sub-pixel accuracy for typical Illustrator paths.
+ */
+static const int kBezierSamples = 16;
+
+/**
+ * Evaluate a cubic bezier curve at parameter t.
+ *
+ * B(t) = (1-t)^3 * P0 + 3*(1-t)^2*t * P1 + 3*(1-t)*t^2 * P2 + t^3 * P3
+ *
+ * @param p0 Start anchor point
+ * @param p1 First control point (out handle of start)
+ * @param p2 Second control point (in handle of end)
+ * @param p3 End anchor point
+ * @param t Parameter value in [0, 1]
+ * @return The point on the curve at parameter t
+ */
+static AIRealPoint EvalBezier(AIRealPoint p0, AIRealPoint p1, AIRealPoint p2,
+                              AIRealPoint p3, double t) {
+  double u = 1.0 - t;
+  double u2 = u * u;
+  double u3 = u2 * u;
+  double t2 = t * t;
+  double t3 = t2 * t;
+
+  AIRealPoint result;
+  result.h = static_cast<AIReal>(u3 * p0.h + 3.0 * u2 * t * p1.h +
+                                 3.0 * u * t2 * p2.h + t3 * p3.h);
+  result.v = static_cast<AIReal>(u3 * p0.v + 3.0 * u2 * t * p1.v +
+                                 3.0 * u * t2 * p2.v + t3 * p3.v);
+  return result;
+}
+
+/**
+ * Check if a bezier segment is actually a straight line.
+ * A segment is linear if both control points coincide with their
+ * respective anchor points.
+ */
+static bool IsLinearSegment(AIRealPoint anchor, AIRealPoint outCtrl,
+                            AIRealPoint inCtrl, AIRealPoint nextAnchor) {
+  const AIReal kEpsilon = 0.001;
+  return (std::fabs(outCtrl.h - anchor.h) < kEpsilon &&
+          std::fabs(outCtrl.v - anchor.v) < kEpsilon &&
+          std::fabs(inCtrl.h - nextAnchor.h) < kEpsilon &&
+          std::fabs(inCtrl.v - nextAnchor.v) < kEpsilon);
+}
+
+// -------------------------------------------------------------------------
+// CalculatePathArea
+// -------------------------------------------------------------------------
+
+PathAreaResult CalculatePathArea(AIArtHandle art) {
+  PathAreaResult result = {0.0, 0.0};
+
+  AIPathSuite *pathSuite = SuitePointers::AIPath();
+  AIArtSuite *artSuite = SuitePointers::AIArt();
+  if (pathSuite == nullptr || artSuite == nullptr || art == nullptr) {
+    return result;
+  }
+
+  // Verify this is a path art object
+  short artType = 0;
+  ASErr error = artSuite->GetArtType(art, &artType);
+  if (error != kNoErr || artType != kPathArt) {
+    return result;
+  }
+
+  // Get segment count
+  short segmentCount = 0;
+  error = pathSuite->GetPathSegmentCount(art, &segmentCount);
+  if (error != kNoErr || segmentCount < 2) {
+    return result;
+  }
+
+  // Get all path segments
+  std::vector<AIPathSegment> segments(segmentCount);
+  error = pathSuite->GetPathSegments(art, 0, segmentCount, segments.data());
+  if (error != kNoErr) {
+    return result;
+  }
+
+  // Check if path is closed (area is only meaningful for closed paths)
+  AIBoolean closed = false;
+  error = pathSuite->GetPathClosed(art, &closed);
+  if (error != kNoErr || !closed) {
+    return result;  // Returns {0.0, 0.0} for open paths
+  }
+
+  // Linearize all bezier segments into a polygon
+  // For each segment pair, sample points along the bezier curve
+  std::vector<AIRealPoint> polygon;
+  polygon.reserve(segmentCount * kBezierSamples);
+
+  int totalSegments = closed ? segmentCount : (segmentCount - 1);
+
+  for (int i = 0; i < totalSegments; ++i) {
+    int nextIdx = (i + 1) % segmentCount;
+
+    // Bezier control points:
+    // P0 = current anchor point
+    // P1 = current segment's out control point
+    // P2 = next segment's in control point
+    // P3 = next anchor point
+    AIRealPoint p0 = segments[i].p;
+    AIRealPoint p1 = segments[i].out;
+    AIRealPoint p2 = segments[nextIdx].in;
+    AIRealPoint p3 = segments[nextIdx].p;
+
+    if (IsLinearSegment(p0, p1, p2, p3)) {
+      // Straight line - just add the start point
+      polygon.push_back(p0);
+    } else {
+      // Bezier curve - sample points along the curve
+      // Start at t=0 (anchor point), stop before t=1 (next segment handles it)
+      for (int s = 0; s < kBezierSamples; ++s) {
+        double t = static_cast<double>(s) / static_cast<double>(kBezierSamples);
+        polygon.push_back(EvalBezier(p0, p1, p2, p3, t));
+      }
+    }
+  }
+
+  // If the path is not closed, add the last anchor point
+  if (!closed) {
+    polygon.push_back(segments[segmentCount - 1].p);
+  }
+
+  // Apply the shoelace formula
+  // signed_area = 0.5 * sum of (x_i * y_{i+1} - x_{i+1} * y_i)
+  if (polygon.size() < 3) {
+    return result;
+  }
+
+  double sum = 0.0;
+  size_t n = polygon.size();
+  for (size_t i = 0; i < n; ++i) {
+    size_t j = (i + 1) % n;
+    sum += static_cast<double>(polygon[i].h) *
+               static_cast<double>(polygon[j].v) -
+           static_cast<double>(polygon[j].h) *
+               static_cast<double>(polygon[i].v);
+  }
+
+  result.signed_area = sum * 0.5;
+  result.area = std::fabs(result.signed_area);
+
+  return result;
 }
 
 } // namespace GeometryUtils

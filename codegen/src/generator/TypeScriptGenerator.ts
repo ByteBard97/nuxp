@@ -76,7 +76,7 @@ interface FunctionView {
     outputParams: OutputParamView[];
     singleOutputName: string;
     callParams: string;
-    returnsBooleanDirect: boolean; // For functions that return AIBoolean (not via output param)
+    returnsBooleanDirect: boolean; // For functions that return boolean types (AIBoolean, ASBoolean, bool)
     returnsDirectValue: boolean;   // For functions that return a non-error value directly
 }
 
@@ -377,8 +377,9 @@ export class TypeScriptGenerator {
         const inputParams = func.params.filter(p => !p.isOutput);
         const outputParams = func.params.filter(p => p.isOutput);
 
-        // Check if function returns AIBoolean directly (not via output param)
-        const returnsBooleanDirect = func.returnType === 'AIBoolean';
+        // Check if function returns a boolean directly (AIBoolean, ASBoolean, bool)
+        const returnsBooleanDirect = func.returnType === 'AIBoolean' ||
+            (this.config.primitives[func.returnType] === 'bool');
         // Check if function returns a non-error value directly (handle, primitive, string)
         const directReturnTsType = this.getDirectReturnType(func.returnType);
         const hasDirectReturn = !returnsBooleanDirect && directReturnTsType !== null;

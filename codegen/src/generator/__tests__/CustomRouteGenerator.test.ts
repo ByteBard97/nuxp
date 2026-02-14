@@ -406,7 +406,7 @@ describe('CustomRouteGenerator', () => {
                 expect(result.content).toContain('/beds/([a-zA-Z0-9_-]+)');
             });
 
-            it('should use default pattern [^/]+ when no pattern specified', async () => {
+            it('should use default pattern [a-zA-Z0-9_.-]+ when no pattern specified', async () => {
                 const config: RoutesConfig = {
                     routes: [{
                         name: 'getItem',
@@ -423,7 +423,7 @@ describe('CustomRouteGenerator', () => {
                 const gen = new CustomRouteGenerator(configPath);
                 const result = gen.generateCppRegistration();
 
-                expect(result.content).toContain('/items/([^/]+)');
+                expect(result.content).toContain('/items/([a-zA-Z0-9_.-]+)');
             });
 
             it('should include params empty guard for pattern routes', () => {

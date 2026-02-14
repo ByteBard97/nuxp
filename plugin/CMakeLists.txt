@@ -85,6 +85,64 @@ if(NOT EXISTS "${LIB_PATH}")
 endif()
 
 # -----------------------------------------------------------------------------
+# Optional: XMP Toolkit SDK (property-level XMP metadata access)
+# -----------------------------------------------------------------------------
+# The XMP Toolkit SDK enables per-property read/write of XMP metadata.
+# Without it, full-packet XMP access (get/set entire XML) still works
+# via AIDocumentSuite::GetDocumentXAP/SetDocumentXAP.
+#
+# To enable:
+#   cmake -B build -DXMP_SDK_PATH=/path/to/XMP-Toolkit-SDK
+#
+# Or clone it alongside the plugin:
+#   git clone https://github.com/adobe/XMP-Toolkit-SDK.git
+#   cmake -B build -DXMP_SDK_PATH=XMP-Toolkit-SDK
+
+set(XMP_SDK_PATH "" CACHE PATH
+    "Path to Adobe XMP Toolkit SDK (optional, enables property-level XMP access)")
+
+set(NUXP_HAS_XMP OFF)
+if(XMP_SDK_PATH AND EXISTS "${XMP_SDK_PATH}")
+    # Look for the main XMP SDK header
+    find_path(XMP_INCLUDE_DIR "XMP.hpp"
+        PATHS
+            "${XMP_SDK_PATH}/public/include"
+            "${XMP_SDK_PATH}/public/include/client-glue"
+            "${XMP_SDK_PATH}/source"
+        NO_DEFAULT_PATH
+    )
+
+    # Look for pre-built XMP libraries
+    find_library(XMP_CORE_LIB
+        NAMES XMPCoreStatic XMPCore
+        PATHS
+            "${XMP_SDK_PATH}/public/libraries"
+            "${XMP_SDK_PATH}/build"
+            "${XMP_SDK_PATH}/build/Release"
+            "${XMP_SDK_PATH}/build/Debug"
+        NO_DEFAULT_PATH
+    )
+
+    if(XMP_INCLUDE_DIR)
+        set(NUXP_HAS_XMP ON)
+        message(STATUS "XMP Toolkit SDK found: ${XMP_SDK_PATH}")
+        message(STATUS "  Include dir: ${XMP_INCLUDE_DIR}")
+        if(XMP_CORE_LIB)
+            message(STATUS "  Library: ${XMP_CORE_LIB}")
+        else()
+            message(STATUS "  Library: not found (header-only mode)")
+        endif()
+    else()
+        message(STATUS "XMP Toolkit SDK path set but headers not found at ${XMP_SDK_PATH}")
+        message(STATUS "  Expected XMP.hpp in public/include/ or source/")
+    endif()
+else()
+    message(STATUS "XMP Toolkit SDK: not configured (property-level XMP disabled)")
+    message(STATUS "  Document-level XMP (full packet get/set) is always available")
+    message(STATUS "  To enable: cmake -DXMP_SDK_PATH=/path/to/XMP-Toolkit-SDK")
+endif()
+
+# -----------------------------------------------------------------------------
 # Source Files
 # -----------------------------------------------------------------------------
 
@@ -214,6 +272,19 @@ if(EXISTS "${LIB_PATH}/nlohmann")
     target_include_directories(${PROJECT_NAME} PRIVATE ${LIB_PATH}/nlohmann)
 endif()
 
+# Optional XMP Toolkit SDK support
+if(NUXP_HAS_XMP)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NUXP_HAS_XMP)
+    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+        "${XMP_SDK_PATH}/public/include"
+        "${XMP_SDK_PATH}/public/include/client-glue"
+        "${XMP_SDK_PATH}/source"
+    )
+    if(XMP_CORE_LIB)
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${XMP_CORE_LIB})
+    endif()
+endif()
+
 endif() # CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR
 
 # -----------------------------------------------------------------------------
@@ -257,6 +328,9 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/XMPUtils.cpp
     # Endpoints
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/DemoEndpoints.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/NUXPHandlers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/TextEndpoints.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/XMPEndpoints.cpp
     ${NUXP_GENERATED_ENDPOINTS}
 )
 
@@ -277,6 +351,19 @@ target_include_directories(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
 )
+
+# Optional XMP Toolkit SDK support for nuxp-core
+if(NUXP_HAS_XMP)
+    target_compile_definitions(nuxp-core INTERFACE NUXP_HAS_XMP)
+    target_include_directories(nuxp-core SYSTEM INTERFACE
+        "${XMP_SDK_PATH}/public/include"
+        "${XMP_SDK_PATH}/public/include/client-glue"
+        "${XMP_SDK_PATH}/source"
+    )
+    if(XMP_CORE_LIB)
+        target_link_libraries(nuxp-core INTERFACE ${XMP_CORE_LIB})
+    endif()
+endif()
 
 # -----------------------------------------------------------------------------
 # Platform-Specific Configuration
@@ -641,6 +728,11 @@ message(STATUS "  Default Port:     ${NUXP_DEFAULT_PORT}")
 message(STATUS "  SDK Path:         ${AI_SDK_PATH}")
 message(STATUS "  Library Path:     ${LIB_PATH}")
 message(STATUS "  Install Path:     ${AI_PLUGINS_PATH}")
+if(NUXP_HAS_XMP)
+message(STATUS "  XMP Toolkit SDK:  ${XMP_SDK_PATH}")
+else()
+message(STATUS "  XMP Toolkit SDK:  not configured (property-level XMP disabled)")
+endif()
 if(APPLE)
 message(STATUS "")
 message(STATUS "macOS Settings:")

@@ -15,8 +15,12 @@
 #include "SuitePointers.hpp"
 #include "HandleManager.hpp"
 #include "MainThreadDispatch.hpp"
+#include "utils/GeometryUtils.hpp"
+#include "utils/StringUtils.hpp"
 #include <nlohmann/json.hpp>
 #include <vector>
+#include <algorithm>
+#include <functional>
 
 using json = nlohmann::json;
 
@@ -580,6 +584,458 @@ std::string HandleSetPathSegments(const std::string& id, const std::string& body
         }
 
         return {{"success", true}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/artboard/check-bounds — Check if rect fits within active artboard
+// ---------------------------------------------------------------------------
+std::string HandleCheckBounds(const std::string& body) {
+    json params;
+    try {
+        params = json::parse(body);
+    } catch (const json::parse_error& e) {
+        return json{{"success", false},
+                    {"error", std::string("Invalid JSON: ") + e.what()}}.dump();
+    }
+
+    json result = MainThreadDispatch::Run([&params]() -> json {
+        if (!SuitePointers::AIArtboard()) {
+            return {{"success", false},
+                    {"error", "AIArtboard suite not available"}};
+        }
+
+        double x = params.value("x", 0.0);
+        double y = params.value("y", 0.0);
+        double width = params.value("width", 0.0);
+        double height = params.value("height", 0.0);
+
+        // Get active artboard bounds
+        ai::ArtboardList artboardList;
+        ASErr err = SuitePointers::AIArtboard()->GetArtboardList(artboardList);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "Failed to get artboard list"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        ai::ArtboardID active = 0;
+        SuitePointers::AIArtboard()->GetActive(artboardList, active);
+
+        ai::ArtboardProperties props;
+        SuitePointers::AIArtboard()->Init(props);
+        err = SuitePointers::AIArtboard()->GetArtboardProperties(
+            artboardList, active, props);
+
+        if (err != kNoErr) {
+            SuitePointers::AIArtboard()->ReleaseArtboardList(artboardList);
+            return {{"success", false},
+                    {"error", "Failed to get artboard properties"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        AIRealRect abBounds;
+        SuitePointers::AIArtboard()->GetPosition(props, abBounds);
+
+        SuitePointers::AIArtboard()->Dispose(props);
+        SuitePointers::AIArtboard()->ReleaseArtboardList(artboardList);
+
+        // Check if the rectangle fits within artboard bounds
+        double abLeft   = abBounds.left;
+        double abTop    = abBounds.top;
+        double abRight  = abBounds.right;
+        double abBottom = abBounds.bottom;
+
+        bool fits = (x >= abLeft && y <= abTop &&
+                     x + width <= abRight && y - height >= abBottom);
+
+        // Compute clamped coordinates
+        double clampedX = x;
+        double clampedY = y;
+
+        // Clamp X so rectangle stays within left/right bounds
+        if (clampedX < abLeft) {
+            clampedX = abLeft;
+        }
+        if (clampedX + width > abRight) {
+            clampedX = abRight - width;
+        }
+
+        // Clamp Y so rectangle stays within top/bottom bounds
+        // In Illustrator coordinate system, Y increases upward, top > bottom
+        if (clampedY > abTop) {
+            clampedY = abTop;
+        }
+        if (clampedY - height < abBottom) {
+            clampedY = abBottom + height;
+        }
+
+        return {{"success", true},
+                {"fits", fits},
+                {"clampedX", clampedX},
+                {"clampedY", clampedY}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/selection/deselect-all — Deselect all selected art
+// ---------------------------------------------------------------------------
+std::string HandleDeselectAll() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AIMatchingArt()) {
+            return {{"success", false},
+                    {"error", "AIMatchingArt suite not available"}};
+        }
+
+        // Use the AIMatchingArtSuite DeselectAll convenience method
+        // which internally iterates selected art and clears kArtSelected
+        ASErr err = SuitePointers::AIMatchingArt()->DeselectAll();
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "DeselectAll failed"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        return {{"success", true}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/selection/select — Select art objects by handle IDs
+// ---------------------------------------------------------------------------
+std::string HandleSelectByHandles(const std::string& body) {
+    json params;
+    try {
+        params = json::parse(body);
+    } catch (const json::parse_error& e) {
+        return json{{"success", false},
+                    {"error", std::string("Invalid JSON: ") + e.what()}}.dump();
+    }
+
+    if (!params.contains("handles") || !params["handles"].is_array()) {
+        return json{{"success", false},
+                    {"error", "Missing required field: handles (array)"}}.dump();
+    }
+
+    json result = MainThreadDispatch::Run([&params]() -> json {
+        if (!SuitePointers::AIArt()) {
+            return {{"success", false},
+                    {"error", "AIArt suite not available"}};
+        }
+
+        const auto& handleIds = params["handles"];
+        int selected = 0;
+
+        for (const auto& idVal : handleIds) {
+            if (!idVal.is_number_integer()) continue;
+
+            int handleId = idVal.get<int>();
+            AIArtHandle art = HandleManager::art.Get(handleId);
+            if (!art) continue;
+
+            ASErr err = SuitePointers::AIArt()->SetArtUserAttr(
+                art, kArtSelected, kArtSelected);
+            if (err == kNoErr) {
+                ++selected;
+            }
+        }
+
+        return {{"success", true},
+                {"selected", selected}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/query/text-frames — Query all text frame art objects
+// ---------------------------------------------------------------------------
+std::string HandleQueryTextFrames() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AIMatchingArt() || !SuitePointers::AIArt()) {
+            return {{"success", false},
+                    {"error", "Required suites not available"}};
+        }
+
+        AIMatchingArtSpec spec;
+        spec.type      = kTextFrameArt;
+        spec.whichAttr = 0;
+        spec.attr      = 0;
+
+        AIArtHandle** matches = nullptr;
+        ai::int32 numMatches = 0;
+
+        ASErr err = SuitePointers::AIMatchingArt()->GetMatchingArt(
+            &spec, 1, &matches, &numMatches);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "GetMatchingArt failed"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        json frames = json::array();
+
+        if (matches != nullptr && numMatches > 0) {
+            for (ai::int32 i = 0; i < numMatches; ++i) {
+                AIArtHandle art = (*matches)[i];
+                if (!art) continue;
+
+                json frame;
+
+                // Register handle
+                frame["handle"] = HandleManager::art.Register(art);
+
+                // Get name
+                ai::UnicodeString nameUni;
+                err = SuitePointers::AIArt()->GetArtName(art, nameUni, nullptr);
+                if (err == kNoErr && !nameUni.empty()) {
+                    frame["name"] = nameUni.as_UTF8();
+                } else {
+                    frame["name"] = "";
+                }
+
+                // Get bounds
+                AIRealRect bounds;
+                err = SuitePointers::AIArt()->GetArtBounds(art, &bounds);
+                if (err == kNoErr) {
+                    frame["bounds"] = {{"left", bounds.left},
+                                       {"top", bounds.top},
+                                       {"right", bounds.right},
+                                       {"bottom", bounds.bottom}};
+                }
+
+                frames.push_back(frame);
+            }
+
+            // Free SDK-allocated memory
+            if (SuitePointers::AIMdMemory()) {
+                SuitePointers::AIMdMemory()->MdMemoryDisposeHandle(
+                    reinterpret_cast<AIMdMemoryHandle>(matches));
+            }
+        }
+
+        return {{"success", true},
+                {"frames", frames},
+                {"count", static_cast<int>(numMatches)}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/query/layers — Query all layers with properties
+// ---------------------------------------------------------------------------
+std::string HandleQueryLayers() {
+    json result = MainThreadDispatch::Run([]() -> json {
+        if (!SuitePointers::AILayer()) {
+            return {{"success", false},
+                    {"error", "AILayer suite not available"}};
+        }
+
+        ai::int32 layerCount = 0;
+        ASErr err = SuitePointers::AILayer()->CountLayers(&layerCount);
+        if (err != kNoErr) {
+            return {{"success", false},
+                    {"error", "CountLayers failed"},
+                    {"errorCode", static_cast<int>(err)}};
+        }
+
+        json layers = json::array();
+
+        for (ai::int32 i = 0; i < layerCount; ++i) {
+            AILayerHandle layer = nullptr;
+            err = SuitePointers::AILayer()->GetNthLayer(i, &layer);
+            if (err != kNoErr || !layer) continue;
+
+            json layerObj;
+
+            // Register handle
+            layerObj["handle"] = HandleManager::layers.Register(layer);
+
+            // Get title
+            ai::UnicodeString titleUni;
+            err = SuitePointers::AILayer()->GetLayerTitle(layer, titleUni);
+            if (err == kNoErr) {
+                layerObj["title"] = titleUni.as_UTF8();
+            } else {
+                layerObj["title"] = "Untitled";
+            }
+
+            // Get visible
+            AIBoolean visible = true;
+            SuitePointers::AILayer()->GetLayerVisible(layer, &visible);
+            layerObj["visible"] = static_cast<bool>(visible);
+
+            // Get editable
+            AIBoolean editable = true;
+            SuitePointers::AILayer()->GetLayerEditable(layer, &editable);
+            layerObj["editable"] = static_cast<bool>(editable);
+
+            // Get printed
+            AIBoolean printed = true;
+            SuitePointers::AILayer()->GetLayerPrinted(layer, &printed);
+            layerObj["printed"] = static_cast<bool>(printed);
+
+            layers.push_back(layerObj);
+        }
+
+        return {{"success", true},
+                {"layers", layers},
+                {"count", static_cast<int>(layerCount)}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/query/find — Find art objects by name (substring match)
+// ---------------------------------------------------------------------------
+std::string HandleFindArtByName(const std::string& body) {
+    json params;
+    try {
+        params = json::parse(body);
+    } catch (const json::parse_error& e) {
+        return json{{"success", false},
+                    {"error", std::string("Invalid JSON: ") + e.what()}}.dump();
+    }
+
+    if (!params.contains("name") || !params["name"].is_string()) {
+        return json{{"success", false},
+                    {"error", "Missing required field: name (string)"}}.dump();
+    }
+
+    json result = MainThreadDispatch::Run([&params]() -> json {
+        if (!SuitePointers::AIArt()) {
+            return {{"success", false},
+                    {"error", "AIArt suite not available"}};
+        }
+
+        std::string query = params["name"].get<std::string>();
+        json items = json::array();
+
+        // Helper: convert art type to string
+        auto artTypeToString = [](short type) -> std::string {
+            switch (type) {
+            case kGroupArt:         return "group";
+            case kPathArt:          return "path";
+            case kCompoundPathArt:  return "compoundPath";
+            case kPlacedArt:        return "placed";
+            case kRasterArt:        return "raster";
+            case kPluginArt:        return "plugin";
+            case kMeshArt:          return "mesh";
+            case kTextFrameArt:     return "textFrame";
+            case kSymbolArt:        return "symbol";
+            case kForeignArt:       return "foreign";
+            case kLegacyTextArt:    return "legacyText";
+            default:                return "unknown";
+            }
+        };
+
+        // Recursive art tree walker
+        std::function<void(AIArtHandle)> walkArt = [&](AIArtHandle art) {
+            while (art) {
+                // Check name for substring match
+                ai::UnicodeString nameUni;
+                ASErr err = SuitePointers::AIArt()->GetArtName(
+                    art, nameUni, nullptr);
+                if (err == kNoErr && !nameUni.empty()) {
+                    std::string name = nameUni.as_UTF8();
+                    if (name.find(query) != std::string::npos) {
+                        json item;
+                        item["handle"] = HandleManager::art.Register(art);
+                        item["name"] = name;
+
+                        short artType = 0;
+                        SuitePointers::AIArt()->GetArtType(art, &artType);
+                        item["type"] = artTypeToString(artType);
+
+                        AIRealRect bounds;
+                        err = SuitePointers::AIArt()->GetArtBounds(
+                            art, &bounds);
+                        if (err == kNoErr) {
+                            item["bounds"] = {
+                                {"left", bounds.left},
+                                {"top", bounds.top},
+                                {"right", bounds.right},
+                                {"bottom", bounds.bottom}};
+                        }
+
+                        items.push_back(item);
+                    }
+                }
+
+                // Recurse into children (groups, compound paths, etc.)
+                AIArtHandle child = nullptr;
+                SuitePointers::AIArt()->GetArtFirstChild(art, &child);
+                if (child) {
+                    walkArt(child);
+                }
+
+                // Move to sibling
+                AIArtHandle sibling = nullptr;
+                SuitePointers::AIArt()->GetArtSibling(art, &sibling);
+                art = sibling;
+            }
+        };
+
+        // Start walk from each layer's first art
+        if (SuitePointers::AILayer()) {
+            ai::int32 layerCount = 0;
+            SuitePointers::AILayer()->CountLayers(&layerCount);
+
+            for (ai::int32 i = 0; i < layerCount; ++i) {
+                AILayerHandle layer = nullptr;
+                ASErr err = SuitePointers::AILayer()->GetNthLayer(i, &layer);
+                if (err != kNoErr || !layer) continue;
+
+                AIArtHandle firstArt = nullptr;
+                err = SuitePointers::AIArt()->GetFirstArtOfLayer(
+                    layer, &firstArt);
+                if (err == kNoErr && firstArt) {
+                    // GetFirstArtOfLayer returns the layer group;
+                    // walk its children
+                    AIArtHandle child = nullptr;
+                    SuitePointers::AIArt()->GetArtFirstChild(
+                        firstArt, &child);
+                    if (child) {
+                        walkArt(child);
+                    }
+                }
+            }
+        }
+
+        return {{"success", true},
+                {"items", items},
+                {"count", static_cast<int>(items.size())}};
+    });
+    return result.dump();
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/art/{id}/area — Calculate path area via shoelace formula
+// ---------------------------------------------------------------------------
+std::string HandleCalculatePathArea(const std::string& id) {
+    int artId;
+    try {
+        artId = std::stoi(id);
+    } catch (...) {
+        return json{{"success", false},
+                    {"error", "Invalid art handle ID"}}.dump();
+    }
+
+    json result = MainThreadDispatch::Run([artId]() -> json {
+        AIArtHandle art = HandleManager::art.Get(artId);
+        if (!art) {
+            return {{"success", false},
+                    {"error", "Invalid or stale art handle"}};
+        }
+
+        GeometryUtils::PathAreaResult areaResult =
+            GeometryUtils::CalculatePathArea(art);
+
+        return {{"success", true},
+                {"area", areaResult.area},
+                {"signed_area", areaResult.signed_area}};
     });
     return result.dump();
 }

@@ -16,6 +16,8 @@
 #include "MainThreadDispatch.hpp"
 #include "SSE.hpp"
 #include "endpoints/DemoEndpoints.hpp"
+#include "endpoints/TextEndpoints.hpp"
+#include "endpoints/XMPEndpoints.hpp"
 #include "endpoints/generated/CentralDispatcher.h"
 
 // cpp-httplib (header-only HTTP library)
@@ -379,7 +381,9 @@ void HttpServer::ConfigureRoutes() {
 
   // -------------------------------------------------------------------------
   // Pattern Routes - Routes with path parameters (regex capture groups)
-  // Example: R"(/plant/([a-f0-9-]+))" captures UUID from /plant/abc-123
+  // Default pattern is ([^/]+) which matches any non-slash characters.
+  // Routes can override with a custom pattern via pathParams.pattern in
+  // routes.json, e.g. ([a-zA-Z0-9_.-]+) for alphanumeric IDs.
   // -------------------------------------------------------------------------
   for (const auto &route : patternRoutes_) {
     auto handler = [route](const httplib::Request &req,
@@ -586,9 +590,18 @@ void HttpServer::ConfigureRoutes() {
  ******************************************************************************/
 
 void HttpServer::ServerThread() {
-  // Register custom routes from generated code (populates customRoutes_/patternRoutes_)
+  // Register all custom routes from generated code (populates customRoutes_/patternRoutes_).
+  // This now handles ALL routes including text and XMP endpoints, which were previously
+  // registered separately via TextEndpoints::RegisterRoutes() and XMPEndpoints::RegisterRoutes().
   extern void RegisterCustomRoutes();
   RegisterCustomRoutes();
+
+  // DEPRECATED: Text and XMP routes are now registered by CustomRouteRegistration.cpp
+  // (generated from routes.json). These calls are commented out to avoid duplicate
+  // route registration. Remove entirely once the generated registration is confirmed
+  // working in production.
+  // TextEndpoints::RegisterRoutes();
+  // XMPEndpoints::RegisterRoutes();
 
   // Create server instance
   {
