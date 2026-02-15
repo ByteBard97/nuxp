@@ -1,3 +1,8 @@
+---
+layout: default
+title: Configurable Port Spec
+---
+
 # Configurable Port Specification
 
 ## Overview

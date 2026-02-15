@@ -1,3 +1,8 @@
+---
+layout: default
+title: Getting Started
+---
+
 # Getting Started with NUXP
 
 This guide covers how to set up your development environment for NUXP.

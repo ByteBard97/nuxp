@@ -1,3 +1,8 @@
+---
+layout: default
+title: Adding Custom Endpoints
+---
+
 # Adding Custom Endpoints to NUXP
 
 A step-by-step guide for adding your own HTTP endpoints to the NUXP plugin. Time estimate: 15 minutes.

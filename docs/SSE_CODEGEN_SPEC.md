@@ -1,3 +1,8 @@
+---
+layout: default
+title: SSE Codegen Spec
+---
+
 # SSE Code Generation Specification
 
 ## Overview

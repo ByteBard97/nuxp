@@ -1,3 +1,8 @@
+---
+layout: default
+title: "Tutorial: Your First Plugin"
+---
+
 # Your First NUXP Plugin
 
 This tutorial walks you through creating a simple Illustrator tool using NUXP. By the end, you'll have a working button that creates a rectangle in your Illustrator document.

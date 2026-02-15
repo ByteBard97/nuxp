@@ -1,3 +1,8 @@
+---
+layout: default
+title: Architecture
+---
+
 # NUXP Architecture
 
 NUXP bridges a Vue/TypeScript frontend to Adobe Illustrator's C++ SDK via an HTTP/JSON server embedded in the plugin. The frontend (Tauri desktop app or dev server) sends HTTP requests to `localhost:8080`. The C++ plugin, loaded as a `.aip` file inside Illustrator, runs an embedded HTTP server that translates JSON requests into SDK calls and returns JSON responses.
