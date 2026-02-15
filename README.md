@@ -323,6 +323,17 @@ VITE_USE_MOCK=true npm run dev
 
 The mock bridge provides simulated responses for all SDK calls.
 
+### Script Toolkit
+
+The shell includes a built-in Script Toolkit with 15 ready-to-run operations inspired by popular ExtendScript script collections. Click "Scripts" in the sidebar to try them:
+
+- **Document**: Info, object counter, artboard list
+- **Layers**: List, visibility toggle, lock/unlock
+- **Selection**: Info, deselect all
+- **Objects**: Rename, opacity, duplicate
+- **Text**: List frames, create frame
+- **View**: Fit artboard, fit selection
+
 ### Full Stack Development
 
 1. Start Illustrator with the plugin loaded
