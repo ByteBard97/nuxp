@@ -360,6 +360,7 @@ connect(): void {
 
 Downstream apps like Flora can add a settings UI:
 
+{% raw %}
 ```vue
 <template>
   <div class="port-settings">
@@ -404,6 +405,7 @@ async function savePort() {
 }
 </script>
 ```
+{% endraw %}
 
 ---
 

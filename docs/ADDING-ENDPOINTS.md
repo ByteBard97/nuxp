@@ -227,6 +227,7 @@ Create your handler implementation in a `.cpp` file inside `plugin/src/endpoints
 
 Here is the complete, working implementation for `GetArtboardCount`:
 
+{% raw %}
 ```cpp
 // In plugin/src/endpoints/handwritten/NUXPHandlers.cpp
 // (or a new file like plugin/src/endpoints/handwritten/ArtboardHandlers.cpp)
@@ -273,6 +274,7 @@ std::string HandleGetArtboardCount() {
 
 } // namespace NUXP
 ```
+{% endraw %}
 
 ### Critical Pattern: MainThreadDispatch::Run()
 
@@ -280,6 +282,7 @@ Every handler that calls the Adobe SDK **must** wrap those calls in `MainThreadD
 
 **Why:** The HTTP server runs on a background thread, but all Adobe Illustrator SDK calls must execute on the main thread. `MainThreadDispatch::Run()` queues your lambda onto the main thread (via `AITimerSuite` callbacks) and blocks the HTTP thread until the work completes.
 
+{% raw %}
 ```cpp
 json result = MainThreadDispatch::Run([]() -> json {
     // Everything inside this lambda runs on Illustrator's main thread.
@@ -288,6 +291,7 @@ json result = MainThreadDispatch::Run([]() -> json {
 });
 return result.dump();  // Back on HTTP thread -- convert JSON to string
 ```
+{% endraw %}
 
 If you skip `MainThreadDispatch::Run()`, your SDK calls will execute on the HTTP thread and crash Illustrator.
 
@@ -300,6 +304,7 @@ Follow the pattern used throughout `NUXPHandlers.cpp`:
 3. **Return structured errors** with `success: false`, an `error` message, and optionally `errorCode`
 4. **Clean up SDK resources** (release artboard lists, dispose handles, free memory blocks)
 
+{% raw %}
 ```cpp
 if (!SuitePointers::AILayer()) {
     return {{"success", false},
@@ -313,11 +318,13 @@ if (err != kNoErr) {
             {"errorCode", static_cast<int>(err)}};
 }
 ```
+{% endraw %}
 
 ### POST Handler Example (with request body)
 
 For a POST endpoint, the handler receives the request body as a JSON string. Parse it, validate required fields, then pass data into the `MainThreadDispatch::Run()` lambda:
 
+{% raw %}
 ```cpp
 std::string HandleRenameLayer(const std::string& body) {
     // Parse the JSON body
@@ -365,11 +372,13 @@ std::string HandleRenameLayer(const std::string& body) {
     return result.dump();
 }
 ```
+{% endraw %}
 
 ### Path Parameter Handler Example
 
 For routes with `{id}` in the path, the extracted parameter is passed as a `const std::string&` argument. Typically you parse it to an integer handle ID:
 
+{% raw %}
 ```cpp
 std::string HandleGetArtBounds(const std::string& id) {
     int artId;
@@ -403,6 +412,7 @@ std::string HandleGetArtBounds(const std::string& id) {
     return result.dump();
 }
 ```
+{% endraw %}
 
 ### Including Your New File in CMake
 
