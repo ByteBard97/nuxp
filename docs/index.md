@@ -1,0 +1,31 @@
+---
+layout: default
+title: Home
+---
+
+# NUXP Documentation
+
+**No UXP? No problem.** Build modern Illustrator plugins with Vue, TypeScript, and the Adobe C++ SDK.
+
+---
+
+## Guides
+
+- **[Getting Started](getting-started.md)** -- Download the SDK, build the plugin, run the frontend
+- **[Tutorial: Your First Plugin](TUTORIAL.md)** -- Create a rectangle from a Vue component
+- **[Adding Custom Endpoints](ADDING-ENDPOINTS.md)** -- Define routes, generate code, implement handlers
+- **[Architecture](ARCHITECTURE.md)** -- Threading model, handle management, code generation pipeline
+
+## Reference
+
+- **[Custom Routes Codegen Spec](CUSTOM_ROUTES_CODEGEN_SPEC.md)** -- Full specification for the route code generator
+- **[SSE Codegen Spec](SSE_CODEGEN_SPEC.md)** -- Server-Sent Events code generation
+- **[Configurable Port Spec](CONFIGURABLE_PORT_SPEC.md)** -- Port configuration and auto-discovery
+- **[API Reference](api/README.md)** -- HTTP API endpoint documentation
+
+## Project Links
+
+- **[GitHub Repository](https://github.com/ByteBard97/nuxp)**
+- **[README](https://github.com/ByteBard97/nuxp#readme)**
+- **[Customization Guide](https://github.com/ByteBard97/nuxp/blob/master/CUSTOMIZATION.md)**
+- **[Contributing](https://github.com/ByteBard97/nuxp/blob/master/CONTRIBUTING.md)**
