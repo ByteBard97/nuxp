@@ -2,6 +2,9 @@ import type { Script, ScriptCategory } from './types'
 import documentInfo from './scripts/document-info'
 import objectCounter from './scripts/object-counter'
 import listArtboards from './scripts/list-artboards'
+import listLayers from './scripts/list-layers'
+import toggleVisibility from './scripts/toggle-visibility'
+import lockUnlockAll from './scripts/lock-unlock-all'
 
 const scripts: Script[] = []
 
@@ -26,3 +29,8 @@ export function registerScript(script: Script): void {
 registerScript(documentInfo)
 registerScript(objectCounter)
 registerScript(listArtboards)
+
+// Register layers scripts
+registerScript(listLayers)
+registerScript(toggleVisibility)
+registerScript(lockUnlockAll)
