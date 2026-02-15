@@ -32,23 +32,32 @@ NUXP stops waiting. Instead of shoehorning modern web apps into a decade-old emb
 
 NUXP replaces the "CEP Panel" approach with a standalone web application that communicates with Illustrator via a C++ plugin exposing a local HTTP server.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Your Application                          │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │              Vue 3 Frontend (shell/)                     ││
-│  │   Components │ Pinia Stores │ TypeScript SDK Client      ││
-│  └─────────────────────────┬───────────────────────────────┘│
-│                            │ HTTP (localhost:8080)           │
-│  ┌─────────────────────────▼───────────────────────────────┐│
-│  │              C++ Plugin (plugin/)                        ││
-│  │   HTTP Server │ Handle Manager │ SDK Wrappers            ││
-│  └─────────────────────────┬───────────────────────────────┘│
-│                            │ Native API                      │
-│  ┌─────────────────────────▼───────────────────────────────┐│
-│  │              Adobe Illustrator                           ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'primaryColor': '#1B3A6B',
+  'primaryTextColor': '#FFFFFF',
+  'primaryBorderColor': '#F5C518',
+  'lineColor': '#C41E24',
+  'secondaryColor': '#F5C518',
+  'tertiaryColor': '#FFF8E7',
+  'clusterBkg': '#FFF8E7',
+  'clusterBorder': '#1B3A6B'
+}}}%%
+flowchart TB
+    subgraph App["Your Application"]
+        direction TB
+        subgraph Frontend["Vue 3 Frontend &nbsp;(shell/)"]
+            FE["Components &bull; Pinia Stores &bull; TypeScript SDK Client"]
+        end
+        Frontend -->|"HTTP (localhost:8080)"| Plugin
+        subgraph Plugin["C++ Plugin &nbsp;(plugin/)"]
+            PL["HTTP Server &bull; Handle Manager &bull; SDK Wrappers"]
+        end
+        Plugin -->|"Native PICA API"| AI
+        subgraph AI["Adobe Illustrator"]
+            SDK["19 SDK Suites &bull; 442+ Functions"]
+        end
+    end
 ```
 
 For details on threading, handle management, and code generation, see [Architecture](docs/ARCHITECTURE.md).
