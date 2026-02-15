@@ -1,5 +1,5 @@
 title: NUXP Documentation
-description: "Not UXP — A modern alternative to Adobe CEP for Illustrator plugins"
+description: "Not UXP — Build Illustrator plugins with any JS framework and the C++ SDK"
 theme: jekyll-theme-cayman
 exclude:
   - internal/
