@@ -4,6 +4,12 @@
 @import "jekyll-theme-cayman";
 
 /* NUXP brand colors: Navy #1B3A6B, Red #C41E24, Gold #F5C518 */
+/* Dark theme */
+
+body {
+  background-color: #0A1929;
+  color: #D4D4D4;
+}
 
 .page-header {
   background-image: linear-gradient(120deg, #0D2240, #1B3A6B, #2A5298);
@@ -23,9 +29,13 @@
 }
 
 .page-header .btn:hover {
-  color: #1B3A6B;
+  color: #0A1929;
   background-color: #F5C518;
   border-color: #F5C518;
+}
+
+.main-content {
+  color: #D4D4D4;
 }
 
 .main-content h1,
@@ -34,17 +44,85 @@
 .main-content h4,
 .main-content h5,
 .main-content h6 {
-  color: #1B3A6B;
+  color: #F5C518;
+}
+
+.main-content h2 {
+  border-bottom-color: #1B3A6B;
 }
 
 .main-content a {
-  color: #C41E24;
+  color: #5B9BD5;
 }
 
 .main-content a:hover {
-  color: #1B3A6B;
+  color: #F5C518;
 }
 
 .main-content hr {
-  border-bottom-color: #F5C518;
+  border-bottom-color: #1B3A6B;
+}
+
+.main-content code {
+  background-color: #142036;
+  color: #E06C75;
+  border: 1px solid #1B3A6B;
+}
+
+.main-content pre {
+  background-color: #0D1B2A;
+  border: 1px solid #1B3A6B;
+  color: #D4D4D4;
+}
+
+.main-content pre code {
+  background-color: transparent;
+  border: none;
+  color: #D4D4D4;
+}
+
+.main-content blockquote {
+  color: #9CA3AF;
+  border-left-color: #F5C518;
+}
+
+.main-content table th {
+  background-color: #1B3A6B;
+  color: #FFFFFF;
+}
+
+.main-content table td {
+  border-color: #1B3A6B;
+}
+
+.main-content table tr {
+  background-color: #0D1B2A;
+  border-top-color: #1B3A6B;
+}
+
+.main-content table tr:nth-child(2n) {
+  background-color: #142036;
+}
+
+.main-content img {
+  border-radius: 4px;
+}
+
+.main-content strong {
+  color: #E8E8E8;
+}
+
+.site-footer {
+  border-top-color: #1B3A6B;
+  color: #6B7280;
+}
+
+.site-footer a {
+  color: #5B9BD5;
+}
+
+/* Selection highlight */
+::selection {
+  background-color: #1B3A6B;
+  color: #F5C518;
 }
