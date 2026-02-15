@@ -329,11 +329,8 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/SelectionUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ToolUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/XMPUtils.cpp
-    # Endpoints (hand-written)
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/DemoEndpoints.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/NUXPHandlers.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/TextEndpoints.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten/XMPEndpoints.cpp
+    # Endpoints (hand-written) — uses same GLOB as standalone target
+    ${HANDWRITTEN_ENDPOINT_SOURCES}
     ${NUXP_GENERATED_ENDPOINTS}
 )
 
