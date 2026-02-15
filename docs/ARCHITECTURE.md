@@ -31,20 +31,18 @@ Adobe Illustrator's SDK is not thread-safe. Every suite function pointer (`Suite
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {
-  'primaryColor': '#1B3A6B',
-  'primaryTextColor': '#FFFFFF',
-  'primaryBorderColor': '#F5C518',
-  'lineColor': '#C41E24',
-  'secondaryColor': '#F5C518',
-  'tertiaryColor': '#FFF8E7',
-  'actorBorder': '#1B3A6B',
-  'actorBkg': '#FFF8E7',
-  'actorTextColor': '#1B3A6B',
-  'signalColor': '#1B3A6B',
-  'signalTextColor': '#1B3A6B',
-  'noteBkgColor': '#F5C518',
-  'noteTextColor': '#1B3A6B',
-  'noteBorderColor': '#1B3A6B'
+  'actorBkg': '#1B3A6B',
+  'actorBorder': '#F5C518',
+  'actorTextColor': '#FFFFFF',
+  'actorLineColor': '#F5C518',
+  'signalColor': '#F5C518',
+  'signalTextColor': '#F5C518',
+  'noteBkgColor': '#C41E24',
+  'noteTextColor': '#FFFFFF',
+  'noteBorderColor': '#F5C518',
+  'activationBkgColor': '#1B3A6B',
+  'activationBorderColor': '#F5C518',
+  'sequenceNumberColor': '#FFFFFF'
 }}}%%
 sequenceDiagram
     participant Client as Frontend
@@ -122,9 +120,12 @@ C++ pointers like `AIArtHandle` (which is `ArtObject*`) cannot be serialized as 
   'primaryColor': '#1B3A6B',
   'primaryTextColor': '#FFFFFF',
   'primaryBorderColor': '#F5C518',
-  'lineColor': '#C41E24',
-  'secondaryColor': '#F5C518',
-  'tertiaryColor': '#FFF8E7'
+  'lineColor': '#F5C518',
+  'secondaryColor': '#C41E24',
+  'secondaryTextColor': '#FFFFFF',
+  'tertiaryColor': '#2A5298',
+  'tertiaryTextColor': '#FFFFFF',
+  'edgeLabelBackground': 'transparent'
 }}}%%
 flowchart LR
     A["SDK returns AIArtHandle*"] --> B["HandleManager::art.Register(ptr)"]
@@ -207,8 +208,8 @@ NUXP auto-generates C++ wrappers and TypeScript clients from Adobe's SDK headers
   'lineColor': '#C41E24',
   'secondaryColor': '#F5C518',
   'tertiaryColor': '#FFF8E7',
-  'clusterBkg': '#FFF8E7',
-  'clusterBorder': '#1B3A6B'
+  'clusterBkg': '#0D2240',
+  'clusterBorder': '#F5C518'
 }}}%%
 flowchart TB
     subgraph Input
@@ -303,9 +304,12 @@ HTTP requests reach the plugin through two distinct paths.
   'primaryColor': '#1B3A6B',
   'primaryTextColor': '#FFFFFF',
   'primaryBorderColor': '#F5C518',
-  'lineColor': '#C41E24',
-  'secondaryColor': '#F5C518',
-  'tertiaryColor': '#FFF8E7'
+  'lineColor': '#F5C518',
+  'secondaryColor': '#C41E24',
+  'secondaryTextColor': '#FFFFFF',
+  'tertiaryColor': '#2A5298',
+  'tertiaryTextColor': '#FFFFFF',
+  'edgeLabelBackground': 'transparent'
 }}}%%
 flowchart TB
     Req["HTTP Request"] --> Type{Route type?}
