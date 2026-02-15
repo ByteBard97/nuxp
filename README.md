@@ -19,10 +19,6 @@ UXP has transformed plugin development for Photoshop, InDesign, and other Adobe 
 
 ## Why NUXP?
 
-<p align="center">
-  <img src="docs/images/uxp-os.webp" alt="UXP-Os" width="600">
-</p>
-
 Illustrator developers have been waiting for UXP support for years. Roadmap slides, developer previews, "coming soon" — but no shipping product. Meanwhile, CEP's embedded Chromium browser and ExtendScript runtime make plugin development feel stuck in 2013.
 
 NUXP takes a different approach. Instead of an embedded browser panel, it runs a local HTTP server inside a C++ plugin and communicates with a standalone frontend. You get direct SDK access, modern tooling, hot reload, and a development workflow that matches how we build software today.
