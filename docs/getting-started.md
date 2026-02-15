@@ -44,11 +44,14 @@ This will:
 
 ### Windows
 
-1. Extract the ZIP file
-2. Copy the following to `plugin/sdk/`:
-   - All files from `illustratorapi/illustrator/`
-   - All files from `illustratorapi/pica_sp/`
-   - All files from `illustratorapi/ate/`
+NUXP is developed and tested on macOS. Windows support is not officially maintained, but community contributions are welcome. The CI/CD pipeline does build on Windows, so the code compiles — but the setup script (`scripts/setup-sdk.sh`) is macOS-only.
+
+If you want to get NUXP running on Windows, the key steps are:
+1. Extract the SDK ZIP and copy headers to `plugin/sdk/` (mirror what `setup-sdk.sh` does for macOS)
+2. CMake validates the SDK by checking for `plugin/sdk/AIArt.h`
+3. Build with `cmake -B build && cmake --build build`
+
+See `scripts/setup-sdk.sh` for the authoritative list of which headers are needed.
 
 ## 3. Install Dependencies
 

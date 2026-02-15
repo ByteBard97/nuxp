@@ -32,7 +32,29 @@ async function post(path, body = {}) {
 }
 
 /**
- * Call an SDK method via the generic /api/call endpoint
+ * Call an SDK method via the generic /api/call endpoint.
+ *
+ * How it works:
+ *   POST /api/call is handled by NUXP's CentralDispatcher, which looks up the
+ *   given "suite" name in its handler registry and calls the corresponding method.
+ *
+ * Important distinction -- suite names used below:
+ *   The suite name "demo" is NOT an Adobe Illustrator SDK suite.  It is a custom
+ *   handler suite registered by DemoEndpoints.cpp (see plugin/src/endpoints/).
+ *   Adobe SDK suites use names like "AIArt", "AILayer", "AIDocument", etc.
+ *
+ * Alternative -- REST-style routes:
+ *   For custom (hand-written) endpoints, NUXP also exposes REST-style routes that
+ *   are generated from routes.json.  These can be more readable than /api/call:
+ *
+ *     // Equivalent to callSdk('demo', 'getDocumentInfo'):
+ *     const docInfo = await get('/api/doc/info')
+ *
+ *     // Equivalent to callSdk('demo', 'getLayers'):
+ *     const layers = await get('/api/doc/layers')
+ *
+ *   Use whichever style you prefer.  The /api/call route is the universal fallback
+ *   and works for both generated SDK wrappers and custom handlers.
  */
 async function callSdk(suite, method, args = {}) {
   return post('/api/call', { suite, method, args })

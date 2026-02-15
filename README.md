@@ -1,7 +1,14 @@
 # NUXP ("Not UXP")
 
 <p align="center">
-  <img src="docs/images/nuxp-crunch.webp" alt="NUXP Crunch — Actually Ships!" width="400">
+  <img src="docs/images/nuxp-crunch.webp" alt="NUXP Crunch — Actually Ships!" width="300">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Actually_Ships!-C41E24?style=for-the-badge&labelColor=1B3A6B" alt="Status: Actually Ships!">
+  <img src="https://img.shields.io/badge/SDK_Functions-442+-F5C518?style=for-the-badge&labelColor=1B3A6B" alt="442+ SDK Functions">
+  <img src="https://img.shields.io/badge/License-MIT-F5C518?style=for-the-badge&labelColor=1B3A6B" alt="MIT License">
+  <img src="https://img.shields.io/badge/macOS-Supported-F5C518?style=for-the-badge&labelColor=1B3A6B&logo=apple&logoColor=white" alt="macOS Supported">
 </p>
 
 **No UXP? No problem.**
@@ -43,6 +50,8 @@ NUXP replaces the "CEP Panel" approach with a standalone web application that co
 │  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
 ```
+
+For details on threading, handle management, and code generation, see [Architecture](docs/ARCHITECTURE.md).
 
 ## Current Capabilities
 
@@ -334,24 +343,55 @@ npm test -- --testPathPattern="CppGenerator"  # single suite
 
 ## API Overview
 
-The TypeScript SDK provides typed access to Illustrator functionality:
+The TypeScript SDK provides three calling patterns, depending on how the endpoint was created.
+
+### 1. Generated Suite Functions (auto-generated from SDK headers)
+
+Each Illustrator SDK suite gets a typed module with one function per method. Use these when the SDK function you need has been auto-generated:
 
 ```typescript
-import { sdk } from '@/sdk'
+import { GetArtType, GetArtBounds, GetArtName } from '@/sdk/generated/AIArtSuite'
 
-// Document operations
-const doc = await sdk.document.getActive()
-const layers = await sdk.layers.list(doc.id)
-
-// Art manipulation
-const art = await sdk.art.create({
-  type: 'rectangle',
-  bounds: { x: 0, y: 0, width: 100, height: 100 }
-})
-
-// Colors
-await sdk.color.setFill(art.id, { r: 255, g: 0, b: 0 })
+const artType = await GetArtType(handleId)         // returns number
+const bounds  = await GetArtBounds(handleId)        // returns AIRealRect
+const info    = await GetArtName(handleId)          // returns { name, isDefaultName }
 ```
+
+These call `callCpp` internally and route through the `CentralDispatcher` on the C++ side.
+
+### 2. Custom Route Functions (hand-written endpoints)
+
+Complex operations that cannot be auto-generated (path styles, text frames, selection queries, XMP metadata) are defined in `codegen/src/config/routes.json` and exposed as typed functions:
+
+```typescript
+import { GetDocumentInfo, GetViewZoom, QueryPathItems } from '@/sdk/generated/customRoutes'
+import { GetSelection, GetPathStyle, CreateTextFrame } from '@/sdk/generated/customRoutes'
+
+const doc   = await GetDocumentInfo()       // returns { name, path, saved, artboards }
+const zoom  = await GetViewZoom()           // returns { zoom }
+const paths = await QueryPathItems()        // returns { items, count }
+const sel   = await GetSelection()          // returns { handles, count }
+const style = await GetPathStyle(String(handleId))  // returns fill/stroke details
+const text  = await CreateTextFrame({ x: 100, y: -200 })  // returns { success, artId }
+```
+
+Custom routes hit dedicated HTTP endpoints (e.g., `GET /api/doc/info`, `GET /api/selection`) rather than the central dispatcher.
+
+### 3. Generic Bridge Call (flexible, for ad-hoc use)
+
+Use `callCpp` directly when you want maximum flexibility or are prototyping:
+
+```typescript
+import { callCpp } from '@/sdk/bridge'
+
+const result = await callCpp<{ type: number }>('AIArtSuite', 'GetArtType', { art: handleId })
+const bounds = await callCpp<{ bounds: AIRealRect }>('AIArtSuite', 'GetArtBounds', { art: handleId })
+```
+
+**When to use which pattern:**
+- **Generated suite functions** -- best for standard SDK operations; fully typed, one function per SDK method
+- **Custom route functions** -- best for complex operations (path styles, queries, text, XMP) that need hand-written C++ logic
+- **Generic bridge call** -- best for prototyping or when you need to call a suite dynamically
 
 ## Creating Your Own Plugin
 
@@ -419,6 +459,8 @@ void RegisterMyFeatureEndpoints(httplib::Server& server) {
 ```
 
 Register in `plugin/src/endpoints/RegisterAll.cpp` and add corresponding TypeScript types in `shell/src/sdk/`.
+
+See [Adding Custom Endpoints](docs/ADDING-ENDPOINTS.md) for a step-by-step guide and [Endpoint Organization](plugin/src/endpoints/README.md) for the generated vs. hand-written code boundary.
 
 ### 4. Adding Custom Routes via Code Generation
 
