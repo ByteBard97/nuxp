@@ -70,6 +70,7 @@ sequenceDiagram
 
 Every handler follows this pattern -- wrap SDK calls inside `MainThreadDispatch::Run()`:
 
+{% raw %}
 ```cpp
 std::string HandleGetSelection() {
     json result = MainThreadDispatch::Run([]() -> json {
@@ -96,6 +97,7 @@ std::string HandleGetSelection() {
     return result.dump();
 }
 ```
+{% endraw %}
 
 There is also `RunWithTimeout()` for cases where you want to avoid blocking indefinitely:
 
@@ -187,6 +189,7 @@ public:
 
 Register on the main thread (inside `MainThreadDispatch::Run`), send the ID to the frontend:
 
+{% raw %}
 ```cpp
 // Registering
 int32_t id = HandleManager::art.Register(artHandle);
@@ -198,6 +201,7 @@ if (!art) {
     return {{"success", false}, {"error", "Invalid or stale art handle"}};
 }
 ```
+{% endraw %}
 
 ---
 
@@ -422,6 +426,7 @@ To add a new hand-written endpoint:
 2. **Regenerate** (`./scripts/generate.sh`). This updates `CustomRouteHandlers.h` with the new declaration and `CustomRouteRegistration.cpp` with the route wiring.
 
 3. **Implement the handler** in a `.cpp` file under `plugin/src/endpoints/handwritten/`:
+{% raw %}
 ```cpp
 #include "CustomRouteHandlers.h"
 #include "MainThreadDispatch.hpp"
@@ -445,6 +450,7 @@ std::string HandleMyNewEndpoint(const std::string& body) {
 
 } // namespace NUXP
 ```
+{% endraw %}
 
 4. **Build**: `cd plugin && cmake --build build`
 

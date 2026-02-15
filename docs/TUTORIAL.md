@@ -28,6 +28,7 @@ Open http://localhost:5173 in your browser.
 
 Create a new file `shell/src/components/CreateRectangle.vue`:
 
+{% raw %}
 ```vue
 <template>
   <div class="create-rectangle">
@@ -140,6 +141,7 @@ button:hover:not(:disabled) {
 }
 </style>
 ```
+{% endraw %}
 
 ## Step 3: Add to a View
 
@@ -183,6 +185,7 @@ If you need functionality not covered by existing endpoints:
 
 In `plugin/src/endpoints/`, create or edit a handler:
 
+{% raw %}
 ```cpp
 // MyEndpoints.cpp
 #include "MyEndpoints.hpp"
@@ -198,6 +201,7 @@ json DoSomething(const json& params) {
 
 } // namespace MyEndpoints
 ```
+{% endraw %}
 
 ### 2. Register the Route
 
