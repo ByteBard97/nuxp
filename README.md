@@ -15,7 +15,7 @@
 
 UXP has transformed plugin development for Photoshop, InDesign, and other Adobe apps — but it hasn't arrived for Illustrator yet. In the meantime, the only official option is CEP, which was deprecated in 2013 and hasn't seen meaningful updates since.
 
-**NUXP** bridges that gap. It provides **442+ pre-built TypeScript functions** that talk directly to the Illustrator SDK — no C++ required. Just write TypeScript, call the API, and build your plugin UI with any JavaScript framework you like. The included frontend uses Vue 3, but since NUXP communicates over HTTP/JSON, you can swap in React, Svelte, or anything else.
+**NUXP** bridges that gap. It provides **442+ pre-built TypeScript functions** that talk directly to the Illustrator SDK — no new C++ to write. Just call the API from TypeScript and build your plugin UI with any JavaScript framework you like. The included frontend uses Vue 3, but since NUXP communicates over HTTP/JSON, you can swap in React, Svelte, or anything else.
 
 ## Why NUXP?
 

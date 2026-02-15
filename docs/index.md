@@ -5,7 +5,7 @@ title: Home
 
 # NUXP Documentation
 
-**No UXP? No problem.** Build modern Illustrator plugins with TypeScript and any JavaScript framework. 442+ SDK functions, ready to use — no C++ required.
+**No UXP? No problem.** Build modern Illustrator plugins with TypeScript and any JavaScript framework. 442+ SDK functions, ready to use — no new C++ to write.
 
 ---
 
