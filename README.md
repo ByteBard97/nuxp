@@ -15,13 +15,13 @@
 
 UXP has transformed plugin development for Photoshop, InDesign, and other Adobe apps — but it hasn't arrived for Illustrator yet. In the meantime, the only official option is CEP, which was deprecated in 2013 and hasn't seen meaningful updates since.
 
-**NUXP** bridges that gap. It lets you build Illustrator plugins using **any JavaScript framework**, **TypeScript**, and the **Adobe C++ SDK**, giving you a modern development experience today. The included frontend uses Vue 3, but since NUXP communicates over HTTP/JSON, you can swap in React, Svelte, or anything else.
+**NUXP** bridges that gap. It provides **442+ pre-built TypeScript functions** that talk directly to the Illustrator SDK — no C++ required. Just write TypeScript, call the API, and build your plugin UI with any JavaScript framework you like. The included frontend uses Vue 3, but since NUXP communicates over HTTP/JSON, you can swap in React, Svelte, or anything else.
 
 ## Why NUXP?
 
 Illustrator developers have been waiting for UXP support for years. Roadmap slides, developer previews, "coming soon" — but no shipping product. Meanwhile, CEP's embedded Chromium browser and ExtendScript runtime make plugin development feel stuck in 2013.
 
-NUXP takes a different approach. Instead of an embedded browser panel, it runs a local HTTP server inside a C++ plugin and communicates with a standalone frontend. You get direct SDK access, modern tooling, hot reload, and a development workflow that matches how we build software today.
+NUXP takes a different approach. A C++ plugin handles the low-level SDK communication behind the scenes — you never need to touch it. From your perspective, you just call TypeScript functions and get typed responses. You get modern tooling, hot reload, and a development workflow that matches how we build software today.
 
 ## Architecture
 
@@ -115,16 +115,11 @@ The code generator handles these C++ type categories automatically:
 | **Enums** | AIEntryType, ai::ArtboardID | Integer cast |
 | **Non-standard returns** | AIReal, AIArtHandle, const char* | Direct value or handle registration |
 
-### What Requires Hand-Written Wrappers
+### Advanced: Extending with Custom C++ Endpoints
 
-Some SDK patterns can't be auto-generated and need manual C++ endpoints:
+The 442 auto-generated functions cover most SDK operations. For edge cases involving complex types (AIColor, AIPathStyle, AIGradient) or the Adobe Text Engine, NUXP includes hand-written C++ endpoints that are also callable from TypeScript.
 
-- **Complex structs** - AIColor (tagged union), AIPathStyle (nested structs), AIGradient
-- **Callback functions** - Plugin infrastructure callbacks
-- **Array parameters** - AIPathSegment[], triple pointers (AIArtHandle***)
-- **Text (ATE)** - Adobe Text Engine headers have SDK conflicts
-
-The infrastructure makes adding manual wrappers straightforward. See `plugin/src/endpoints/` for examples.
+If you need to wrap additional SDK functionality, you *can* write C++ — but most users won't need to. See `plugin/src/endpoints/` for examples.
 
 ### Real-Time Events
 
@@ -138,8 +133,8 @@ Server-Sent Events push Illustrator state changes to the frontend in real-time:
 
 Beyond SDK suite wrappers, NUXP includes:
 
-- **Custom Route Generator** - Define HTTP endpoints in JSON, get type-safe C++ handlers + TypeScript clients. Supports path parameters, request/response schemas, and config inheritance.
-- **SSE Event Generator** - Define events in JSON, get C++ emitters + TypeScript event bus with typed payloads.
+- **Custom Route Generator** - Define HTTP endpoints in JSON, get type-safe TypeScript clients (and matching C++ handlers). Supports path parameters, request/response schemas, and config inheritance.
+- **SSE Event Generator** - Define events in JSON, get a typed TypeScript event bus with real-time payloads from Illustrator.
 
 ## Quick Start
 
@@ -334,9 +329,9 @@ The mock bridge provides simulated responses for all SDK calls.
 2. Run the frontend: `cd shell && npm run dev`
 3. Changes to Vue components hot-reload automatically
 
-### Extending the SDK
+### Extending the SDK (Advanced)
 
-To add support for new Illustrator SDK features:
+Most users won't need to do this — 442+ functions are already generated. But if you need additional SDK coverage:
 
 1. **Automatic** (recommended): Add headers to the SDK and run `./scripts/generate.sh`
 2. **Manual**: Create custom endpoint handlers in `plugin/src/endpoints/`
@@ -398,7 +393,7 @@ const bounds = await callCpp<{ bounds: AIRealRect }>('AIArtSuite', 'GetArtBounds
 
 **When to use which pattern:**
 - **Generated suite functions** -- best for standard SDK operations; fully typed, one function per SDK method
-- **Custom route functions** -- best for complex operations (path styles, queries, text, XMP) that need hand-written C++ logic
+- **Custom route functions** -- best for complex operations (path styles, queries, text, XMP) that go beyond simple SDK calls
 - **Generic bridge call** -- best for prototyping or when you need to call a suite dynamically
 
 ## Creating Your Own Plugin
@@ -452,27 +447,11 @@ Then build with: `cmake --preset my-plugin && cmake --build build`
 
 Update `shell/index.html` and `shell/src/App.vue` with your branding. The Tauri configuration in `shell/src-tauri/tauri.conf.json` controls the desktop app name and window title.
 
-### 3. Adding Custom Endpoints
+### 3. Adding Custom Endpoints (Optional — C++ not required for most use cases)
 
-Create new SDK bindings in `plugin/src/endpoints/`:
+The 442+ auto-generated functions cover most Illustrator SDK operations. If you need something not already covered, you can define new routes in JSON and the code generator produces the TypeScript client for you.
 
-```cpp
-// plugin/src/endpoints/MyFeatureEndpoints.cpp
-void RegisterMyFeatureEndpoints(httplib::Server& server) {
-    server.Post("/api/my-feature/do-something", [](const auto& req, auto& res) {
-        // Your SDK code here
-        res.set_content("{\"success\": true}", "application/json");
-    });
-}
-```
-
-Register in `plugin/src/endpoints/RegisterAll.cpp` and add corresponding TypeScript types in `shell/src/sdk/`.
-
-See [Adding Custom Endpoints](docs/ADDING-ENDPOINTS.md) for a step-by-step guide and [Endpoint Organization](plugin/src/endpoints/README.md) for the generated vs. hand-written code boundary.
-
-### 4. Adding Custom Routes via Code Generation
-
-For type-safe route generation, define endpoints in `codegen/src/config/routes.json`:
+Define endpoints in `codegen/src/config/routes.json`:
 
 ```json
 {
@@ -492,7 +471,9 @@ For type-safe route generation, define endpoints in `codegen/src/config/routes.j
 }
 ```
 
-Run `npm run generate` to produce matching C++ handlers and TypeScript clients.
+Run `npm run generate` to produce a typed TypeScript client function automatically.
+
+For advanced users who want to write custom C++ handlers, see [Adding Custom Endpoints](docs/ADDING-ENDPOINTS.md) and [Endpoint Organization](plugin/src/endpoints/README.md).
 
 ## Using NUXP as a Library
 

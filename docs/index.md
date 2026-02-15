@@ -5,7 +5,7 @@ title: Home
 
 # NUXP Documentation
 
-**No UXP? No problem.** Build modern Illustrator plugins with any JavaScript framework, TypeScript, and the Adobe C++ SDK.
+**No UXP? No problem.** Build modern Illustrator plugins with TypeScript and any JavaScript framework. 442+ SDK functions, ready to use — no C++ required.
 
 ---
 
@@ -13,7 +13,7 @@ title: Home
 
 - **[Getting Started](getting-started.md)** -- Download the SDK, build the plugin, run the frontend
 - **[Tutorial: Your First Plugin](TUTORIAL.md)** -- Create a rectangle from your frontend
-- **[Adding Custom Endpoints](ADDING-ENDPOINTS.md)** -- Define routes, generate code, implement handlers
+- **[Adding Custom Endpoints](ADDING-ENDPOINTS.md)** -- Advanced: extend the API with new routes
 - **[Architecture](ARCHITECTURE.md)** -- Threading model, handle management, code generation pipeline
 
 ## Reference

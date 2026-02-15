@@ -15,7 +15,7 @@ This tutorial walks you through creating a simple Illustrator tool using NUXP. B
 
 ## Step 1: Start in Mock Mode
 
-First, let's develop the UI without needing Illustrator. This is faster and doesn't require the C++ plugin.
+First, let's develop the UI without needing Illustrator. This is faster and lets you iterate on the frontend independently.
 
 ```bash
 cd shell
@@ -153,7 +153,7 @@ In mock mode, the `callCpp` function routes to `MockBridge.ts` which returns sim
 
 ## Step 5: Connect to Real Illustrator
 
-1. Build and install the C++ plugin (see README)
+1. Build and install the plugin (see README)
 2. Launch Illustrator
 3. Stop the dev server and restart without mock mode:
 
@@ -177,62 +177,18 @@ Adobe SDK
 Illustrator Document
 ```
 
-## Adding a Custom Endpoint
+## What You Can Do From Here
 
-If you need functionality not covered by existing endpoints:
+NUXP ships with **442+ TypeScript functions** covering 19 SDK suites. You can build most Illustrator tools entirely in TypeScript without touching any C++.
 
-### 1. Create C++ Handler
-
-In `plugin/src/endpoints/`, create or edit a handler:
-
-{% raw %}
-```cpp
-// MyEndpoints.cpp
-#include "MyEndpoints.hpp"
-#include "../SuitePointers.hpp"
-
-namespace MyEndpoints {
-
-json DoSomething(const json& params) {
-    // Call Adobe SDK here
-    // Return JSON response
-    return json{{"success", true}, {"message", "Did something!"}};
-}
-
-} // namespace MyEndpoints
-```
-{% endraw %}
-
-### 2. Register the Route
-
-In `HttpServer.cpp`, add your route in `ConfigureRoutes()`:
-
-```cpp
-svr.Post("/my/endpoint", [](const auto& req, auto& res) {
-    auto args = json::parse(req.body);
-    json result = MainThreadDispatch::Run([&]() {
-        return MyEndpoints::DoSomething(args);
-    });
-    res.set_content(result.dump(), "application/json");
-});
-```
-
-### 3. Rebuild
-
-```bash
-cd plugin
-cmake --build build
-cmake --install build
-```
-
-Restart Illustrator to load the updated plugin.
-
-## Next Steps
-
-- Explore `plugin/src/endpoints/DemoEndpoints.cpp` for more examples
-- Check `shell/src/sdk/generated/` for auto-generated TypeScript clients
-- Read the [API Reference](api/README.md) for all available endpoints
+Browse what's available:
+- Check `shell/src/sdk/generated/` for all auto-generated TypeScript functions
+- Read the [API Reference](api/README.md) for the full endpoint list
 - Look at the Debug Panel in the shell for real-time event monitoring
+
+### Advanced: Adding Custom C++ Endpoints
+
+If you need SDK functionality not already covered by the 442+ generated functions, you can write custom C++ endpoints. See [Adding Custom Endpoints](ADDING-ENDPOINTS.md) for a step-by-step guide. Most users won't need this.
 
 ## Troubleshooting
 
@@ -245,5 +201,5 @@ Restart Illustrator to load the updated plugin.
 - Create or open an Illustrator document first
 
 **Changes not appearing:**
-- Rebuild the plugin after C++ changes
-- Restart Illustrator to reload the plugin
+- If you modified C++ code, rebuild the plugin and restart Illustrator
+- Frontend changes hot-reload automatically
