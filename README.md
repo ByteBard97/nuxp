@@ -41,25 +41,36 @@ NUXP replaces the "CEP Panel" approach with a standalone web application that co
   'secondaryTextColor': '#FFFFFF',
   'tertiaryColor': '#2A5298',
   'tertiaryTextColor': '#FFFFFF',
-  'clusterBkg': '#0D2240',
-  'clusterBorder': '#F5C518',
   'edgeLabelBackground': 'transparent'
 }}}%%
-flowchart TB
-    subgraph App["Your Application"]
+flowchart LR
+    subgraph FE [" Frontend App (Tauri / Web) "]
         direction TB
-        subgraph Frontend["Vue 3 Frontend &nbsp;(shell/)"]
-            FE["Components &bull; Pinia Stores &bull; TypeScript SDK Client"]
-        end
-        Frontend -->|"HTTP (localhost:8080)"| Plugin
-        subgraph Plugin["C++ Plugin &nbsp;(plugin/)"]
-            PL["HTTP Server &bull; Handle Manager &bull; SDK Wrappers"]
-        end
-        Plugin -->|"Native PICA API"| AI
-        subgraph AI["Adobe Illustrator"]
-            SDK["19 SDK Suites &bull; 442+ Functions"]
-        end
+        SDK_CLIENT["TypeScript SDK Client"]
+        SSE_CLIENT["SSE Event Client"]
     end
+
+    SDK_CLIENT <-- "HTTP / JSON" --> HTTP_SERVER
+    SSE_CLIENT <-- "SSE Stream" --> SSE
+
+    subgraph BE [" C++ Plugin (Illustrator) "]
+        direction TB
+        HTTP_SERVER["HttpServer"]
+        CFG["ConfigManager"]
+        SSE["SSE"]
+    end
+
+    HTTP_SERVER --> AI
+    AI[("Adobe Illustrator SDK (19 Suites, 442+ Functions)")]
+
+    style FE fill:#1B3A6B,stroke:#F5C518,color:#FFFFFF
+    style BE fill:#1B3A6B,stroke:#F5C518,color:#FFFFFF
+    style SDK_CLIENT fill:#2A5298,stroke:#F5C518,color:#FFFFFF
+    style SSE_CLIENT fill:#2A5298,stroke:#F5C518,color:#FFFFFF
+    style HTTP_SERVER fill:#2A5298,stroke:#F5C518,color:#FFFFFF
+    style CFG fill:#2A5298,stroke:#F5C518,color:#FFFFFF
+    style SSE fill:#2A5298,stroke:#F5C518,color:#FFFFFF
+    style AI fill:#C41E24,stroke:#F5C518,color:#FFFFFF
 ```
 
 For details on threading, handle management, and code generation, see [Architecture](docs/ARCHITECTURE.md).
