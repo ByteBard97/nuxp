@@ -85,8 +85,6 @@ interface FunctionView {
  */
 interface SuiteView {
     suiteName: string;
-    structs: StructDefinition[];
-    hasStructs: boolean;
     structImportList: string;
     hasStructImports: boolean;
     functions: FunctionView[];
@@ -156,8 +154,6 @@ export class TypeScriptGenerator {
 
         const view: SuiteView = {
             suiteName: suite.name,
-            structs: [],
-            hasStructs: false,
             structImportList: structNames.join(', '),
             hasStructImports: structNames.length > 0,
             functions
@@ -366,33 +362,6 @@ export class TypeScriptGenerator {
         }
 
         return usedStructs;
-    }
-
-    /**
-     * Generates struct definitions for used struct types
-     * @param usedStructs - Set of struct type names to generate
-     * @returns Array of struct definitions
-     */
-    private generateStructDefinitions(usedStructs: Set<string>): StructDefinition[] {
-        const definitions: StructDefinition[] = [];
-
-        for (const structName of usedStructs) {
-            if (STRUCT_DEFINITIONS[structName]) {
-                definitions.push(STRUCT_DEFINITIONS[structName]);
-            } else {
-                // Generate a generic struct definition for unknown structs
-                definitions.push({
-                    name: structName,
-                    description: `${structName} structure`,
-                    fields: [{ name: 'data', type: 'any' }]
-                });
-            }
-        }
-
-        // Sort alphabetically for consistent output
-        definitions.sort((a, b) => a.name.localeCompare(b.name));
-
-        return definitions;
     }
 
     /**

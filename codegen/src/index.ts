@@ -825,7 +825,7 @@ async function generateTypeScriptIndex(tsOutputDir: string): Promise<void> {
         const names: string[] = [];
         // Match: export interface Foo, export async function Foo, export function Foo,
         //        export type Foo, export const Foo, export class Foo
-        const re = /^export\s+(?:async\s+)?(?:interface|function|type|const|class)\s+(\w+)/gm;
+        const re = /^export\s+(?:async\s+)?(?:interface|function|type|const|class|enum)\s+(\w+)/gm;
         let m;
         while ((m = re.exec(content)) !== null) {
             names.push(m[1]);
