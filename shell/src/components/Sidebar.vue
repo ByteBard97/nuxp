@@ -47,6 +47,12 @@ const navItems = computed<NavItem[]>(() => [
     icon: '🔧',
     badge: null,
   },
+  {
+    id: 'scripts',
+    label: 'Scripts',
+    icon: '⚡',
+    badge: null,
+  },
 ]);
 
 // Active navigation item

@@ -14,6 +14,7 @@ import { useRoute } from 'vue-router';
 import Sidebar from '@/components/Sidebar.vue';
 import DebugPanel from '@/components/DebugPanel.vue';
 import DocumentStatus from '@/components/DocumentStatus.vue';
+import ScriptToolkit from '@/components/ScriptToolkit.vue';
 import { useConnectionStore } from '@/stores/connection';
 import { useDocumentStore } from '@/stores/document';
 import { startEventLoop, stopEventLoop } from '@/sdk/bridge';
@@ -102,6 +103,7 @@ onUnmounted(() => {
         <DocumentStatus v-else-if="currentView === 'documents'" />
         <DocumentStatus v-else-if="currentView === 'layers'" />
         <DocumentStatus v-else-if="currentView === 'selection'" />
+        <ScriptToolkit v-else-if="currentView === 'scripts'" />
         <div v-else class="placeholder-view">
           <p>View not implemented: {{ currentView }}</p>
         </div>
