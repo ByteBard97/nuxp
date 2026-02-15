@@ -177,7 +177,7 @@ else
     print_warn "  No C++ files to copy"
 fi
 
-# Copy TypeScript files to client
+# Copy TypeScript files to shell
 if [ -d "$TS_SRC" ] && [ "$(ls -A "$TS_SRC" 2>/dev/null)" ]; then
     # Create destination if it doesn't exist
     mkdir -p "$TS_DEST"
@@ -203,7 +203,7 @@ if [ -d "$TS_SRC" ] && [ "$(ls -A "$TS_SRC" 2>/dev/null)" ]; then
     done
 
     if [ $ts_count -gt 0 ]; then
-        print_info "  Copied $ts_count TypeScript files to client/src/sdk/generated/"
+        print_info "  Copied $ts_count TypeScript files to shell/src/sdk/generated/"
     fi
 else
     print_warn "  No TypeScript files to copy"
@@ -219,7 +219,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Review generated files in:"
 echo "     - plugin/src/endpoints/generated/"
-echo "     - client/src/sdk/generated/"
+echo "     - shell/src/sdk/generated/"
 echo "  2. Build the plugin: cd plugin && cmake -B build && cmake --build build"
-echo "  3. Build the client: cd client && npm run build"
+echo "  3. Build the shell: cd shell && npm run build"
 echo ""
