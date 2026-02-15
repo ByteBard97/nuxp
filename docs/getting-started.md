@@ -11,9 +11,7 @@ This guide covers how to set up your development environment for NUXP.
 
 -   **Node.js**: v18+
 -   **CMake**: v3.20+
--   **C++ Compiler**:
-    -   macOS: Xcode Command Line Tools (`xcode-select --install`)
-    -   Windows: Visual Studio 2022 (C++ workload)
+-   **C++ Compiler**: Xcode Command Line Tools (`xcode-select --install`)
 -   **Adobe Illustrator**: 2024 or later (for testing the plugin)
 
 ## 1. Download the Adobe Illustrator SDK
@@ -25,15 +23,11 @@ This guide covers how to set up your development environment for NUXP.
 
 2.  **Sign in** with your Adobe ID (create one for free if needed)
 
-3.  **Download** the Illustrator SDK for your version:
-    -   macOS: `AI_2026_SDK_Mac.dmg` (or similar)
-    -   Windows: `AI_2026_SDK_Win.zip` (or similar)
+3.  **Download** the Illustrator SDK for your version (e.g., `AI_2026_SDK_Mac.dmg`)
 
 4.  **Save the file** somewhere accessible (e.g., `~/Downloads/`)
 
 ## 2. Setup the SDK
-
-### macOS
 
 Run the setup script with your downloaded DMG:
 
@@ -46,17 +40,6 @@ This will:
 - Extract all required headers to `plugin/sdk/`
 - Create the `IllustratorSDK.h` convenience header
 - Unmount the DMG
-
-### Windows
-
-NUXP is developed and tested on macOS. Windows support is not officially maintained, but community contributions are welcome. The CI/CD pipeline does build on Windows, so the code compiles — but the setup script (`scripts/setup-sdk.sh`) is macOS-only.
-
-If you want to get NUXP running on Windows, the key steps are:
-1. Extract the SDK ZIP and copy headers to `plugin/sdk/` (mirror what `setup-sdk.sh` does for macOS)
-2. CMake validates the SDK by checking for `plugin/sdk/AIArt.h`
-3. Build with `cmake -B build && cmake --build build`
-
-See `scripts/setup-sdk.sh` for the authoritative list of which headers are needed.
 
 ## 3. Install Dependencies
 

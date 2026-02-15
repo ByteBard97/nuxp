@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/macOS-Supported-F5C518?style=for-the-badge&labelColor=1B3A6B&logo=apple&logoColor=white" alt="macOS Supported">
 </p>
 
-**A modern plugin framework for Adobe Illustrator.**
+**A modern plugin framework for Adobe Illustrator.** | [Documentation](https://bytebard97.github.io/nuxp/)
 
 UXP has transformed plugin development for Photoshop, InDesign, and other Adobe apps — but it hasn't arrived for Illustrator yet. In the meantime, the only official option is CEP, which was deprecated in 2013 and hasn't seen meaningful updates since.
 
@@ -151,7 +151,7 @@ Beyond SDK suite wrappers, NUXP includes:
 
 - **Node.js** v18+
 - **CMake** v3.15+ (for building the C++ plugin)
-- **C++ Compiler**: Xcode Command Line Tools (macOS) or Visual Studio 2022 (Windows)
+- **C++ Compiler**: Xcode Command Line Tools (`xcode-select --install`)
 - **Adobe Illustrator** 2024+ (for running the plugin)
 - **Adobe Illustrator SDK** (see below)
 
@@ -188,22 +188,13 @@ Open http://localhost:5173 to see the debug panel and design system demo.
 1. Go to **[Adobe Illustrator SDK Download](https://developer.adobe.com/console/servicesandapis/ai)**
 2. Sign in with your Adobe ID
 3. Download the **Illustrator 2026 SDK** (or matching your Illustrator version)
-4. You'll get a `.dmg` file (macOS) or `.zip` file (Windows)
+4. Download the `.dmg` file
 
 #### b. Setup the SDK
 
-**macOS:**
 ```bash
 # Run the setup script with your downloaded DMG
 ./scripts/setup-sdk.sh ~/Downloads/AI_2026_SDK_Mac.dmg
-```
-
-**Windows:**
-```bash
-# Extract the ZIP to plugin/sdk/ manually, then:
-# Ensure these directories exist:
-#   plugin/sdk/AIArt.h (and other headers)
-#   plugin/sdk/SPFiles.h (PICA headers)
 ```
 
 The setup script extracts and organizes:
@@ -272,8 +263,7 @@ cmake --install build
 ```
 
 Or manually copy to your Illustrator plugins folder:
-- **macOS**: `~/Library/Application Support/Adobe/Adobe Illustrator 2024/Plug-ins/`
-- **Windows**: `C:\Program Files\Adobe\Adobe Illustrator 2024\Plug-ins\`
+- `~/Library/Application Support/Adobe/Adobe Illustrator 2024/Plug-ins/`
 
 #### f. Run the Frontend
 
@@ -665,7 +655,7 @@ cmake --build build --config Release
 ## CI/CD
 
 GitHub Actions workflows are included for:
-- Building the C++ plugin (macOS + Windows)
+- Building the C++ plugin
 - Building the Vue frontend
 - Running codegen tests
 
@@ -718,5 +708,7 @@ See [`plugin/mac/README.md`](plugin/mac/README.md) for detailed macOS build trou
 MIT
 
 ---
+
+**[Full Documentation](https://bytebard97.github.io/nuxp/)** | **[Getting Started](https://bytebard97.github.io/nuxp/getting-started)** | **[Architecture](https://bytebard97.github.io/nuxp/ARCHITECTURE)**
 
 *NUXP is not affiliated with or endorsed by Adobe. Adobe, Illustrator, and related marks are trademarks of Adobe Inc.*

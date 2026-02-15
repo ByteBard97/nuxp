@@ -3,6 +3,10 @@ layout: default
 title: Home
 ---
 
+<p align="center">
+  <img src="images/nuxp-crunch.webp" alt="NUXP Crunch — Actually Ships!" width="300" />
+</p>
+
 # NUXP Documentation
 
 **No UXP? No problem.** Build modern Illustrator plugins with Vue, TypeScript, and the Adobe C++ SDK.
@@ -29,3 +33,9 @@ title: Home
 - **[README](https://github.com/ByteBard97/nuxp#readme)**
 - **[Customization Guide](https://github.com/ByteBard97/nuxp/blob/master/CUSTOMIZATION.md)**
 - **[Contributing](https://github.com/ByteBard97/nuxp/blob/master/CONTRIBUTING.md)**
+
+---
+
+<p align="center">
+  <img src="images/uxp-os.webp" alt="UXP-Os — Free Inside: Disappointment" width="600" />
+</p>
