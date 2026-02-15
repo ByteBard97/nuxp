@@ -1,56 +1,53 @@
 # NUXP Examples
 
-This directory contains example code showing how to interact with the NUXP plugin.
+## Script Toolkit (Recommended)
 
-## Prerequisites
-
-- NUXP plugin installed and Illustrator running
-- Node.js 18+ (for JavaScript examples)
-
-## Examples
-
-### basic-api.js
-
-Demonstrates basic HTTP API calls to the plugin:
-- Health check
-- Get document info
-- List layers
-- Create a rectangle
+The best way to see NUXP in action is the built-in Script Toolkit. Run:
 
 ```bash
-node examples/basic-api.js
+cd shell
+npm run dev
 ```
 
-### batch-operations.js
+Click "Scripts" in the sidebar to access 15 ready-to-run operations covering document info, layers, selection, text, and view control.
 
-Shows how to perform multiple operations:
-- Get current selection
-- Modify selected objects
-- Handle errors gracefully
+## Using the HTTP API Directly
 
-```bash
-node examples/batch-operations.js
+NUXP exposes a standard HTTP/JSON API on localhost:8080. You can call it from any language:
+
+### JavaScript / TypeScript
+
+```javascript
+const response = await fetch('http://localhost:8080/api/doc/info')
+const docInfo = await response.json()
+console.log(docInfo)
 ```
-
-## Using from Other Languages
-
-The NUXP plugin exposes a standard HTTP/JSON API, so you can use it from any language:
 
 ### Python
+
 ```python
 import requests
 
-response = requests.get('http://localhost:8080/health')
+response = requests.get('http://localhost:8080/api/doc/info')
 print(response.json())
 ```
 
 ### curl
+
 ```bash
+# Document info
+curl http://localhost:8080/api/doc/info
+
+# Health check
 curl http://localhost:8080/health
+
+# List layers
+curl http://localhost:8080/api/query/layers
+
+# Call a generated SDK function
 curl -X POST http://localhost:8080/api/call \
   -H "Content-Type: application/json" \
-  -d '{"suite":"demo","method":"getDocumentInfo","args":{}}'
+  -d '{"suite":"AILayerSuite","method":"CountLayers","args":{}}'
 ```
 
-### Any HTTP Client
-The API uses standard REST conventions - GET for reads, POST for operations.
+See the [API Reference](../docs/api/README.md) for all available endpoints.
