@@ -8,6 +8,7 @@
     "url": "https://github.com/ByteBard97/nuxp.git"
   },
   "homepage": "https://github.com/ByteBard97/nuxp#readme",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {

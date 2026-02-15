@@ -84,14 +84,18 @@ nuxp/
 
 ### Adding New Endpoints
 
+See [Endpoint Organization](plugin/src/endpoints/README.md) for how the generated vs. hand-written code boundary works.
+
 #### Hand-written Endpoints
 
 For custom functionality not covered by SDK wrappers:
 
-1. Create `plugin/src/endpoints/YourEndpoints.cpp` and `.hpp`
-2. Define handler functions that accept JSON and return JSON
-3. Register routes in `HttpServer::ConfigureRoutes()`
-4. Add TypeScript client in `shell/src/sdk/`
+1. Define the route in `codegen/src/config/routes.json` (name, method, path, request/response schema)
+2. Run `./scripts/generate.sh` to produce declarations and route registration
+3. Write the handler body in `plugin/src/endpoints/handwritten/NUXPHandlers.cpp` (or a new file in `handwritten/`)
+4. Rebuild the plugin
+
+For a complete walkthrough, see [Adding Custom Endpoints](docs/ADDING-ENDPOINTS.md).
 
 #### Generated Endpoints
 

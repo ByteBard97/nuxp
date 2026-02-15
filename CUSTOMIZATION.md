@@ -47,11 +47,18 @@ Or create a `CMakeUserPresets.json`:
 
 ## 2. Package.json Files
 
+Both `shell/package.json` and `codegen/package.json` ship with template placeholders
+that are designed to be filled in by the developer when forking NUXP.
+
+In particular, both files contain:
+- `"author": "YOUR_NAME <your@email.com>"` -- replace with your real name and email
+- `"repository"` URL pointing to the upstream NUXP repo -- replace with your own repo URL
+
 ### codegen/package.json
 
 Update these fields:
 - `name`: Your package name
-- `author`: Your name and email
+- `author`: Your name and email (currently the `YOUR_NAME` placeholder)
 - `repository`: Your GitHub repository URL
 - `homepage`: Your project's homepage
 - `bugs`: Your issue tracker URL
@@ -61,7 +68,7 @@ Update these fields:
 Update these fields:
 - `name`: Your package name
 - `description`: Your app description
-- `author`: Your name and email
+- `author`: Your name and email (currently the `YOUR_NAME` placeholder)
 - `repository`: Your GitHub repository URL
 
 ## 3. Tauri Configuration
