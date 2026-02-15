@@ -36,7 +36,7 @@ Adobe Illustrator's SDK is not thread-safe. Every suite function pointer (`Suite
   'actorTextColor': '#FFFFFF',
   'actorLineColor': '#F5C518',
   'signalColor': '#F5C518',
-  'signalTextColor': '#F5C518',
+  'signalTextColor': '#FFFFFF',
   'noteBkgColor': '#C41E24',
   'noteTextColor': '#FFFFFF',
   'noteBorderColor': '#F5C518',
