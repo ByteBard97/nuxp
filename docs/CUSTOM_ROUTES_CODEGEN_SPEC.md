@@ -1,3 +1,8 @@
+---
+layout: default
+title: Custom Routes Codegen Spec
+---
+
 # Custom Route Code Generation Specification
 
 ## Overview

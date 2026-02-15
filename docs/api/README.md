@@ -1,3 +1,8 @@
+---
+layout: default
+title: API Reference
+---
+
 # NUXP API Reference
 
 The NUXP plugin exposes an HTTP/JSON API on `localhost:8080` (configurable) that allows external applications to control Adobe Illustrator.
