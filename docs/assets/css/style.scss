@@ -121,6 +121,74 @@ body {
   color: #5B9BD5;
 }
 
+/* Rouge syntax highlighting — dark theme (Monokai-inspired) */
+.highlight,
+.highlight pre,
+.highlighter-rouge .highlight {
+  background-color: #0D1B2A;
+  color: #D4D4D4;
+}
+
+.highlight .c,
+.highlight .cd,
+.highlight .cm,
+.highlight .c1,
+.highlight .cs { color: #6A737D; font-style: italic; } /* Comments */
+
+.highlight .k,
+.highlight .kc,
+.highlight .kd,
+.highlight .kn,
+.highlight .kp,
+.highlight .kr,
+.highlight .kt { color: #C678DD; } /* Keywords */
+
+.highlight .s,
+.highlight .sb,
+.highlight .sc,
+.highlight .sd,
+.highlight .s2,
+.highlight .se,
+.highlight .sh,
+.highlight .si,
+.highlight .sx,
+.highlight .s1,
+.highlight .ss,
+.highlight .dl { color: #98C379; } /* Strings */
+
+.highlight .mi,
+.highlight .mf,
+.highlight .mh,
+.highlight .mo,
+.highlight .il,
+.highlight .mb,
+.highlight .mx { color: #D19A66; } /* Numbers */
+
+.highlight .na { color: #E06C75; } /* Attribute names */
+.highlight .nc,
+.highlight .nn { color: #E5C07B; } /* Class/namespace */
+.highlight .nf,
+.highlight .nb { color: #61AFEF; } /* Functions/builtins */
+.highlight .no { color: #D19A66; } /* Constants */
+.highlight .ni { color: #D4D4D4; } /* Entity */
+.highlight .ne { color: #E06C75; } /* Exception */
+.highlight .nl { color: #61AFEF; } /* Label */
+.highlight .nt { color: #E06C75; } /* HTML tags */
+.highlight .nv,
+.highlight .vi,
+.highlight .vg,
+.highlight .vc { color: #E06C75; } /* Variables */
+.highlight .o,
+.highlight .ow { color: #56B6C2; } /* Operators */
+.highlight .p { color: #D4D4D4; } /* Punctuation */
+.highlight .gi { color: #98C379; } /* Git inserted */
+.highlight .gd { color: #E06C75; } /* Git deleted */
+.highlight .gh { color: #61AFEF; font-weight: bold; } /* Git heading */
+.highlight .ge { font-style: italic; } /* Emphasis */
+.highlight .gs { font-weight: bold; } /* Strong */
+.highlight .err { color: #E06C75; } /* Error */
+.highlight .w { color: #D4D4D4; } /* Whitespace */
+
 /* Selection highlight */
 ::selection {
   background-color: #1B3A6B;
