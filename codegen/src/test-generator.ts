@@ -24,6 +24,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'ai::int16',
                         isPointer: false,
                         isConst: false,
+                        isReference: false,
                         isOutput: false,
                         classification: classifier.classify('ai::int16', 'type')
                     },
@@ -32,6 +33,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'ai::int16',
                         isPointer: false,
                         isConst: false,
+                        isReference: false,
                         isOutput: false,
                         classification: classifier.classify('ai::int16', 'paintOrder')
                     },
@@ -40,6 +42,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'AIArtHandle',
                         isPointer: true,
                         isConst: false,
+                        isReference: false,
                         isOutput: false, // Input handle (we read from it)
                         classification: classifier.classify('AIArtHandle', 'prep')
                     },
@@ -48,6 +51,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'AIArtHandle',
                         isPointer: true,
                         isConst: false,
+                        isReference: false,
                         isOutput: true, // Output handle (SDK writes to it)
                         classification: classifier.classify('AIArtHandle', 'newArt')
                     }
@@ -64,6 +68,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'AIArtHandle',
                         isPointer: true,
                         isConst: true, // const means input
+                        isReference: false,
                         isOutput: false,
                         classification: classifier.classify('AIArtHandle', 'art')
                     },
@@ -72,6 +77,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'short',
                         isPointer: true,
                         isConst: false,
+                        isReference: false,
                         isOutput: true,
                         classification: classifier.classify('short', 'type')
                     }
@@ -88,6 +94,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'AIArtHandle',
                         isPointer: true,
                         isConst: true,
+                        isReference: false,
                         isOutput: false,
                         classification: classifier.classify('AIArtHandle', 'art')
                     },
@@ -96,6 +103,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'AIRealRect',
                         isPointer: true,
                         isConst: false,
+                        isReference: false,
                         isOutput: true,
                         classification: classifier.classify('AIRealRect', 'bounds')
                     }
@@ -112,6 +120,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'AIArtHandle',
                         isPointer: true,
                         isConst: false,
+                        isReference: false,
                         isOutput: false,
                         classification: classifier.classify('AIArtHandle', 'art')
                     },
@@ -120,6 +129,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'ai::UnicodeString',
                         isPointer: false,
                         isConst: true,
+                        isReference: false,
                         isOutput: false,
                         classification: classifier.classify('ai::UnicodeString', 'name')
                     }
@@ -136,6 +146,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'AIArtHandle',
                         isPointer: true,
                         isConst: true,
+                        isReference: false,
                         isOutput: false,
                         classification: classifier.classify('AIArtHandle', 'art')
                     },
@@ -144,6 +155,7 @@ function createMockSuite(): SuiteInfo {
                         type: 'ai::UnicodeString',
                         isPointer: true,
                         isConst: false,
+                        isReference: false,
                         isOutput: true,
                         classification: classifier.classify('ai::UnicodeString', 'name')
                     }
