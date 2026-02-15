@@ -1,4 +1,7 @@
 import type { Script, ScriptCategory } from './types'
+import documentInfo from './scripts/document-info'
+import objectCounter from './scripts/object-counter'
+import listArtboards from './scripts/list-artboards'
 
 const scripts: Script[] = []
 
@@ -18,3 +21,8 @@ export function getCategories(): ScriptCategory[] {
 export function registerScript(script: Script): void {
   scripts.push(script)
 }
+
+// Register document scripts
+registerScript(documentInfo)
+registerScript(objectCounter)
+registerScript(listArtboards)
