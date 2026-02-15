@@ -393,7 +393,9 @@ const BLOCKED_FUNCTIONS: Set<string> = new Set([
     'WarningAlert',
     'YesNoAlert',
 
-    // AIBlendStyleSuite - enum params (AIBlendingMode, AIKnockout) and unmapped types (AIDictionaryRef, AIArtStyleHandle)
+    // AIBlendStyleSuite - enum params (AIBlendingMode, AIKnockout) not yet mapped to int
+    // Note: AIDictionaryRef and AIArtStyleHandle are now fully supported.
+    // The *BlendStyle* and *AllAttrs variants use enum types that need codegen enum mapping.
     'SetBlendingMode',
     'SetKnockout',
     'GetBlendStyleAttrs',
