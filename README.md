@@ -11,22 +11,21 @@
   <img src="https://img.shields.io/badge/macOS-Supported-F5C518?style=for-the-badge&labelColor=1B3A6B&logo=apple&logoColor=white" alt="macOS Supported">
 </p>
 
-**No UXP? No problem.**
+**A modern plugin framework for Adobe Illustrator.**
 
-Adobe refuses to port UXP to Illustrator, leaving us stuck with the ancient, deprecated CEP framework from 2013.
-**NUXP** is a modern alternative that lets you build native-feeling Illustrator plugins using **Vue**, **TypeScript**, and the **Adobe C++ SDK**, completely bypassing the limitations of CEP.
+UXP has transformed plugin development for Photoshop, InDesign, and other Adobe apps — but it hasn't arrived for Illustrator yet. In the meantime, the only official option is CEP, which was deprecated in 2013 and hasn't seen meaningful updates since.
 
-*"If Adobe won't build it, we will."*
+**NUXP** bridges that gap. It lets you build Illustrator plugins using **Vue**, **TypeScript**, and the **Adobe C++ SDK**, giving you a modern development experience today.
 
 ## Why NUXP?
 
 <p align="center">
-  <img src="docs/images/uxp-os.webp" alt="UXP-Os — Part of an INCOMPLETE breakfast" width="600">
+  <img src="docs/images/uxp-os.webp" alt="UXP-Os" width="600">
 </p>
 
-Adobe has promised UXP for Illustrator for years. It's been in roadmap presentations, developer previews, and "coming soon" announcements — but it never ships. Meanwhile, the CEP framework it's supposed to replace was deprecated in 2013 and hasn't seen meaningful updates since.
+Illustrator developers have been waiting for UXP support for years. Roadmap slides, developer previews, "coming soon" — but no shipping product. Meanwhile, CEP's embedded Chromium browser and ExtendScript runtime make plugin development feel stuck in 2013.
 
-NUXP stops waiting. Instead of shoehorning modern web apps into a decade-old embedded browser, NUXP runs a local HTTP server inside a C++ plugin and talks to a standalone frontend. You get full SDK access, modern tooling, and a development experience that doesn't feel like 2013.
+NUXP takes a different approach. Instead of an embedded browser panel, it runs a local HTTP server inside a C++ plugin and communicates with a standalone frontend. You get direct SDK access, modern tooling, hot reload, and a development workflow that matches how we build software today.
 
 ## Architecture
 
