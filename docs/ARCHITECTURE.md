@@ -207,17 +207,19 @@ NUXP auto-generates C++ wrappers and TypeScript clients from Adobe's SDK headers
   'primaryBorderColor': '#F5C518',
   'lineColor': '#C41E24',
   'secondaryColor': '#F5C518',
-  'tertiaryColor': '#FFF8E7',
+  'tertiaryColor': '#2A5298',
+  'tertiaryTextColor': '#FFFFFF',
   'clusterBkg': '#0D2240',
-  'clusterBorder': '#F5C518'
+  'clusterBorder': '#F5C518',
+  'clusterTextColor': '#F5C518'
 }}}%%
 flowchart TB
-    subgraph Input
+    subgraph Input [" Input "]
         SDK["SDK Headers (.h files)"]
         Routes["routes.json"]
     end
 
-    subgraph Codegen["codegen/ (Node.js + Tree-sitter)"]
+    subgraph Codegen [" Codegen (Node.js + Tree-sitter) "]
         Parser["Tree-sitter Parser"]
         TC["TypeClassifier"]
         CppGen["CppGenerator"]
@@ -225,15 +227,15 @@ flowchart TB
         CRGen["CustomRouteGenerator"]
     end
 
-    subgraph Output_CPP["plugin/src/endpoints/generated/"]
-        Wrappers["FloraAI*SuiteWrapper.h\n(one per suite)"]
+    subgraph Output_CPP [" C++ Output (plugin/src/endpoints/generated/) "]
+        Wrappers["FloraAI*SuiteWrapper.h (one per suite)"]
         Central["CentralDispatcher.h"]
         CRHandlers["CustomRouteHandlers.h"]
         CRReg["CustomRouteRegistration.cpp"]
     end
 
-    subgraph Output_TS["shell/src/sdk/generated/"]
-        TsClients["ai*.ts\n(one per suite)"]
+    subgraph Output_TS [" TypeScript Output (shell/src/sdk/generated/) "]
+        TsClients["ai*.ts (one per suite)"]
         TsCustom["customRoutes.ts"]
     end
 
@@ -314,9 +316,9 @@ HTTP requests reach the plugin through two distinct paths.
 flowchart TB
     Req["HTTP Request"] --> Type{Route type?}
 
-    Type -- "POST /api/call\n{suite, method, args}" --> APICall["Generic Suite Dispatch"]
-    Type -- "POST /AIArt/NewArt\n{type: 1}" --> SuiteShort["Suite Shorthand\n(regex catch-all)"]
-    Type -- "GET /api/selection\nPOST /api/art/{id}/style\netc." --> Custom["Custom Route\n(registered handlers)"]
+    Type -- "POST /api/call" --> APICall["Generic Suite Dispatch"]
+    Type -- "POST /AIArt/NewArt" --> SuiteShort["Suite Shorthand (regex catch-all)"]
+    Type -- "GET /api/selection etc." --> Custom["Custom Route (registered handlers)"]
 
     APICall --> MTD1["MainThreadDispatch::Run()"]
     SuiteShort --> MTD2["MainThreadDispatch::Run()"]
@@ -325,10 +327,10 @@ flowchart TB
 
     MTD1 --> CD["Flora::Dispatch(suite, method, args)"]
     MTD2 --> CD
-    CD --> Wrapper["Generated Suite Wrapper\n(FloraAI*SuiteWrapper.h)"]
+    CD --> Wrapper["Generated Suite Wrapper"]
     Wrapper --> SDKCall["SDK Function Call"]
 
-    MTD3 --> SDKCall2["SDK Function Calls\n(direct via SuitePointers)"]
+    MTD3 --> SDKCall2["SDK Function Calls (via SuitePointers)"]
 
     SDKCall --> JSON["JSON Response"]
     SDKCall2 --> JSON
