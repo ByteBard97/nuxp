@@ -1,0 +1,50 @@
+---
+---
+
+@import "jekyll-theme-cayman";
+
+/* NUXP brand colors: Navy #1B3A6B, Red #C41E24, Gold #F5C518 */
+
+.page-header {
+  background-image: linear-gradient(120deg, #0D2240, #1B3A6B, #2A5298);
+}
+
+.page-header .project-name {
+  color: #F5C518;
+}
+
+.page-header .project-tagline {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page-header .btn {
+  color: #F5C518;
+  border-color: #F5C518;
+}
+
+.page-header .btn:hover {
+  color: #1B3A6B;
+  background-color: #F5C518;
+  border-color: #F5C518;
+}
+
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4,
+.main-content h5,
+.main-content h6 {
+  color: #1B3A6B;
+}
+
+.main-content a {
+  color: #C41E24;
+}
+
+.main-content a:hover {
+  color: #1B3A6B;
+}
+
+.main-content hr {
+  border-bottom-color: #F5C518;
+}
