@@ -4,11 +4,15 @@ Consolidated from previous planning docs (Feb 2026). Only items that are actuall
 
 ---
 
-## Deferred — AIArtStyleHandle (Tier 3 Codegen)
+## Deferred — BlendStyle Enum Functions (Low Priority)
 
-**Status:** Low priority, ~8 BlendStyle focal functions blocked
+**Status:** 14 functions blocked by enum parameter types
 
-Only ~8 functions depend on this. The codegen change requires adding an `artStyles` registry to HandleManager and extending TypeClassifier. Most affected functions also need AIDictionaryRef (which is already working). Defer unless specifically needed.
+The `AIBlendStyleSuite` has 14 functions still on the blocklist because they use enum types (`AIBlendingMode`, `AIKnockout`) that the codegen doesn't yet map to integers. The underlying handle types (`AIArtStyleHandle`, `AIDictionaryRef`) are fully working — the remaining blocker is purely enum support.
+
+**Blocked functions:** `SetBlendingMode`, `SetKnockout`, `Get/SetBlendStyleAttrs`, `Get/SetFocalFillBlendStyleAttrs`, `Get/SetFocalStrokeBlendStyleAttrs`, `Get/SetBlendStyleAllAttrs`, `Get/SetFocalBlendStyleAllAttrs`, `Get/SetFocalFillBlendStyleAllAttrs`
+
+**To unblock:** Add enum type mappings to `codegen/src/config/type-map.json` (map `AIBlendingMode` and `AIKnockout` to `int32_t`), then remove these functions from `BLOCKED_FUNCTIONS` in `codegen/src/index.ts`.
 
 ---
 
@@ -23,6 +27,7 @@ Only ~8 functions depend on this. The codegen change requires adding an `artStyl
 - Path Area Calculation (`GET /api/art/{id}/area`)
 - Art Deselection (`POST /api/selection/deselect-all`, `POST /api/selection/select`)
 - AIDictionaryRef/AIEntryRef handles (37 dict + 24 entry functions generating)
+- AIArtStyleHandle support (6 BlendStyle functions working: Get/SetStyleAttrs, focal variants)
 - CustomRouteGenerator (fully implemented)
 - All codegen Tier 1-2 type fixes
 - TypeScript client tests (37 tests for all 30 custom route functions)
