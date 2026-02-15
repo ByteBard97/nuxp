@@ -38,20 +38,12 @@ NUXP should support runtime-configurable HTTP server port, allowing users to cha
 ### 1. Config File Location
 
 ```cpp
-// Platform-specific paths
-#ifdef _WIN32
-    // Windows: %APPDATA%/NUXP/config.json
-    std::string GetConfigDir() {
-        char* appdata = getenv("APPDATA");
-        return std::string(appdata) + "/NUXP";
-    }
-#else
-    // macOS: ~/Library/Application Support/NUXP/config.json
-    std::string GetConfigDir() {
-        char* home = getenv("HOME");
-        return std::string(home) + "/Library/Application Support/NUXP";
-    }
-#endif
+// macOS: ~/Library/Application Support/NUXP/config.json
+std::string GetConfigDir() {
+    char* home = getenv("HOME");
+    return std::string(home) + "/Library/Application Support/NUXP";
+}
+```
 ```
 
 ### 2. Config File Format
