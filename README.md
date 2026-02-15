@@ -36,11 +36,14 @@ NUXP replaces the "CEP Panel" approach with a standalone web application that co
   'primaryColor': '#1B3A6B',
   'primaryTextColor': '#FFFFFF',
   'primaryBorderColor': '#F5C518',
-  'lineColor': '#C41E24',
-  'secondaryColor': '#F5C518',
-  'tertiaryColor': '#FFF8E7',
-  'clusterBkg': '#FFF8E7',
-  'clusterBorder': '#1B3A6B'
+  'lineColor': '#F5C518',
+  'secondaryColor': '#C41E24',
+  'secondaryTextColor': '#FFFFFF',
+  'tertiaryColor': '#2A5298',
+  'tertiaryTextColor': '#FFFFFF',
+  'clusterBkg': '#0D2240',
+  'clusterBorder': '#F5C518',
+  'edgeLabelBackground': 'transparent'
 }}}%%
 flowchart TB
     subgraph App["Your Application"]
