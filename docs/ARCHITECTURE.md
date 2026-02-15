@@ -127,15 +127,15 @@ C++ pointers like `AIArtHandle` (which is `ArtObject*`) cannot be serialized as 
   'tertiaryTextColor': '#FFFFFF',
   'edgeLabelBackground': 'transparent'
 }}}%%
-flowchart LR
+flowchart TD
     A["SDK returns AIArtHandle*"] --> B["HandleManager::art.Register(ptr)"]
     B --> C["Returns integer ID (e.g. 42)"]
     C --> D["ID sent to frontend as JSON"]
     D --> E["Frontend sends ID back in later request"]
     E --> F["HandleManager::art.Get(42)"]
     F --> G{Generation matches?}
-    G -- Yes --> H["Returns original AIArtHandle*"]
-    G -- No --> I["Returns nullptr (stale handle)"]
+    G -- "Yes" --> H["Returns original AIArtHandle*"]
+    G -- "No (stale)" --> I["Returns nullptr"]
 ```
 
 ### HandleRegistry Internals
