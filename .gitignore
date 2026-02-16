@@ -62,6 +62,10 @@ plugin/tools/pipl/
 # Converted SDK documentation (derived from Adobe copyrighted PDFs)
 plugin/sdk-docs/
 
+# Internal planning docs (not for public repo)
+LAUNCH-PLAN.md
+DEVELOPER-EXPERIENCE-AUDIT.md
+
 docs/api/generated/
 shell/src-tauri/target/
 shell/src-tauri/gen/
