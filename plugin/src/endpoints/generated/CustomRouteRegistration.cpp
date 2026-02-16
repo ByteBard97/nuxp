@@ -97,7 +97,7 @@ void RegisterCustomRoutes() {
             return HandleCalculatePathArea(params[0]);
         });
 
-    // POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via forward-declared vtable (avoids ATE header conflicts).
+    // POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via ATEBridge (isolated ATE compilation unit).
     HttpServer::Post("/api/text/create", [](const std::string& body) {
         return HandleCreateTextFrame(body);
     });

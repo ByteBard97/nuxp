@@ -169,7 +169,7 @@ export interface CalculatePathAreaResponse {
   signed_area: number;
 }
 
-/** POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via forward-declared vtable (avoids ATE header conflicts). */
+/** POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via ATEBridge (isolated ATE compilation unit). */
 export interface CreateTextFrameRequest {
   /** Anchor point X coordinate in points */
   x: number;
@@ -484,7 +484,7 @@ export async function CalculatePathArea(id: string): Promise<CalculatePathAreaRe
   return fetchRoute<CalculatePathAreaResponse>('GET', getApiUrl(`/api/art/${encodeURIComponent(id)}/area`));
 }
 
-/** POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via forward-declared vtable (avoids ATE header conflicts). */
+/** POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via ATEBridge (isolated ATE compilation unit). */
 export async function CreateTextFrame(params: CreateTextFrameRequest): Promise<CreateTextFrameResponse> {
   return fetchRoute<CreateTextFrameResponse>('POST', getApiUrl('/api/text/create'), JSON.stringify(params));
 }

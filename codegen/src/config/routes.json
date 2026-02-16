@@ -182,7 +182,7 @@
       "name": "CreateTextFrame",
       "method": "POST",
       "path": "/api/text/create",
-      "description": "Create a new point text frame. Uses AITextFrameSuite::NewPointText via forward-declared vtable (avoids ATE header conflicts).",
+      "description": "Create a new point text frame. Uses AITextFrameSuite::NewPointText via ATEBridge (isolated ATE compilation unit).",
       "request": {
         "x": { "type": "number", "description": "Anchor point X coordinate in points" },
         "y": { "type": "number", "description": "Anchor point Y coordinate in points (Illustrator coordinates)" },

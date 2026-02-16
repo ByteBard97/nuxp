@@ -34,18 +34,19 @@ Standard SDK handler bodies. The codegen generates the *declarations* and *route
 but the actual SDK call sequences are business logic that can't be auto-generated.
 
 ### TextEndpoints.cpp
-The Adobe Text Engine (ATE) uses a fundamentally different architecture than standard AI suites:
-- **Different calling convention**: ATE functions use plain C calls (no `ASAPI` marker),
-  returning `ATEErr` instead of `ASErr`
-- **Different lifecycle**: ATE refs use COM-style `AddRef()`/`Release()` reference counting,
-  not the `HandleRegistry<T>` pattern used by AI handles
-- **Different header structure**: ATE suites live in `sdk/ate/ATESuites.h` (6,000+ lines),
-  a single file with ~40 suite structs — completely different from the one-suite-per-header
-  pattern the codegen parser expects
+The Adobe Text Engine (ATE) uses a fundamentally different architecture than standard AI suites
+(different calling convention, COM-style ref counting, ~6,000-line monolithic header). The ATE
+headers (`ATESuites.h`, `AIFont.h`) conflict with `AITypes.h` when included alongside
+`IllustratorSDK.h` in the same translation unit.
 
-The workaround: manually mirror the vtable layout as local structs and acquire suites
-at runtime via `SPBasicSuite::AcquireSuite()` using string names. This avoids including
-the ATE headers entirely.
+**Solution: ATEBridge** (`src/bridges/ATEBridge.cpp`) is compiled as an isolated translation
+unit that includes the real ATE headers directly. It exposes a clean API through `ATEBridge.h`
+using only `AITypes.h` types — no ATE types leak out. TextEndpoints.cpp simply calls
+`ATEBridge::NewPointText()`, `ATEBridge::GetTextContent()`, and `ATEBridge::SetTextContent()`.
+
+This uses the real SDK struct types and version constants (`kAITextFrameSuiteVersion`,
+`kTextRangeSuiteVersion`), eliminating the fragile hand-rolled vtable structs that previously
+lived here with hardcoded version numbers.
 
 ### XMPEndpoints.cpp
 Depends on the optional XMP Toolkit SDK (`-DXMP_SDK_PATH=...`). Wrapped in `#ifdef NUXP_HAS_XMP`

@@ -7,11 +7,12 @@
  * them incompatible with the auto-generated code pipeline.
  *
  * Strategy:
- *   - Text frame CREATION uses AITextFrameSuite (via forward-declared struct)
- *     which does not require ATE headers.
- *   - Text CONTENT manipulation (get/set) uses the ATE TextRangeSuite via
- *     the same forward-declared vtable approach. Both suites are acquired at
- *     runtime via SPBasicSuite::AcquireSuite(), avoiding any ATE #includes.
+ *   - All ATE operations are delegated to ATEBridge (src/bridges/ATEBridge.h),
+ *     which is compiled as an isolated translation unit that includes the real
+ *     Adobe ATE headers (AITextFrame.h, ATESuites.h).
+ *   - ATEBridge acquires suites using the real SDK constant names and version
+ *     numbers, eliminating the fragile hand-rolled vtable approach.
+ *   - No ATE types leak through the ATEBridge.h interface.
  *
  * Endpoints:
  *   POST /api/text/create            - Create a new point text frame

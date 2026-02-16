@@ -96,7 +96,7 @@ std::string HandleFindArtByName(const std::string& body);
 std::string HandleCalculatePathArea(const std::string& id);
 
 /**
- * POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via forward-declared vtable (avoids ATE header conflicts).
+ * POST /api/text/create - Create a new point text frame. Uses AITextFrameSuite::NewPointText via ATEBridge (isolated ATE compilation unit).
  * @param body JSON: { x: number, y: number, orientation?: number, contents?: string }
  * @returns JSON: { success: bool, artId: number }
  */
