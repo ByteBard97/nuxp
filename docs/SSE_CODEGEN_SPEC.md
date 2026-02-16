@@ -5,6 +5,10 @@ title: SSE Codegen Spec
 
 # SSE Code Generation Specification
 
+<p align="center">
+  <img src="images/nuxp-dance.gif" alt="Captain NUXP" width="200">
+</p>
+
 ## Overview
 
 NUXP's codegen currently generates C++ and TypeScript for SDK suite wrappers. This spec extends codegen to also generate **Server-Sent Events (SSE)** infrastructure, ensuring type safety between C++ event emission and TypeScript event reception.

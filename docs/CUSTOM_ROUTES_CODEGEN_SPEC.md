@@ -5,6 +5,10 @@ title: Custom Routes Codegen Spec
 
 # Custom Route Code Generation Specification
 
+<p align="center">
+  <img src="images/nuxp-idle.gif" alt="Captain NUXP" width="200">
+</p>
+
 ## Overview
 
 NUXP's codegen generates C++ and TypeScript for SDK suite wrappers from parsed Adobe Illustrator SDK headers. But plugin developers also need **custom higher-level endpoints** that compose multiple SDK calls -- for example, "create a planting bed" which involves `GetSelectedArt`, `GetArtBounds`, `SetNote`, and `SetArtName` in sequence. These don't map 1:1 to any single SDK function.

@@ -5,6 +5,10 @@ title: Getting Started
 
 # Getting Started with NUXP
 
+<p align="center">
+  <img src="images/nuxp-destruction.gif" alt="Captain NUXP" width="200">
+</p>
+
 This guide covers how to set up your development environment for NUXP.
 
 ## Prerequisites

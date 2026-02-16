@@ -5,6 +5,10 @@ title: Configurable Port Spec
 
 # Configurable Port Specification
 
+<p align="center">
+  <img src="images/nuxp-destruction.gif" alt="Captain NUXP" width="200">
+</p>
+
 ## Overview
 
 NUXP should support runtime-configurable HTTP server port, allowing users to change the port without restarting Illustrator or the frontend application.

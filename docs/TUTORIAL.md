@@ -5,6 +5,10 @@ title: "Tutorial: Your First Plugin"
 
 # Your First NUXP Plugin
 
+<p align="center">
+  <img src="images/nuxp-idle.gif" alt="Captain NUXP" width="200">
+</p>
+
 This tutorial walks you through creating a simple Illustrator tool using NUXP. By the end, you'll have a working button that creates a rectangle in your Illustrator document.
 
 ## Prerequisites
