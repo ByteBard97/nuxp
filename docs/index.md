@@ -5,6 +5,12 @@ title: Home
 
 # NUXP Documentation
 
+<p align="center">
+  <video src="images/nuxp-dance.webm" autoplay loop muted playsinline width="300">
+    <img src="images/nuxp-icon.png" alt="Captain NUXP" width="300">
+  </video>
+</p>
+
 **No UXP? No problem.** Build modern Illustrator plugins with TypeScript and any JavaScript framework. 442+ SDK functions, ready to use — no new C++ to write.
 
 ---

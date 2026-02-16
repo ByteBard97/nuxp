@@ -1,7 +1,7 @@
 # NUXP ("Not UXP")
 
 <p align="center">
-  <img src="docs/images/nuxp-crunch.webp" alt="NUXP Crunch — Actually Ships!" width="300">
+  <img src="docs/images/nuxp-destruction.gif" alt="Captain NUXP — Actually Ships!" width="400">
 </p>
 
 <p align="center">

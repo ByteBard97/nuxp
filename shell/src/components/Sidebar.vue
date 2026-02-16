@@ -2,13 +2,14 @@
 /**
  * Sidebar Component
  *
- * Navigation sidebar with connection status indicator and navigation links.
- * Displays plugin connection status and provides navigation between views.
+ * Navigation sidebar with Captain NUXP branding, connection status,
+ * and navigation links.
  */
 
 import { computed } from 'vue';
 import { useConnectionStore } from '@/stores/connection';
 import { useDocumentStore } from '@/stores/document';
+import nuxpIcon from '@/assets/nuxp-icon.png';
 
 // Stores
 const connectionStore = useConnectionStore();
@@ -79,6 +80,15 @@ async function handleRefresh(): Promise<void> {
 
 <template>
   <aside class="sidebar">
+    <!-- Captain NUXP Branding -->
+    <div class="sidebar-brand">
+      <img :src="nuxpIcon" alt="Captain NUXP" class="brand-avatar" />
+      <div class="brand-info">
+        <span class="brand-name">NUXP</span>
+        <span class="brand-tagline">Actually Ships!</span>
+      </div>
+    </div>
+
     <!-- Connection Status -->
     <div class="connection-status">
       <div class="status-indicator">
@@ -142,6 +152,47 @@ async function handleRefresh(): Promise<void> {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Captain NUXP Branding */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(13, 51, 32, 0.4) 0%, transparent 100%);
+}
+
+.brand-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform var(--transition-normal);
+}
+
+.brand-avatar:hover {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: 1px;
+}
+
+.brand-tagline {
+  font-size: var(--font-size-xs);
+  color: var(--accent-green);
+  font-weight: 500;
+  font-style: italic;
 }
 
 /* Connection Status */
