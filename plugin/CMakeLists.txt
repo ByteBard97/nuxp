@@ -200,6 +200,16 @@ set(CORE_HEADERS
     src/utils/XMPUtils.hpp
 )
 
+# Bridge sources (isolated compilation units for conflicting SDK headers)
+# ATEBridge.cpp includes AITextFrame.h + ATESuites.h directly, which cannot
+# coexist with IllustratorSDK.h in the same translation unit.
+set(BRIDGE_SOURCES
+    src/bridges/ATEBridge.cpp
+)
+set(BRIDGE_HEADERS
+    src/bridges/ATEBridge.h
+)
+
 # Hand-written endpoint files (manually created endpoints)
 # These live in endpoints/handwritten/ to clearly separate them from
 # auto-generated code. See endpoints/README.md for the boundary explanation.
@@ -230,12 +240,14 @@ endif()
 set(PLUGIN_SOURCES
     ${CORE_SOURCES}
     ${SDK_SOURCES}
+    ${BRIDGE_SOURCES}
     ${HANDWRITTEN_ENDPOINT_SOURCES}
     ${GENERATED_ENDPOINT_SOURCES}
 )
 
 set(PLUGIN_HEADERS
     ${CORE_HEADERS}
+    ${BRIDGE_HEADERS}
     ${HANDWRITTEN_ENDPOINT_HEADERS}
     ${GENERATED_ENDPOINT_HEADERS}
 )
@@ -265,6 +277,7 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bridges
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
@@ -329,6 +342,8 @@ target_sources(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/SelectionUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ToolUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/XMPUtils.cpp
+    # Bridge sources (isolated TUs for ATE headers)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bridges/ATEBridge.cpp
     # Endpoints (hand-written) — uses same GLOB as standalone target
     ${HANDWRITTEN_ENDPOINT_SOURCES}
     ${NUXP_GENERATED_ENDPOINTS}
@@ -348,6 +363,7 @@ endif()
 target_include_directories(nuxp-core INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bridges
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/handwritten
     ${CMAKE_CURRENT_SOURCE_DIR}/src/endpoints/generated
