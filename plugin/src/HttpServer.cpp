@@ -181,7 +181,7 @@ void HttpServer::ConfigureRoutes() {
   // CORS headers for browser access from Tauri app
   svr.set_default_headers(
       {{"Access-Control-Allow-Origin", "*"},
-       {"Access-Control-Allow-Methods", "GET, POST, OPTIONS"},
+       {"Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH, OPTIONS"},
        {"Access-Control-Allow-Headers", "Content-Type, Authorization"}});
 
   // Handle CORS preflight requests
