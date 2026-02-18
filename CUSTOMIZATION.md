@@ -150,8 +150,11 @@ Update the application title and any NUXP references:
 For a thorough renaming, search for these terms:
 - `NUXP` / `nuxp`
 - `Not UXP`
+- `ByteBard97` / `bytebard97` (GitHub username in URLs)
 - Default port `8080`
 - Bundle ID `com.nuxp`
+- GitHub URLs: `https://github.com/ByteBard97/nuxp`
+- `package.json` fields: `repository`, `homepage`, `bugs`
 
 ## Keeping Up with NUXP
 

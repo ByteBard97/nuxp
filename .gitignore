@@ -65,6 +65,7 @@ plugin/sdk-docs/
 # Internal planning docs (not for public repo)
 LAUNCH-PLAN.md
 DEVELOPER-EXPERIENCE-AUDIT.md
+docs/internal/
 
 docs/api/generated/
 shell/src-tauri/target/
