@@ -18,6 +18,7 @@ codegen/dist/
 .cache/
 .idea/
 .claude/
+CLAUDE.md
 *.swp
 *.swo
 
