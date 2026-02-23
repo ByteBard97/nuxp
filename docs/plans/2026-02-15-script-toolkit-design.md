@@ -100,7 +100,7 @@ interface ScriptResult {
 ## File Structure
 
 ```
-shell/src/
+demo/src/
   modules/scripts/
     types.ts                 # Script, ScriptParam, ScriptResult interfaces
     registry.ts              # All scripts registered here

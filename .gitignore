@@ -5,12 +5,12 @@ plugin/build/
 plugin/*.plist
 !plugin/tools/**/*.plist
 plugin/.cache/
-shell/build/
-shell/target/
-shell/dist/
+demo/build/
+demo/target/
+demo/dist/
 client/dist/
 # Codegen intermediate output (final generated code IS checked in at its
-# destination: plugin/src/endpoints/generated/ and shell/src/sdk/generated/)
+# destination: plugin/src/endpoints/generated/ and demo/src/sdk/generated/)
 codegen/output/
 codegen/dist/
 
@@ -69,7 +69,7 @@ DEVELOPER-EXPERIENCE-AUDIT.md
 docs/internal/
 
 docs/api/generated/
-shell/src-tauri/target/
-shell/src-tauri/gen/
+demo/src-tauri/target/
+demo/src-tauri/gen/
 /plugin/build-xcode/build
 /plugin/build-xcode

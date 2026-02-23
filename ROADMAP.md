@@ -151,7 +151,7 @@ We welcome contributions! Here are some areas where help is especially appreciat
 - Improving documentation
 - Adding TypeScript types for SDK methods
 - Writing tests for the code generator
-- UI improvements in the shell
+- UI improvements in the demo app
 
 ### Medium Complexity
 - Adding support for additional SDK suites in the parser

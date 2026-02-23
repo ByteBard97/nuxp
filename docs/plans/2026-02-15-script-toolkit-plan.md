@@ -98,13 +98,13 @@ git commit -m "docs: replace examples with Script Toolkit reference and REST-sty
 ### Task 2: Create types and registry
 
 **Files:**
-- Create: `shell/src/modules/scripts/types.ts`
-- Create: `shell/src/modules/scripts/registry.ts`
+- Create: `demo/src/modules/scripts/types.ts`
+- Create: `demo/src/modules/scripts/registry.ts`
 
 **Step 1: Create types.ts**
 
 ```typescript
-// shell/src/modules/scripts/types.ts
+// demo/src/modules/scripts/types.ts
 
 export type ScriptCategory = 'document' | 'layers' | 'selection' | 'objects' | 'text' | 'view'
 
@@ -156,7 +156,7 @@ export const CATEGORY_ICONS: Record<ScriptCategory, string> = {
 **Step 2: Create empty registry.ts** (scripts will be added in later tasks)
 
 ```typescript
-// shell/src/modules/scripts/registry.ts
+// demo/src/modules/scripts/registry.ts
 import type { Script, ScriptCategory } from './types'
 
 // Scripts are registered here as they're implemented
@@ -189,7 +189,7 @@ cd shell && npx vue-tsc --noEmit 2>&1 | head -20
 **Step 4: Commit**
 
 ```bash
-git add shell/src/modules/scripts/
+git add demo/src/modules/scripts/
 git commit -m "feat(scripts): add types and registry for Script Toolkit"
 ```
 
@@ -198,7 +198,7 @@ git commit -m "feat(scripts): add types and registry for Script Toolkit"
 ### Task 3: Create ScriptCard component
 
 **Files:**
-- Create: `shell/src/components/ScriptCard.vue`
+- Create: `demo/src/components/ScriptCard.vue`
 
 **Step 1: Create ScriptCard.vue**
 
@@ -414,7 +414,7 @@ async function runScript() {
 **Step 2: Commit**
 
 ```bash
-git add shell/src/components/ScriptCard.vue
+git add demo/src/components/ScriptCard.vue
 git commit -m "feat(scripts): add ScriptCard component"
 ```
 
@@ -423,9 +423,9 @@ git commit -m "feat(scripts): add ScriptCard component"
 ### Task 4: Create ScriptToolkit view and wire into app
 
 **Files:**
-- Create: `shell/src/components/ScriptToolkit.vue`
-- Modify: `shell/src/App.vue` (add import + conditional render)
-- Modify: `shell/src/components/Sidebar.vue` (add nav item)
+- Create: `demo/src/components/ScriptToolkit.vue`
+- Modify: `demo/src/App.vue` (add import + conditional render)
+- Modify: `demo/src/components/Sidebar.vue` (add nav item)
 
 **Step 1: Create ScriptToolkit.vue**
 
@@ -545,7 +545,7 @@ if (categories.value.length > 0) {
 
 **Step 2: Add nav item in Sidebar.vue**
 
-In `shell/src/components/Sidebar.vue`, add a "Scripts" entry to `navItems` computed array, after the "debug" entry:
+In `demo/src/components/Sidebar.vue`, add a "Scripts" entry to `navItems` computed array, after the "debug" entry:
 
 ```typescript
   {
@@ -558,7 +558,7 @@ In `shell/src/components/Sidebar.vue`, add a "Scripts" entry to `navItems` compu
 
 **Step 3: Wire into App.vue**
 
-In `shell/src/App.vue`:
+In `demo/src/App.vue`:
 - Add import: `import ScriptToolkit from '@/components/ScriptToolkit.vue';`
 - Add conditional render after the `<DocumentStatus v-else-if="currentView === 'selection'" />` line:
   ```html
@@ -576,7 +576,7 @@ Open http://localhost:5173, click "Scripts" in sidebar. Should show category bar
 **Step 5: Commit**
 
 ```bash
-git add shell/src/components/ScriptToolkit.vue shell/src/components/Sidebar.vue shell/src/App.vue
+git add demo/src/components/ScriptToolkit.vue demo/src/components/Sidebar.vue demo/src/App.vue
 git commit -m "feat(scripts): add ScriptToolkit view with category tabs and sidebar nav"
 ```
 
@@ -585,10 +585,10 @@ git commit -m "feat(scripts): add ScriptToolkit view with category tabs and side
 ### Task 5: Implement Document scripts (3 scripts)
 
 **Files:**
-- Create: `shell/src/modules/scripts/scripts/document-info.ts`
-- Create: `shell/src/modules/scripts/scripts/object-counter.ts`
-- Create: `shell/src/modules/scripts/scripts/list-artboards.ts`
-- Modify: `shell/src/modules/scripts/registry.ts` (register scripts)
+- Create: `demo/src/modules/scripts/scripts/document-info.ts`
+- Create: `demo/src/modules/scripts/scripts/object-counter.ts`
+- Create: `demo/src/modules/scripts/scripts/list-artboards.ts`
+- Modify: `demo/src/modules/scripts/registry.ts` (register scripts)
 
 **Step 1: document-info.ts**
 
@@ -721,7 +721,7 @@ Click "Scripts" > "Document" category. Three cards should appear.
 **Step 6: Commit**
 
 ```bash
-git add shell/src/modules/scripts/
+git add demo/src/modules/scripts/
 git commit -m "feat(scripts): add Document category — info, counter, artboards"
 ```
 
@@ -730,10 +730,10 @@ git commit -m "feat(scripts): add Document category — info, counter, artboards
 ### Task 6: Implement Layers scripts (3 scripts)
 
 **Files:**
-- Create: `shell/src/modules/scripts/scripts/list-layers.ts`
-- Create: `shell/src/modules/scripts/scripts/toggle-visibility.ts`
-- Create: `shell/src/modules/scripts/scripts/lock-unlock-all.ts`
-- Modify: `shell/src/modules/scripts/registry.ts`
+- Create: `demo/src/modules/scripts/scripts/list-layers.ts`
+- Create: `demo/src/modules/scripts/scripts/toggle-visibility.ts`
+- Create: `demo/src/modules/scripts/scripts/lock-unlock-all.ts`
+- Modify: `demo/src/modules/scripts/registry.ts`
 
 **Step 1: list-layers.ts**
 
@@ -856,7 +856,7 @@ registerScript(lockUnlockAll)
 **Step 5: Commit**
 
 ```bash
-git add shell/src/modules/scripts/
+git add demo/src/modules/scripts/
 git commit -m "feat(scripts): add Layers category — list, visibility toggle, lock/unlock"
 ```
 
@@ -865,16 +865,16 @@ git commit -m "feat(scripts): add Layers category — list, visibility toggle, l
 ### Task 7: Implement Selection + Objects + Text + View scripts (9 scripts)
 
 **Files:**
-- Create: `shell/src/modules/scripts/scripts/selection-info.ts`
-- Create: `shell/src/modules/scripts/scripts/deselect-all.ts`
-- Create: `shell/src/modules/scripts/scripts/rename-selected.ts`
-- Create: `shell/src/modules/scripts/scripts/change-opacity.ts`
-- Create: `shell/src/modules/scripts/scripts/duplicate-selected.ts`
-- Create: `shell/src/modules/scripts/scripts/list-text-frames.ts`
-- Create: `shell/src/modules/scripts/scripts/create-text-frame.ts`
-- Create: `shell/src/modules/scripts/scripts/fit-artboard.ts`
-- Create: `shell/src/modules/scripts/scripts/fit-selection.ts`
-- Modify: `shell/src/modules/scripts/registry.ts`
+- Create: `demo/src/modules/scripts/scripts/selection-info.ts`
+- Create: `demo/src/modules/scripts/scripts/deselect-all.ts`
+- Create: `demo/src/modules/scripts/scripts/rename-selected.ts`
+- Create: `demo/src/modules/scripts/scripts/change-opacity.ts`
+- Create: `demo/src/modules/scripts/scripts/duplicate-selected.ts`
+- Create: `demo/src/modules/scripts/scripts/list-text-frames.ts`
+- Create: `demo/src/modules/scripts/scripts/create-text-frame.ts`
+- Create: `demo/src/modules/scripts/scripts/fit-artboard.ts`
+- Create: `demo/src/modules/scripts/scripts/fit-selection.ts`
+- Modify: `demo/src/modules/scripts/registry.ts`
 
 Each script follows the same pattern. Key SDK calls:
 
@@ -910,7 +910,7 @@ All 6 categories should appear with 15 total scripts.
 **Step 4: Commit**
 
 ```bash
-git add shell/src/modules/scripts/
+git add demo/src/modules/scripts/
 git commit -m "feat(scripts): add Selection, Objects, Text, View categories — 15 scripts total"
 ```
 
@@ -925,7 +925,7 @@ cd shell && npm run type-check
 ```
 
 Fix any TypeScript errors. Common issues:
-- SDK function signatures may differ from what's assumed — check `shell/src/sdk/generated/` for exact types
+- SDK function signatures may differ from what's assumed — check `demo/src/sdk/generated/` for exact types
 - Custom route response types may need adjustment
 
 **Step 2: Build**

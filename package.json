@@ -1,0 +1,15 @@
+{
+  "name": "nuxp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NUXP - TypeScript SDK and tooling for Adobe Illustrator plugin development",
+  "workspaces": [
+    "sdk",
+    "demo"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspace=sdk",
+    "typecheck:all": "npm run typecheck --workspaces"
+  },
+  "license": "MIT"
+}

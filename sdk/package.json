@@ -1,0 +1,47 @@
+{
+  "name": "@nuxp/sdk",
+  "version": "0.1.0",
+  "description": "Framework-agnostic TypeScript SDK for Adobe Illustrator plugin communication",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "d3-polygon": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/d3-polygon": "^3.0.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-fs": "^2.0.0",
+    "zod": "^3.25.76"
+  },
+  "peerDependenciesMeta": {
+    "@tauri-apps/api": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-dialog": {
+      "optional": true
+    },
+    "@tauri-apps/plugin-fs": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "license": "MIT"
+}

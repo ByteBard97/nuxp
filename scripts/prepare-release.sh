@@ -35,11 +35,11 @@ rsync -a --progress \
     --exclude='plugin/build' \
     --exclude='plugin/build-xcode' \
     --exclude='plugin/.cache' \
-    --exclude='shell/build' \
-    --exclude='shell/dist' \
-    --exclude='shell/target' \
-    --exclude='shell/src-tauri/target' \
-    --exclude='shell/src-tauri/gen' \
+    --exclude='demo/build' \
+    --exclude='demo/dist' \
+    --exclude='demo/target' \
+    --exclude='demo/src-tauri/target' \
+    --exclude='demo/src-tauri/gen' \
     --exclude='client/dist' \
     --exclude='codegen/output' \
     --exclude='codegen/dist' \

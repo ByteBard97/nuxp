@@ -37,7 +37,7 @@ Thank you for your interest in contributing to NUXP! This document provides guid
 
 4. **Set up the frontend**
    ```bash
-   cd shell
+   cd demo
    npm install
    npm run dev  # Starts dev server with hot reload
    ```
@@ -57,7 +57,7 @@ nuxp/
 │   ├── src/          # Core plugin code
 │   ├── src/endpoints/        # Hand-written endpoints
 │   └── src/endpoints/generated/  # Auto-generated (DO NOT EDIT)
-├── shell/            # Vue 3 frontend
+├── demo/            # Vue 3 frontend
 │   └── src/sdk/      # TypeScript bridge layer
 ├── codegen/          # SDK parser + code generators
 └── scripts/          # Build automation
@@ -78,7 +78,7 @@ nuxp/
 - Document non-obvious code with comments
 - Handle errors gracefully - never crash the plugin
 
-**TypeScript (shell/, codegen/)**
+**TypeScript (demo/, codegen/)**
 - Run `npm run type-check` before committing
 - Follow existing patterns for new components/modules
 
@@ -115,7 +115,7 @@ cd codegen && npm test
 
 **Frontend type checking**
 ```bash
-cd shell && npm run type-check
+cd demo && npm run type-check
 ```
 
 **Plugin testing**

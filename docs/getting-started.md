@@ -109,7 +109,7 @@ To regenerate the C++ and TypeScript bindings from SDK headers:
 
 This creates:
 - `plugin/src/endpoints/generated/` - C++ wrapper functions
-- `shell/src/sdk/generated/` - TypeScript client SDK
+- `demo/src/sdk/generated/` - TypeScript client SDK
 
 ## CI/CD Setup
 

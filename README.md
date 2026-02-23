@@ -155,16 +155,16 @@ cd nuxp
 # Install codegen dependencies
 cd codegen && npm install && cd ..
 
-# Install shell (frontend) dependencies
-cd shell && npm install && cd ..
+# Install demo app (frontend) dependencies
+cd demo && npm install && cd ..
 ```
 
 ### 2. Run in Development Mode (No Illustrator Required)
 
-The shell includes a mock bridge that simulates the C++ plugin, allowing frontend development without Illustrator:
+The demo app includes a mock bridge that simulates the C++ plugin, allowing frontend development without Illustrator:
 
 ```bash
-cd shell
+cd demo
 VITE_USE_MOCK=true npm run dev
 ```
 
@@ -202,7 +202,9 @@ The setup script extracts and organizes:
 
 This parses SDK headers and generates:
 - C++ endpoint handlers -> `plugin/src/endpoints/generated/`
-- TypeScript SDK client -> `shell/src/sdk/generated/`
+- TypeScript SDK client -> `demo/src/sdk/generated/`
+
+> **Note:** The TypeScript output path has changed from `shell/` to `demo/`. If upgrading, update any custom scripts that reference the old path.
 
 #### d. Build the C++ Plugin
 
@@ -259,7 +261,7 @@ Or manually copy to your Illustrator plugins folder:
 #### f. Run the Frontend
 
 ```bash
-cd shell
+cd demo
 npm run dev
 ```
 
@@ -269,6 +271,19 @@ With Illustrator running and the plugin loaded, the frontend will connect to the
 
 ```
 nuxp/
+├── sdk/                    # TypeScript SDK package (@nuxp/sdk)
+│   └── src/
+│       ├── bridge/         # Bridge, AutoQueue, request serialization
+│       ├── adapters/       # HTTP, SSE, Plugin, Document, Placement adapters
+│       ├── services/       # Settings, logging, fonts, SVG, symbols, document index
+│       ├── primitives/     # Low-level art/text manipulation functions
+│       ├── geometry/       # Coordinate transforms, artboard bounds
+│       ├── generated/      # Auto-generated suite clients (19 suites, 442+ functions)
+│       ├── tauri/          # Desktop filesystem and dialog wrappers
+│       ├── types/          # Shared type definitions
+│       ├── utils/          # Async safety, environment detection, unit conversions
+│       └── schemas/        # Zod validation schemas
+│
 ├── plugin/                 # C++ Illustrator plugin
 │   ├── CMakeLists.txt
 │   ├── sdk/                # Adobe SDK headers (gitignored, you provide)
@@ -286,11 +301,11 @@ nuxp/
 │           ├── *.cpp       # Hand-written endpoints
 │           └── generated/  # Auto-generated (19 suites, 442 functions)
 │
-├── shell/                  # Vue 3 frontend
+├── demo/                   # Vue 3 demo app
 │   ├── src/
 │   │   ├── components/     # Vue components
 │   │   ├── services/       # API client, MockBridge
-│   │   ├── sdk/            # TypeScript SDK bindings (generated + bridge)
+│   │   ├── sdk/            # Demo-specific SDK wiring (imports @nuxp/sdk)
 │   │   ├── stores/         # Pinia state management
 │   │   └── views/          # Page components
 │   └── package.json
@@ -317,7 +332,7 @@ nuxp/
 For rapid UI iteration without Illustrator:
 
 ```bash
-cd shell
+cd demo
 VITE_USE_MOCK=true npm run dev
 ```
 
@@ -325,7 +340,7 @@ The mock bridge provides simulated responses for all SDK calls.
 
 ### Script Toolkit
 
-The shell includes a built-in Script Toolkit with 15 ready-to-run operations inspired by popular ExtendScript script collections. Click "Scripts" in the sidebar to try them:
+The demo app includes a built-in Script Toolkit with 15 ready-to-run operations inspired by popular ExtendScript script collections. Click "Scripts" in the sidebar to try them:
 
 - **Document**: Info, object counter, artboard list
 - **Layers**: List, visibility toggle, lock/unlock
@@ -337,7 +352,7 @@ The shell includes a built-in Script Toolkit with 15 ready-to-run operations ins
 ### Full Stack Development
 
 1. Start Illustrator with the plugin loaded
-2. Run the frontend: `cd shell && npm run dev`
+2. Run the demo app: `cd demo && npm run dev`
 3. Changes to Vue components hot-reload automatically
 
 ### Extending the SDK (Advanced)
@@ -357,29 +372,40 @@ npm test -- --testPathPattern="CppGenerator"  # single suite
 
 ## API Overview
 
-The TypeScript SDK provides three calling patterns, depending on how the endpoint was created.
+The TypeScript SDK (`@nuxp/sdk`) provides the communication layer between your frontend and the C++ plugin. See [`sdk/README.md`](sdk/README.md) for full SDK documentation.
+
+### Setup
+
+Before using any SDK functions, create a Bridge and register it:
+
+```typescript
+import { createBridge, setBridgeInstance } from '@nuxp/sdk'
+
+const bridge = createBridge({ port: 8080 })
+setBridgeInstance(bridge)  // wires up all generated suite functions
+```
 
 ### 1. Generated Suite Functions (auto-generated from SDK headers)
 
-Each Illustrator SDK suite gets a typed module with one function per method. Use these when the SDK function you need has been auto-generated:
+Each Illustrator SDK suite gets a typed module with one function per method:
 
 ```typescript
-import { GetArtType, GetArtBounds, GetArtName } from '@/sdk/generated/AIArtSuite'
+import { GetArtType, GetArtBounds, GetArtName } from '@nuxp/sdk/generated/AIArtSuite'
 
 const artType = await GetArtType(handleId)         // returns number
 const bounds  = await GetArtBounds(handleId)        // returns AIRealRect
 const info    = await GetArtName(handleId)          // returns { name, isDefaultName }
 ```
 
-These call `callCpp` internally and route through the `CentralDispatcher` on the C++ side.
+These call `Bridge.callSuite()` internally and route through the `CentralDispatcher` on the C++ side.
 
 ### 2. Custom Route Functions (hand-written endpoints)
 
 Complex operations that cannot be auto-generated (path styles, text frames, selection queries, XMP metadata) are defined in `codegen/src/config/routes.json` and exposed as typed functions:
 
 ```typescript
-import { GetDocumentInfo, GetViewZoom, QueryPathItems } from '@/sdk/generated/customRoutes'
-import { GetSelection, GetPathStyle, CreateTextFrame } from '@/sdk/generated/customRoutes'
+import { GetDocumentInfo, GetViewZoom, QueryPathItems } from '@nuxp/sdk/generated/customRoutes'
+import { GetSelection, GetPathStyle, CreateTextFrame } from '@nuxp/sdk/generated/customRoutes'
 
 const doc   = await GetDocumentInfo()       // returns { name, path, saved, artboards }
 const zoom  = await GetViewZoom()           // returns { zoom }
@@ -391,21 +417,29 @@ const text  = await CreateTextFrame({ x: 100, y: -200 })  // returns { success, 
 
 Custom routes hit dedicated HTTP endpoints (e.g., `GET /api/doc/info`, `GET /api/selection`) rather than the central dispatcher.
 
-### 3. Generic Bridge Call (flexible, for ad-hoc use)
+### 3. Direct Bridge Calls (flexible, for ad-hoc use)
 
-Use `callCpp` directly when you want maximum flexibility or are prototyping:
+Use `Bridge.callSuite()` directly when you want maximum flexibility or are prototyping:
 
 ```typescript
-import { callCpp } from '@/sdk/bridge'
+import { createBridge } from '@nuxp/sdk'
 
-const result = await callCpp<{ type: number }>('AIArtSuite', 'GetArtType', { art: handleId })
-const bounds = await callCpp<{ bounds: AIRealRect }>('AIArtSuite', 'GetArtBounds', { art: handleId })
+const bridge = createBridge({ port: 8080 })
+
+// Single call
+const result = await bridge.callSuite<{ type: number }>('AIArtSuite', 'GetArtType', { art: handleId })
+
+// Parallel batch (independent calls)
+const [a, b] = await bridge.batch([
+  { suite: 'AIArt', method: 'GetArtName', args: { art: h1 } },
+  { suite: 'AIArt', method: 'GetArtName', args: { art: h2 } },
+])
 ```
 
 **When to use which pattern:**
 - **Generated suite functions** -- best for standard SDK operations; fully typed, one function per SDK method
 - **Custom route functions** -- best for complex operations (path styles, queries, text, XMP) that go beyond simple SDK calls
-- **Generic bridge call** -- best for prototyping or when you need to call a suite dynamically
+- **Direct bridge calls** -- best for prototyping, dynamic suite calls, or parallel batch operations
 
 ## Creating Your Own Plugin
 
@@ -456,7 +490,7 @@ Then build with: `cmake --preset my-plugin && cmake --build build`
 
 ### 2. Frontend Branding
 
-Update `shell/index.html` and `shell/src/App.vue` with your branding. The Tauri configuration in `shell/src-tauri/tauri.conf.json` controls the desktop app name and window title.
+Update `demo/index.html` and `demo/src/App.vue` with your branding. The Tauri configuration in `demo/src-tauri/tauri.conf.json` controls the desktop app name and window title.
 
 ### 3. Adding Custom Endpoints (Optional — C++ not required for most use cases)
 
@@ -626,11 +660,11 @@ ASErr ShutdownPlugin(SPInterfaceMessage* message) {
 ### Frontend
 
 ```bash
-cd shell
+cd demo
 npm run build
 ```
 
-Output: `shell/dist/`
+Output: `demo/dist/`
 
 ### Plugin
 

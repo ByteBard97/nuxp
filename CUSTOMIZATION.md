@@ -47,7 +47,7 @@ Or create a `CMakeUserPresets.json`:
 
 ## 2. Package.json Files
 
-Both `shell/package.json` and `codegen/package.json` ship with template placeholders
+Both `demo/package.json` and `codegen/package.json` ship with template placeholders
 that are designed to be filled in by the developer when forking NUXP.
 
 In particular, both files contain:
@@ -63,7 +63,7 @@ Update these fields:
 - `homepage`: Your project's homepage
 - `bugs`: Your issue tracker URL
 
-### shell/package.json
+### demo/package.json
 
 Update these fields:
 - `name`: Your package name
@@ -73,7 +73,7 @@ Update these fields:
 
 ## 3. Tauri Configuration
 
-Edit `shell/src-tauri/tauri.conf.json`:
+Edit `demo/src-tauri/tauri.conf.json`:
 
 ```json
 {

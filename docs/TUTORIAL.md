@@ -30,7 +30,7 @@ Open http://localhost:5173 in your browser.
 
 ## Step 2: Create a Simple Component
 
-Create a new file `shell/src/components/CreateRectangle.vue`:
+Create a new file `demo/src/components/CreateRectangle.vue`:
 
 {% raw %}
 ```vue
@@ -149,7 +149,7 @@ button:hover:not(:disabled) {
 
 ## Step 3: Add to a View
 
-Import and use your component in `shell/src/views/HomeView.vue` or create a new view.
+Import and use your component in `demo/src/views/HomeView.vue` or create a new view.
 
 ## Step 4: Test with Mock Mode
 
@@ -186,7 +186,7 @@ Illustrator Document
 NUXP ships with **442+ TypeScript functions** covering 19 SDK suites. You can build most Illustrator tools entirely in TypeScript without touching any C++.
 
 Browse what's available:
-- Check `shell/src/sdk/generated/` for all auto-generated TypeScript functions
+- Check `demo/src/sdk/generated/` for all auto-generated TypeScript functions
 - Read the [API Reference](api/README.md) for the full endpoint list
 - Look at the Debug Panel in the shell for real-time event monitoring
 

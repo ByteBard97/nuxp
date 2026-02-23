@@ -1,0 +1,29 @@
+{
+  "routes": [
+    {
+      "name": "testConnection",
+      "method": "GET",
+      "path": "/health",
+      "description": "Health check"
+    },
+    {
+      "name": "getSelection",
+      "method": "GET",
+      "path": "/api/selection",
+      "description": "Get selected art handles"
+    },
+    {
+      "name": "deselectAll",
+      "method": "POST",
+      "path": "/api/selection/deselect-all",
+      "description": "Deselect all art"
+    },
+    {
+      "name": "getArtBounds",
+      "method": "GET",
+      "path": "/api/art/{uuid}/bounds",
+      "description": "Get art bounding box",
+      "aliases": ["artBounds"]
+    }
+  ]
+}
