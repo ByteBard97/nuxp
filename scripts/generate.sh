@@ -121,7 +121,7 @@ TS_SRC="$CODEGEN_DIR/output/typescript"
 
 # Destination directories
 CPP_DEST="$ROOT_DIR/plugin/src/endpoints/generated"
-TS_DEST="$ROOT_DIR/demo/src/sdk/generated"
+TS_DEST="$ROOT_DIR/sdk/src/generated"
 
 # Copy C++ files to plugin
 if [ -d "$CPP_SRC" ] && [ "$(ls -A "$CPP_SRC" 2>/dev/null)" ]; then
@@ -177,7 +177,7 @@ else
     print_warn "  No C++ files to copy"
 fi
 
-# Copy TypeScript files to shell
+# Copy TypeScript files to SDK package
 if [ -d "$TS_SRC" ] && [ "$(ls -A "$TS_SRC" 2>/dev/null)" ]; then
     # Create destination if it doesn't exist
     mkdir -p "$TS_DEST"
@@ -203,7 +203,7 @@ if [ -d "$TS_SRC" ] && [ "$(ls -A "$TS_SRC" 2>/dev/null)" ]; then
     done
 
     if [ $ts_count -gt 0 ]; then
-        print_info "  Copied $ts_count TypeScript files to demo/src/sdk/generated/"
+        print_info "  Copied $ts_count TypeScript files to sdk/src/generated/"
     fi
 else
     print_warn "  No TypeScript files to copy"
@@ -219,7 +219,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Review generated files in:"
 echo "     - plugin/src/endpoints/generated/"
-echo "     - demo/src/sdk/generated/"
+echo "     - sdk/src/generated/"
 echo "  2. Build the plugin: cd plugin && cmake -B build && cmake --build build"
 echo "  3. Build the demo: cd demo && npm run build"
 echo ""

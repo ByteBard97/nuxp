@@ -709,22 +709,6 @@ add_custom_target(regenerate
 endif() # CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR (standalone plugin)
 
 # -----------------------------------------------------------------------------
-# Generate TypeScript Defaults
-# -----------------------------------------------------------------------------
-# This generates shell/src/sdk/defaults.ts from the template with CMake values
-# So that TypeScript uses the same defaults as C++
-
-set(SHELL_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../shell/src/sdk")
-if(EXISTS "${SHELL_SDK_DIR}/defaults.ts.in")
-    configure_file(
-        "${SHELL_SDK_DIR}/defaults.ts.in"
-        "${SHELL_SDK_DIR}/defaults.ts"
-        @ONLY
-    )
-    message(STATUS "Generated TypeScript defaults: ${SHELL_SDK_DIR}/defaults.ts")
-endif()
-
-# -----------------------------------------------------------------------------
 # Configuration Summary
 # -----------------------------------------------------------------------------
 
