@@ -12,6 +12,9 @@
  * - Subscribe pattern for reactive UI updates
  */
 
+/** Default localStorage key for persisted logger configuration */
+const DEFAULT_STORAGE_KEY = 'nuxp_logger_config'
+
 /** Maximum number of log entries retained in the ring buffer */
 const DEFAULT_MAX_LOGS = 1000
 
@@ -84,13 +87,22 @@ class LoggerService {
   private globalLevel: LogLevel = this.getDefaultGlobalLevel()
   private registeredModules = new Set<string>()
 
+  // localStorage key for persisted configuration
+  private storageKey: string
+
   // Store original console methods
   private originalConsoleLog = console.log
   private originalConsoleWarn = console.warn
   private originalConsoleError = console.error
   private originalConsoleDebug = console.debug
 
-  constructor() {
+  /**
+   * @param storageKey - localStorage key for persisted logger config.
+   *   Defaults to `'nuxp_logger_config'`. Consuming projects can pass
+   *   their own key to preserve existing user settings (e.g. `'flora_logger_config'`).
+   */
+  constructor(storageKey?: string) {
+    this.storageKey = storageKey ?? DEFAULT_STORAGE_KEY
     this.loadConfiguration()
     this.interceptConsole()
   }
@@ -109,7 +121,7 @@ class LoggerService {
    */
   private loadConfiguration() {
     try {
-      const saved = localStorage.getItem('nuxp_logger_config')
+      const saved = localStorage.getItem(this.storageKey)
       if (saved) {
         const config = JSON.parse(saved)
 
@@ -148,7 +160,7 @@ class LoggerService {
           config: p.config
         }))
       }
-      localStorage.setItem('nuxp_logger_config', JSON.stringify(config))
+      localStorage.setItem(this.storageKey, JSON.stringify(config))
     } catch (error) {
       console.warn('[LoggerService] Failed to save config to localStorage:', error)
     }
