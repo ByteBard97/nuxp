@@ -17,11 +17,17 @@ UXP has transformed plugin development for Photoshop, InDesign, and other Adobe 
 
 **NUXP** bridges that gap. It provides **442+ pre-built TypeScript functions** that talk directly to the Illustrator SDK — no new C++ to write. Just call the API from TypeScript and build your plugin UI with any JavaScript framework you like. The included frontend uses Vue 3, but since NUXP communicates over HTTP/JSON, you can swap in React, Svelte, or anything else.
 
-## Why NUXP?
+## Why Should You Care?
 
-Illustrator developers have been waiting for UXP support for years. Roadmap slides, developer previews, "coming soon" — but no shipping product. Meanwhile, CEP's embedded Chromium browser and ExtendScript runtime make plugin development feel stuck in 2013.
+Building Illustrator plugins today means choosing between bad options:
 
-NUXP takes a different approach. A C++ plugin handles the low-level SDK communication behind the scenes — you never need to touch it. From your perspective, you just call TypeScript functions and get typed responses. You get modern tooling, hot reload, and a development workflow that matches how we build software today.
+- **CEP** — Deprecated since 2013. Ships an ancient Chromium with known vulnerabilities. Scripting in ExtendScript, a JavaScript dialect frozen at ES3 (1999). No npm, no TypeScript, no modern tooling.
+- **Raw C++ SDK** — Write everything in C++. Thread safety is your problem — one wrong call from the wrong thread crashes Illustrator silently, no error message. Rebuild the entire plugin to test a one-line change.
+- **UXP** — Adobe's official replacement. Already shipping for Photoshop and InDesign. Not available for Illustrator. Has been "coming soon" for years.
+
+NUXP gives you a fourth option: **just write TypeScript.** A C++ plugin handles the SDK behind the scenes — you never touch it. You call typed functions, get JSON responses, and build your UI with any framework you want. Hot reload, npm, Vite, Pinia — the workflow matches how we build software today.
+
+You can even develop without Illustrator installed. A mock bridge simulates the entire SDK, so you can build and iterate on your UI before you ever load the plugin for real.
 
 ## Architecture
 
