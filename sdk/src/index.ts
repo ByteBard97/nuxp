@@ -89,10 +89,14 @@ export { ArtboardBoundsManager } from './geometry/ArtboardBoundsManager'
 // ─── Primitives ─────────────────────────────────────────────────────────────────
 
 export { ArtType } from './primitives/types'
-export type { ArtBounds, ArtChild, PathSegment, ArtboardInfo } from './primitives/types'
+export type { BridgeCallFn, ArtBounds, ArtChild, PathSegment, ArtboardInfo } from './primitives/types'
+export type { LayerInfo } from './primitives/layer'
 
 export * from './primitives/art'
 export * from './primitives/text'
+export * from './primitives/group'
+export * from './primitives/layer'
+export * from './primitives/duplication'
 
 // ─── Generated Suites ───────────────────────────────────────────────────────────
 

@@ -398,6 +398,84 @@
         "count": { "type": "number" },
         "layer": { "type": "string" }
       }
+    },
+
+    {
+      "name": "CreateRectangle",
+      "method": "POST",
+      "path": "/api/art/rectangle",
+      "description": "Create a rectangle path art object at the given position and size. Uses AIPathSuite to create a new path and set four corner segments.",
+      "request": {
+        "x": { "type": "number", "description": "X coordinate of the rectangle origin in points" },
+        "y": { "type": "number", "description": "Y coordinate of the rectangle origin in points" },
+        "width": { "type": "number", "description": "Width of the rectangle in points" },
+        "height": { "type": "number", "description": "Height of the rectangle in points" }
+      },
+      "response": {
+        "handle": { "type": "number", "description": "Art handle ID registered with HandleManager::art" },
+        "uuid": { "type": "string", "description": "UUID assigned to the new art object" }
+      }
+    },
+    {
+      "name": "CreateEllipse",
+      "method": "POST",
+      "path": "/api/art/ellipse",
+      "description": "Create an ellipse path art object with the given center and radii. Uses AIPathSuite to create a new path with bezier-approximated ellipse segments.",
+      "request": {
+        "cx": { "type": "number", "description": "Center X coordinate in points" },
+        "cy": { "type": "number", "description": "Center Y coordinate in points" },
+        "rx": { "type": "number", "description": "Horizontal radius in points" },
+        "ry": { "type": "number", "description": "Vertical radius in points" }
+      },
+      "response": {
+        "handle": { "type": "number", "description": "Art handle ID registered with HandleManager::art" },
+        "uuid": { "type": "string", "description": "UUID assigned to the new art object" }
+      }
+    },
+    {
+      "name": "CreatePath",
+      "method": "POST",
+      "path": "/api/art/path",
+      "description": "Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments/SetPathSegments.",
+      "request": {
+        "segments": { "type": "object", "description": "Array of { p: {h,v}, in: {h,v}, out: {h,v}, corner: boolean }" },
+        "closed": { "type": "boolean", "description": "Whether the path is closed (default false)", "optional": true }
+      },
+      "response": {
+        "handle": { "type": "number", "description": "Art handle ID registered with HandleManager::art" },
+        "uuid": { "type": "string", "description": "UUID assigned to the new art object" }
+      }
+    },
+    {
+      "name": "CreateLine",
+      "method": "POST",
+      "path": "/api/art/line",
+      "description": "Create a line (open path with two segments) between two points. Uses AIPathSuite to create a new path with start and end segments.",
+      "request": {
+        "x1": { "type": "number", "description": "Start point X coordinate in points" },
+        "y1": { "type": "number", "description": "Start point Y coordinate in points" },
+        "x2": { "type": "number", "description": "End point X coordinate in points" },
+        "y2": { "type": "number", "description": "End point Y coordinate in points" }
+      },
+      "response": {
+        "handle": { "type": "number", "description": "Art handle ID registered with HandleManager::art" },
+        "uuid": { "type": "string", "description": "UUID assigned to the new art object" }
+      }
+    },
+    {
+      "name": "ShowFileSaveDialog",
+      "method": "POST",
+      "path": "/api/dialog/save-file",
+      "description": "Show a native file save dialog. Uses AIUserSuite::PutFileDialog to display a platform save dialog and return the selected path.",
+      "request": {
+        "defaultName": { "type": "string", "description": "Default file name to populate in the dialog", "optional": true },
+        "title": { "type": "string", "description": "Dialog window title", "optional": true },
+        "fileTypes": { "type": "string[]", "description": "Allowed file type extensions (e.g. [\"ai\", \"pdf\", \"svg\"])", "optional": true }
+      },
+      "response": {
+        "path": { "type": "string", "description": "Selected file path (empty string if cancelled)" },
+        "cancelled": { "type": "boolean", "description": "Whether the user cancelled the dialog" }
+      }
     }
   ]
 }

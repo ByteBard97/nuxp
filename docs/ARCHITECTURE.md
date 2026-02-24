@@ -430,6 +430,8 @@ Defined in `routes.json`, wired by generated `CustomRouteRegistration.cpp`, impl
 
 Custom routes are registered **before** the generic suite dispatcher to ensure specific paths like `/api/selection` are not captured by the `/{suite}/{method}` regex.
 
+Planned custom routes (defined in `routes.json`, C++ handlers not yet implemented) include shape creation endpoints (`CreateRectangle`, `CreateEllipse`, `CreatePath`, `CreateLine`) and a native file save dialog (`ShowFileSaveDialog`). Once their C++ handlers are written, the TypeScript clients will be auto-generated.
+
 There are two sub-types:
 
 **Static routes** (exact path match):
@@ -533,7 +535,7 @@ sdk/src/
 ├── adapters/       # HTTP, SSE, Plugin, Document, Placement
 ├── services/       # Settings, logging, fonts, appearance, assets, SVG, symbols, document index
 ├── geometry/       # Coordinate transforms, artboard bounds
-├── primitives/     # Low-level art/text manipulation (dependency-injected)
+├── primitives/     # Low-level art/text/group/layer/duplication (dependency-injected)
 ├── generated/      # Auto-generated suite clients (19 suites, 442+ functions)
 ├── tauri/          # Desktop filesystem and dialog wrappers
 ├── utils/          # Async safety, environment detection, unit conversions
@@ -571,9 +573,15 @@ Adapters wrap communication patterns into reusable, composable layers:
 
 Low-level art and text manipulation functions that use dependency injection via `BridgeCallFn` — they accept a bridge call function as a parameter rather than importing a global bridge, making them testable and composable.
 
-**Art functions** (9): `createPath`, `createRect`, `createEllipse`, `createPolygon`, `createLine`, `getArtBounds`, `setArtBounds`, `duplicateArt`, `deleteArt`
+| Module | Functions | Description |
+|--------|-----------|-------------|
+| **art.ts** | `getArtBounds`, `transformArt`, `setArtVisibility`, `getArtChildren`, `getGroupChildByType`, `setArtName`, `deleteArt`, `findArtByName`, `getArtboardInfo` | Core art object queries and transforms |
+| **text.ts** | `setTextFont`, `setTextFontSize`, `setTextContent`, `getPathSegments` | Text styling and path segment access |
+| **group.ts** | `createGroup`, `addToGroup`, `ungroup`, `getGroupChildren` | Group creation, child iteration, ungrouping |
+| **layer.ts** | `getLayerByName`, `createLayer`, `getLayerArt`, `getAllLayers` | Layer queries, creation, art enumeration |
+| **duplication.ts** | `duplicateArt`, `duplicateArtToPosition` | Art cloning and repositioning |
 
-**Text functions** (4): `createTextFrame`, `setTextContents`, `getTextContents`, `setTextStyle`
+The group, layer, and duplication primitives compose auto-generated `AIArtSuite` and `AILayerSuite` functions internally, providing higher-level operations while maintaining the same dependency-injection pattern.
 
 ### Geometry
 

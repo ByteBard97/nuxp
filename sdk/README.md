@@ -137,18 +137,81 @@ Higher-level services for common plugin operations. All services that talk to Il
 
 ## Primitives
 
-Low-level functions for direct art/text manipulation. Every primitive takes a `BridgeCallFn` as its first argument:
+Low-level functions for direct art/text manipulation. Every primitive takes a `BridgeCallFn` as its first argument -- no global state, fully testable.
+
+### Art and Text
 
 ```typescript
 import { getArtBounds, transformArt, setTextContent } from '@nuxp/sdk'
 
-// bridge.call conforms to the BridgeCallFn signature
 const bounds = await getArtBounds(bridge.call, 'art-uuid-123')
 await transformArt(bridge.call, 'art-uuid-123', { tx: 50, ty: -30 })
 await setTextContent(bridge.call, 'text-uuid-456', 'Hello Illustrator')
 ```
 
-See `primitives/art.ts` and `primitives/text.ts` for the full list.
+### Groups
+
+Create groups, move art into them, iterate children, and ungroup:
+
+```typescript
+import { createGroup, addToGroup, getGroupChildren, ungroup } from '@nuxp/sdk'
+
+// Create an empty group and populate it
+const group = await createGroup(bridge.call)
+await addToGroup(bridge.call, group, artHandle1)
+await addToGroup(bridge.call, group, artHandle2)
+
+// Iterate children
+const children = await getGroupChildren(bridge.call, group)
+
+// Ungroup — moves children out and disposes the empty group shell
+const formerChildren = await ungroup(bridge.call, group)
+```
+
+### Layers
+
+Query, create, and enumerate art on layers:
+
+```typescript
+import { getLayerByName, createLayer, getLayerArt, getAllLayers } from '@nuxp/sdk'
+
+// Find a layer by its display name
+const layer = await getLayerByName(bridge.call, 'Background')
+if (layer) {
+  const artOnLayer = await getLayerArt(bridge.call, layer)
+}
+
+// Create a new layer
+const newLayer = await createLayer(bridge.call, 'Annotations')
+
+// List all layers with handles and names
+const layers = await getAllLayers(bridge.call)
+// => [{ handle: 1, name: 'Layer 1' }, { handle: 2, name: 'Background' }]
+```
+
+### Duplication
+
+Clone art objects and optionally reposition the copy:
+
+```typescript
+import { duplicateArt, duplicateArtToPosition } from '@nuxp/sdk'
+
+// Simple duplicate (placed above the original)
+const copy = await duplicateArt(bridge.call, artHandle)
+
+// Duplicate and reposition relative to a target
+const repositioned = await duplicateArtToPosition(bridge.call, artHandle, targetHandle, 0)
+```
+
+### Full Primitives Reference
+
+| Module | Functions |
+|--------|-----------|
+| **art.ts** | `getArtBounds`, `transformArt`, `setArtVisibility`, `getArtChildren`, `getGroupChildByType`, `setArtName`, `deleteArt`, `findArtByName`, `getArtboardInfo` |
+| **text.ts** | `setTextFont`, `setTextFontSize`, `setTextContent`, `getPathSegments` |
+| **group.ts** | `createGroup`, `addToGroup`, `ungroup`, `getGroupChildren` |
+| **layer.ts** | `getLayerByName`, `createLayer`, `getLayerArt`, `getAllLayers` |
+| **duplication.ts** | `duplicateArt`, `duplicateArtToPosition` |
 
 ## Generated Suites
 

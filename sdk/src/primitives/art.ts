@@ -83,9 +83,9 @@ export async function getGroupChildByType(
   uuid: string,
   artType: number
 ): Promise<{ uuid: string; name: string; artType: number; bounds: ArtBounds } | null> {
-  const result = await bridge('getGroupChildByType', uuid, { artType }) as ({ uuid: string; name: string; artType: number; bounds: ArtBounds } & { error?: string }) | null
+  const result = await bridge<{ uuid: string; name: string; artType: number; bounds: ArtBounds; error?: string }>('getGroupChildByType', uuid, { artType })
   if (result?.error) return null
-  return result as { uuid: string; name: string; artType: number; bounds: ArtBounds } | null
+  return result
 }
 
 /**

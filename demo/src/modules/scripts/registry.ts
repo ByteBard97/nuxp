@@ -14,6 +14,14 @@ import listTextFrames from './scripts/list-text-frames'
 import createTextFrame from './scripts/create-text-frame'
 import fitArtboard from './scripts/fit-artboard'
 import fitSelection from './scripts/fit-selection'
+import sdkLogger from './scripts/sdk-logger'
+import sdkSettings from './scripts/sdk-settings'
+import sdkGeometry from './scripts/sdk-geometry'
+import sdkDocumentAdapter from './scripts/sdk-document-adapter'
+import sdkUtilities from './scripts/sdk-utilities'
+import sdkGroups from './scripts/sdk-groups'
+import sdkLayers from './scripts/sdk-layers'
+import sdkDuplication from './scripts/sdk-duplication'
 
 const scripts: Script[] = []
 
@@ -60,3 +68,13 @@ registerScript(createTextFrame)
 // Register view scripts
 registerScript(fitArtboard)
 registerScript(fitSelection)
+
+// Register SDK scripts
+registerScript(sdkLogger)
+registerScript(sdkSettings)
+registerScript(sdkGeometry)
+registerScript(sdkDocumentAdapter)
+registerScript(sdkUtilities)
+registerScript(sdkGroups)
+registerScript(sdkLayers)
+registerScript(sdkDuplication)

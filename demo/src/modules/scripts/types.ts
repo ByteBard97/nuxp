@@ -1,4 +1,4 @@
-export type ScriptCategory = 'document' | 'layers' | 'selection' | 'objects' | 'text' | 'view'
+export type ScriptCategory = 'document' | 'layers' | 'selection' | 'objects' | 'text' | 'view' | 'sdk'
 
 export interface ScriptParam {
   name: string
@@ -33,6 +33,7 @@ export const CATEGORY_LABELS: Record<ScriptCategory, string> = {
   objects: 'Objects',
   text: 'Text',
   view: 'View',
+  sdk: 'SDK',
 }
 
 export const CATEGORY_ICONS: Record<ScriptCategory, string> = {
@@ -42,4 +43,5 @@ export const CATEGORY_ICONS: Record<ScriptCategory, string> = {
   objects: '\u{1F537}',
   text: '\u{1F4DD}',
   view: '\u{1F441}\u{FE0F}',
+  sdk: '\u{1F9F0}',
 }

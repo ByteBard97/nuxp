@@ -276,7 +276,7 @@ nuxp/
 │       ├── bridge/         # Bridge, AutoQueue, request serialization
 │       ├── adapters/       # HTTP, SSE, Plugin, Document, Placement adapters
 │       ├── services/       # Settings, logging, fonts, SVG, symbols, document index
-│       ├── primitives/     # Low-level art/text manipulation functions
+│       ├── primitives/     # Low-level art/text/group/layer/duplication functions
 │       ├── geometry/       # Coordinate transforms, artboard bounds
 │       ├── generated/      # Auto-generated suite clients (19 suites, 442+ functions)
 │       ├── tauri/          # Desktop filesystem and dialog wrappers
