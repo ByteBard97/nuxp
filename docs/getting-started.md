@@ -119,6 +119,15 @@ For GitHub Actions:
 2. Set the `ILLUSTRATOR_SDK_URL` repository secret
 3. The CI workflow will download and extract it automatically
 
+## What's Next?
+
+Now that your environment is set up, here are the recommended next steps:
+
+-   **Build your first component** -- Follow the [Tutorial](TUTORIAL.md) for a hands-on walkthrough.
+-   **Explore the SDK** -- NUXP auto-generates 442+ typed TypeScript functions in `sdk/src/generated/`, importable via `@nuxp/sdk/generated/`. See the [SDK README](../sdk/README.md) for full documentation.
+-   **Understand the call patterns** -- The framework supports three ways to talk to Illustrator: generated suite functions, custom routes, and direct bridge calls. See [Architecture](ARCHITECTURE.md) for details.
+-   **Make it yours** -- Read [Customization](CUSTOMIZATION.md) to learn how to extend the plugin for your own workflows.
+
 ## Troubleshooting
 
 ### "SDK not found" errors

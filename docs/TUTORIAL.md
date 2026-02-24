@@ -9,86 +9,74 @@ title: "Tutorial: Your First Plugin"
   <img src="images/nuxp-idle.gif" alt="Captain NUXP" width="200">
 </p>
 
-This tutorial walks you through creating a simple Illustrator tool using NUXP. By the end, you'll have a working button that creates a rectangle in your Illustrator document.
+This tutorial walks you through building a simple Illustrator tool using NUXP. By the end, you will have a working component that reads real document information from Adobe Illustrator -- or from mock data during development.
 
 ## Prerequisites
 
 - NUXP built and installed (see main README)
-- Adobe Illustrator 2024+ running
 - Node.js 18+
+- Adobe Illustrator 2024+ (only needed for Step 5)
 
 ## Step 1: Start in Mock Mode
 
-First, let's develop the UI without needing Illustrator. This is faster and lets you iterate on the frontend independently.
+You do not need Illustrator running to develop the UI. Mock mode lets you iterate on the frontend independently.
 
 ```bash
 cd demo
 VITE_USE_MOCK=true npm run dev
 ```
 
-Open http://localhost:5173 in your browser.
+Open http://localhost:5173 in your browser. The demo app will start with a mock Bridge that returns simulated responses for all SDK calls.
 
-## Step 2: Create a Simple Component
+## Step 2: Create a Document Info Component
 
-Create a new file `demo/src/components/CreateRectangle.vue`:
+Create a new file `demo/src/components/DocumentInfo.vue`:
 
 {% raw %}
 ```vue
 <template>
-  <div class="create-rectangle">
-    <h3>Create Rectangle</h3>
+  <div class="document-info">
+    <h3>Document Info</h3>
 
-    <div class="inputs">
-      <label>
-        Width:
-        <input v-model.number="width" type="number" min="1" />
-      </label>
-      <label>
-        Height:
-        <input v-model.number="height" type="number" min="1" />
-      </label>
-    </div>
-
-    <button @click="createRectangle" :disabled="loading">
-      {{ loading ? 'Creating...' : 'Create Rectangle' }}
+    <button @click="fetchInfo" :disabled="loading">
+      {{ loading ? 'Loading...' : 'Get Document Info' }}
     </button>
 
-    <p v-if="message" :class="{ error: isError }">{{ message }}</p>
+    <div v-if="docInfo" class="info-panel">
+      <dl>
+        <dt>Name</dt>
+        <dd>{{ docInfo.name || '(untitled)' }}</dd>
+
+        <dt>Saved</dt>
+        <dd>{{ docInfo.saved ? 'Yes' : 'No' }}</dd>
+
+        <dt>Path</dt>
+        <dd>{{ docInfo.path || '(not saved yet)' }}</dd>
+      </dl>
+    </div>
+
+    <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { getBridgeInstance } from '@nuxp/sdk'
+import { GetDocumentInfo } from '@nuxp/sdk/generated/customRoutes'
+import type { GetDocumentInfoResponse } from '@nuxp/sdk/generated/customRoutes'
 
-const width = ref(100)
-const height = ref(100)
 const loading = ref(false)
-const message = ref('')
-const isError = ref(false)
+const errorMsg = ref('')
+const docInfo = ref<GetDocumentInfoResponse | null>(null)
 
-async function createRectangle() {
+async function fetchInfo() {
   loading.value = true
-  message.value = ''
-  isError.value = false
+  errorMsg.value = ''
 
   try {
-    const result = await getBridgeInstance().callSuite('demo', 'createRectangle', {
-      x: 100,
-      y: 100,
-      width: width.value,
-      height: height.value
-    })
-
-    if (result.success) {
-      message.value = 'Rectangle created!'
-    } else {
-      message.value = result.error || 'Failed to create rectangle'
-      isError.value = true
-    }
+    docInfo.value = await GetDocumentInfo()
   } catch (err) {
-    message.value = err instanceof Error ? err.message : 'Unknown error'
-    isError.value = true
+    errorMsg.value = err instanceof Error ? err.message : 'Unknown error'
+    docInfo.value = null
   } finally {
     loading.value = false
   }
@@ -96,29 +84,34 @@ async function createRectangle() {
 </script>
 
 <style scoped>
-.create-rectangle {
+.document-info {
   padding: 1rem;
   border: 1px solid #ccc;
   border-radius: 8px;
-  max-width: 300px;
+  max-width: 360px;
 }
 
-.inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 1rem 0;
+.info-panel {
+  margin-top: 1rem;
+  background: #f8f8f8;
+  padding: 0.75rem;
+  border-radius: 4px;
 }
 
-.inputs label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0;
 }
 
-.inputs input {
-  width: 100px;
-  padding: 0.25rem;
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin: 0;
+  word-break: break-all;
 }
 
 button {
@@ -142,63 +135,104 @@ button:hover:not(:disabled) {
 
 .error {
   color: red;
+  margin-top: 0.5rem;
 }
 </style>
 ```
 {% endraw %}
 
+Key things to notice:
+
+- **`GetDocumentInfo`** is imported directly from the generated custom routes module. It is a plain `async` function that returns typed data -- no bridge setup needed in the component.
+- The response type **`GetDocumentInfoResponse`** gives you full TypeScript autocompletion for fields like `name`, `path`, `saved`, and `artboards`.
+- Error handling is straightforward: the function throws on HTTP errors, so a standard `try/catch` is all you need.
+
 ## Step 3: Add to a View
 
-Import and use your component in `demo/src/views/HomeView.vue` or create a new view.
+Import and use your component in any view. For example, in `demo/src/views/HomeView.vue`:
+
+```vue
+<script setup lang="ts">
+import DocumentInfo from '@/components/DocumentInfo.vue'
+</script>
+
+<template>
+  <DocumentInfo />
+</template>
+```
 
 ## Step 4: Test with Mock Mode
 
-In mock mode, the Bridge routes to `MockBridge.ts` which returns simulated responses. This lets you develop the UI flow without the real plugin.
+When you run with `VITE_USE_MOCK=true`, the SDK's Bridge is replaced with a mock that intercepts HTTP requests. Custom route functions like `GetDocumentInfo()` make `fetch()` calls under the hood, so in mock mode the request goes to the mock server which returns a simulated response.
+
+This lets you build and test the entire UI flow -- loading states, error handling, data rendering -- without Illustrator running. Once your component looks right, you can connect it to the real plugin.
 
 ## Step 5: Connect to Real Illustrator
 
-1. Build and install the plugin (see README)
-2. Launch Illustrator
+1. Build and install the C++ plugin (see README)
+2. Launch Illustrator and open or create a document
 3. Stop the dev server and restart without mock mode:
 
 ```bash
+cd demo
 npm run dev
 ```
 
-4. Click your button - a rectangle should appear in Illustrator!
+4. Click "Get Document Info" -- you will see the real document name, save status, and file path pulled live from Illustrator.
 
 ## Understanding the Call Flow
 
+Here is what happens when you call `GetDocumentInfo()`:
+
 ```
 Your Component
-    ↓ getBridgeInstance().callSuite('demo', 'createRectangle', {...})
-SDK Bridge (Bridge.ts + AutoQueue)
-    ↓ HTTP POST to localhost:8080
-C++ HTTP Server
-    ↓ Routes to DemoEndpoints::CreateRectangle
-Adobe SDK
-    ↓ Creates actual rectangle
-Illustrator Document
+    | GetDocumentInfo()
+    v
+Generated Custom Route (customRoutes.ts)
+    | fetch('GET', 'http://localhost:8080/api/doc/info')
+    v
+C++ HTTP Server (HttpServer.cpp)
+    | Routes to GetDocumentInfoHandler
+    v
+Main Thread Dispatch
+    | Marshals onto Illustrator's main thread
+    v
+Adobe Illustrator SDK
+    | AIDocumentSuite + AIArtboardSuite queries
+    v
+JSON Response -> TypeScript GetDocumentInfoResponse
 ```
+
+Custom route functions use `fetch()` directly against the C++ plugin's HTTP server. Generated suite functions (like those in `AIArtSuite.ts`) instead go through `Bridge.callSuite()`, which serializes requests through the AutoQueue. Both patterns end up at the same C++ HTTP server.
 
 ## What You Can Do From Here
 
-NUXP ships with **442+ TypeScript functions** covering 19 SDK suites. You can build most Illustrator tools entirely in TypeScript without touching any C++.
+NUXP ships with **442+ TypeScript functions** covering 19 SDK suites, plus 30+ custom route functions for higher-level operations. You can build most Illustrator tools entirely in TypeScript without touching any C++.
 
-Browse what's available:
-- Check `sdk/src/generated/` for all auto-generated TypeScript functions (importable via `@nuxp/sdk/generated/`)
-- Read the [API Reference](api/README.md) for the full endpoint list
-- Look at the Debug Panel in the demo app for real-time event monitoring
+Browse what is available:
+
+- **`sdk/src/generated/`** -- All auto-generated TypeScript functions. Import them via `@nuxp/sdk/generated/` (e.g., `@nuxp/sdk/generated/customRoutes`, `@nuxp/sdk/generated/AIArtSuite`).
+- **Custom routes** -- `GetSelection`, `QueryLayers`, `CreateTextFrame`, `GetViewZoom`, `SetViewZoom`, and more in `customRoutes.ts`.
+- **Suite functions** -- `NewArt`, `GetArtBounds`, `SetArtName`, `GetLayerTitle`, `SetOpacity`, and hundreds more across 19 suites.
+- **Adapters and services** -- Higher-level abstractions like `DocumentAdapter`, `PlacementAdapter`, `SettingsService`, and `FontConfigService` exported from `@nuxp/sdk`.
+- Read the [API Reference](api/README.md) for the full endpoint list.
+- Look at the Debug Panel in the demo app for real-time event monitoring.
 
 ### Advanced: Adding Custom C++ Endpoints
 
-If you need SDK functionality not already covered by the 442+ generated functions, you can write custom C++ endpoints. See [Adding Custom Endpoints](ADDING-ENDPOINTS.md) for a step-by-step guide. Most users won't need this.
+If you need SDK functionality not already covered by the 442+ generated functions, you can write custom C++ endpoints. See [Adding Custom Endpoints](ADDING-ENDPOINTS.md) for a step-by-step guide. Most users will not need this.
+
+## Next Steps
+
+- [Getting Started](getting-started.md) -- Full setup guide including SDK installation and build instructions
+- [Architecture](ARCHITECTURE.md) -- Deep dive into the communication layer, threading model, and code generation pipeline
+- [Adding Endpoints](ADDING-ENDPOINTS.md) -- How to add new C++ endpoints when the generated functions are not enough
 
 ## Troubleshooting
 
 **"Connection refused" errors:**
 - Is Illustrator running?
-- Is the plugin loaded? (Check Window → Plug-ins)
+- Is the plugin loaded? (Check Window > Plug-ins)
 - Is the port correct? (default: 8080)
 
 **"No document open" errors:**
