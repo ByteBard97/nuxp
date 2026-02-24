@@ -76,7 +76,7 @@ export interface WanderingSettings {
   /** Glass tint color overlay */
   glassTint: string
   /** Rhythm/pulse settings */
-  rhythm: RhythmSettings
+  rhythm?: RhythmSettings
 }
 
 /**

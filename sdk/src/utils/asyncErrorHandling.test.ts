@@ -78,7 +78,7 @@ describe('FailureTracker', () => {
 
 describe('wrapAsyncHandler', () => {
   it('calls the wrapped function with the same arguments', async () => {
-    const fn = vi.fn(async (a: number, b: string) => {})
+    const fn = vi.fn(async (_a: number, _b: string) => {})
     const wrapped = wrapAsyncHandler(fn, 'test')
     wrapped(42, 'hello')
     // Let microtask queue flush

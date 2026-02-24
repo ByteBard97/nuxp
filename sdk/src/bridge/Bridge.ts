@@ -24,7 +24,6 @@ import type {
   CppRequest,
   CppResponse,
   EndpointDef,
-  HttpMethod,
   QueueStatus,
 } from './types'
 import { AutoQueue } from './AutoQueue'

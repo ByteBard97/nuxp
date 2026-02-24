@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { DocumentIndexService } from './DocumentIndexService'
+import type { BridgeCallFn } from '../primitives/types'
 
 interface TestItem {
   id: string
@@ -9,11 +10,11 @@ interface TestItem {
 }
 
 describe('DocumentIndexService', () => {
-  let mockBridge: ReturnType<typeof vi.fn>
+  let mockBridge: ReturnType<typeof vi.fn> & BridgeCallFn
   let svc: DocumentIndexService<TestItem>
 
   beforeEach(() => {
-    mockBridge = vi.fn()
+    mockBridge = vi.fn() as ReturnType<typeof vi.fn> & BridgeCallFn
     svc = new DocumentIndexService<TestItem>(mockBridge)
   })
 

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest'
 import { AssetCache } from './SvgCacheService'
-import { createSvgLoader, type CachedSvgEntry } from './SvgLoader'
+import { createSvgLoader, type CachedSvgEntry, type SvgFetchFn } from './SvgLoader'
 
 function entry(content: string): CachedSvgEntry {
   return { content, scale: 1, offsetX: 0, offsetY: 0 }
@@ -8,11 +8,11 @@ function entry(content: string): CachedSvgEntry {
 
 describe('createSvgLoader', () => {
   let cache: AssetCache<CachedSvgEntry>
-  let fetchFn: ReturnType<typeof vi.fn>
+  let fetchFn: Mock & SvgFetchFn
 
   beforeEach(() => {
     cache = new AssetCache<CachedSvgEntry>()
-    fetchFn = vi.fn()
+    fetchFn = vi.fn() as Mock & SvgFetchFn
   })
 
   // -------------------------------------------------------------------------

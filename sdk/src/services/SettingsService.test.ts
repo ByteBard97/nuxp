@@ -21,7 +21,7 @@ function createMockLocalStorage(): Storage {
 // Tests
 // ---------------------------------------------------------------------------
 
-interface TestSettings {
+type TestSettings = {
   theme: string
   zoom: number
   lastTab?: string
