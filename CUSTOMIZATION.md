@@ -77,8 +77,8 @@ Edit `demo/src-tauri/tauri.conf.json`:
 
 ```json
 {
-  "productName": "My Plugin Shell",
-  "identifier": "com.mycompany.myplugin-shell",
+  "productName": "My Plugin App",
+  "identifier": "com.mycompany.myplugin-app",
   "version": "1.0.0"
 }
 ```

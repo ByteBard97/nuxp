@@ -22,7 +22,7 @@ This tutorial walks you through creating a simple Illustrator tool using NUXP. B
 First, let's develop the UI without needing Illustrator. This is faster and lets you iterate on the frontend independently.
 
 ```bash
-cd shell
+cd demo
 VITE_USE_MOCK=true npm run dev
 ```
 
@@ -59,7 +59,7 @@ Create a new file `demo/src/components/CreateRectangle.vue`:
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { callCpp } from '@/sdk/bridge'
+import { getBridgeInstance } from '@nuxp/sdk'
 
 const width = ref(100)
 const height = ref(100)
@@ -73,7 +73,7 @@ async function createRectangle() {
   isError.value = false
 
   try {
-    const result = await callCpp('demo', 'createRectangle', {
+    const result = await getBridgeInstance().callSuite('demo', 'createRectangle', {
       x: 100,
       y: 100,
       width: width.value,
@@ -153,7 +153,7 @@ Import and use your component in `demo/src/views/HomeView.vue` or create a new v
 
 ## Step 4: Test with Mock Mode
 
-In mock mode, the `callCpp` function routes to `MockBridge.ts` which returns simulated responses. This lets you develop the UI flow without the real plugin.
+In mock mode, the Bridge routes to `MockBridge.ts` which returns simulated responses. This lets you develop the UI flow without the real plugin.
 
 ## Step 5: Connect to Real Illustrator
 
@@ -171,8 +171,8 @@ npm run dev
 
 ```
 Your Component
-    ↓ callCpp('demo', 'createRectangle', {...})
-SDK Bridge (bridge.ts)
+    ↓ getBridgeInstance().callSuite('demo', 'createRectangle', {...})
+SDK Bridge (Bridge.ts + AutoQueue)
     ↓ HTTP POST to localhost:8080
 C++ HTTP Server
     ↓ Routes to DemoEndpoints::CreateRectangle
@@ -186,9 +186,9 @@ Illustrator Document
 NUXP ships with **442+ TypeScript functions** covering 19 SDK suites. You can build most Illustrator tools entirely in TypeScript without touching any C++.
 
 Browse what's available:
-- Check `demo/src/sdk/generated/` for all auto-generated TypeScript functions
+- Check `sdk/src/generated/` for all auto-generated TypeScript functions (importable via `@nuxp/sdk/generated/`)
 - Read the [API Reference](api/README.md) for the full endpoint list
-- Look at the Debug Panel in the shell for real-time event monitoring
+- Look at the Debug Panel in the demo app for real-time event monitoring
 
 ### Advanced: Adding Custom C++ Endpoints
 

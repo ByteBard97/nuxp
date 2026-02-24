@@ -306,7 +306,7 @@ flowchart TB
         CRReg["CustomRouteRegistration.cpp"]
     end
 
-    subgraph Output_TS [" TypeScript Output (demo/src/sdk/generated/) "]
+    subgraph Output_TS [" TypeScript Output (sdk/src/generated/) "]
         TsClients["ai*.ts (one per suite)"]
         TsCustom["customRoutes.ts"]
     end
@@ -359,7 +359,7 @@ This script:
 1. Installs codegen npm dependencies if needed
 2. Runs `npm run generate` in `codegen/`
 3. Copies generated C++ to `plugin/src/endpoints/generated/`
-4. Copies generated TypeScript to `demo/src/sdk/generated/`
+4. Copies generated TypeScript to `sdk/src/generated/`
 
 CMake also provides targets:
 ```bash
@@ -517,4 +517,90 @@ std::string HandleMyNewEndpoint(const std::string& body) {
 
 4. **Build**: `cd plugin && cmake --build build`
 
-The TypeScript client function is generated automatically in `demo/src/sdk/generated/customRoutes.ts`.
+The TypeScript client function is generated automatically in `sdk/src/generated/customRoutes.ts`.
+
+---
+
+## 6. TypeScript SDK (`@nuxp/sdk`)
+
+The SDK package (`sdk/`) is a framework-agnostic TypeScript library that provides the complete communication and utility layer between any frontend and the C++ plugin. It is consumed by the demo app via `workspace:*` and by downstream projects (like flora-uxp) via git submodule.
+
+### Module Overview
+
+```
+sdk/src/
+├── bridge/         # Bridge, AutoQueue — core communication
+├── adapters/       # HTTP, SSE, Plugin, Document, Placement
+├── services/       # Settings, logging, fonts, appearance, assets, SVG, symbols, document index
+├── geometry/       # Coordinate transforms, artboard bounds
+├── primitives/     # Low-level art/text manipulation (dependency-injected)
+├── generated/      # Auto-generated suite clients (19 suites, 442+ functions)
+├── tauri/          # Desktop filesystem and dialog wrappers
+├── utils/          # Async safety, environment detection, unit conversions
+├── schemas/        # Zod validation schemas for document responses
+└── types/          # Shared type definitions
+```
+
+### Adapters
+
+Adapters wrap communication patterns into reusable, composable layers:
+
+| Adapter | Purpose |
+|---------|---------|
+| **HttpAdapter** | HTTP transport with configurable base URL, retry logic, and timeout handling |
+| **SSEAdapter** | Typed Server-Sent Events with automatic reconnection and backoff |
+| **PluginAdapter** | Composes HttpAdapter + SSEAdapter into a unified interface with environment detection |
+| **DocumentAdapter** | 5 generic document operations: `getDocumentInfo`, `getArtboards`, `getSelection`, `getLayers`, `getDocumentItems` |
+| **PlacementAdapter** | 7 placement workflow functions: `placeItem`, `positionItem`, `scaleItem`, `rotateItem`, `groupItems`, `ungroupItems`, `deleteItems` |
+
+### Services
+
+| Service | Purpose |
+|---------|---------|
+| **LoggerService** | Per-module logging with ring buffer, console interception, and persistent config |
+| **SettingsService** | Type-safe localStorage persistence with schema validation |
+| **FontConfigService** | Font enumeration, caching, and lookup |
+| **AppearanceConfigService** | UI theme and preset management |
+| **AssetCache** | In-memory asset caching with LRU eviction |
+| **SvgLoader** | SVG loading from URLs and local paths |
+| **SvgPlacementService** | SVG metadata extraction and placement coordinate calculation |
+| **SymbolManagementService** | Illustrator symbol import and lifecycle management |
+| **DocumentIndexService** | Typed item indexing stored in document XMP metadata |
+
+### Primitives
+
+Low-level art and text manipulation functions that use dependency injection via `BridgeCallFn` — they accept a bridge call function as a parameter rather than importing a global bridge, making them testable and composable.
+
+**Art functions** (9): `createPath`, `createRect`, `createEllipse`, `createPolygon`, `createLine`, `getArtBounds`, `setArtBounds`, `duplicateArt`, `deleteArt`
+
+**Text functions** (4): `createTextFrame`, `setTextContents`, `getTextContents`, `setTextStyle`
+
+### Geometry
+
+| Module | Purpose |
+|--------|---------|
+| **CoordinateSystemManager** | 30+ static methods for coordinate system conversions (D3 ↔ Illustrator), bounds operations (get, inset, expand, intersect, validate), point transforms (translate, rotate, scale), polygon area/centroid, circle overlap detection, and unit conversions (inches ↔ points ↔ feet, drawing scale application) |
+| **ArtboardBoundsManager** | Artboard bounds calculations, artboard-relative positioning |
+
+### Tauri Desktop Integration
+
+| Module | Purpose |
+|--------|---------|
+| **tauriFs** | Filesystem wrappers: `exists`, `mkdir`, `readTextFile`, `writeTextFile`, `remove` |
+| **TauriDialogService** | Save dialogs: `saveTextFile`, `saveBinaryFile` |
+
+### Utilities
+
+| Module | Purpose |
+|--------|---------|
+| **apiHelpers** | HTTP result parsing and error extraction |
+| **asyncErrorHandling** | Safe async wrappers to prevent unhandled rejections |
+| **contrastChecker** | Color contrast ratio calculation for accessibility |
+| **sizeCalculator** | Unit conversions (inches, points, feet, drawing scales) |
+| **environment** | Runtime environment detection (Tauri, browser, mock mode) |
+
+### Schemas
+
+Zod validation schemas for document responses, used to validate data at the boundary between the SDK and the C++ plugin:
+
+`InitializeDocumentResponseSchema`, `ArtboardInfoSchema`, `CreateArtboardResponseSchema`, `SuccessResponseSchema`, `ViewZoomResponseSchema`, and associated parsing helpers.

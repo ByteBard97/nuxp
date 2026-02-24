@@ -51,8 +51,8 @@ This will:
 # Install codegen dependencies
 cd codegen && npm install && cd ..
 
-# Install shell (frontend) dependencies
-cd shell && npm install && cd ..
+# Install demo app (frontend) dependencies
+cd demo && npm install && cd ..
 ```
 
 ## 4. Build & Run
@@ -62,7 +62,7 @@ cd shell && npm install && cd ..
 For UI development without the C++ plugin:
 
 ```bash
-cd shell
+cd demo
 VITE_USE_MOCK=true npm run dev
 ```
 
@@ -93,7 +93,7 @@ Launch Illustrator - the plugin will start its HTTP server on port 8080.
 #### d. Run the Frontend
 
 ```bash
-cd shell
+cd demo
 npm run dev
 ```
 
@@ -109,7 +109,7 @@ To regenerate the C++ and TypeScript bindings from SDK headers:
 
 This creates:
 - `plugin/src/endpoints/generated/` - C++ wrapper functions
-- `demo/src/sdk/generated/` - TypeScript client SDK
+- `sdk/src/generated/` - TypeScript client SDK
 
 ## CI/CD Setup
 

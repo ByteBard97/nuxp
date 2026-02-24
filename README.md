@@ -202,9 +202,9 @@ The setup script extracts and organizes:
 
 This parses SDK headers and generates:
 - C++ endpoint handlers -> `plugin/src/endpoints/generated/`
-- TypeScript SDK client -> `demo/src/sdk/generated/`
+- TypeScript SDK client -> `sdk/src/generated/`
 
-> **Note:** The TypeScript output path has changed from `shell/` to `demo/`. If upgrading, update any custom scripts that reference the old path.
+> **Note:** The TypeScript SDK output is now at `sdk/src/generated/`. If upgrading from an older version, update any custom scripts that reference `shell/` or `demo/src/sdk/generated/`.
 
 #### d. Build the C++ Plugin
 
@@ -305,7 +305,7 @@ nuxp/
 │   ├── src/
 │   │   ├── components/     # Vue components
 │   │   ├── services/       # API client, MockBridge
-│   │   ├── sdk/            # Demo-specific SDK wiring (imports @nuxp/sdk)
+│   │   ├── sdk/            # Demo-specific SDK bootstrap (imports @nuxp/sdk)
 │   │   ├── stores/         # Pinia state management
 │   │   └── views/          # Page components
 │   └── package.json

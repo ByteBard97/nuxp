@@ -2,7 +2,7 @@
  * Compatibility shim for generated route/event files.
  *
  * The auto-generated `customRoutes.ts` and `events.ts` import
- * `getApiUrl` and `sdkConfig` from `../config` (a shell-specific module).
+ * `getApiUrl` and `sdkConfig` from `../config` (a demo-app-specific module).
  * This shim provides those symbols backed by a shared Bridge instance
  * so the generated code works inside the SDK.
  *

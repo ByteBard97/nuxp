@@ -2,7 +2,7 @@
  * Compatibility shim for generated suite files.
  *
  * The auto-generated suite modules import `callCpp` from `@/sdk/bridge`
- * (a shell-specific path alias). This shim re-exports a `callCpp` function
+ * (a demo-app path alias). This shim re-exports a `callCpp` function
  * that delegates to a shared Bridge instance so the generated code works
  * inside the SDK without rewriting every import.
  *

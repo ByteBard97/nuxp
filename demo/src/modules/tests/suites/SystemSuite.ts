@@ -124,13 +124,13 @@ async function roundTripLatency(): Promise<TestResult> {
  * Retrieves and displays version information from:
  * - C++ plugin (from /health endpoint)
  * - Tauri (if running in Tauri context)
- * - Shell frontend (from package.json)
+ * - Demo frontend (from package.json)
  */
 async function versionInfo(): Promise<TestResult> {
   const versions: Record<string, string> = {
     plugin: 'Unknown',
     tauri: 'N/A',
-    shell: '0.1.0', // From package.json
+    demo: '0.1.0', // From package.json
   };
 
   try {
@@ -160,7 +160,7 @@ async function versionInfo(): Promise<TestResult> {
 
     return {
       success: true,
-      message: `Plugin: ${versions.plugin}, Shell: ${versions.shell}`,
+      message: `Plugin: ${versions.plugin}, Demo: ${versions.demo}`,
       data: versions,
     };
   } catch (error) {
@@ -276,7 +276,7 @@ export const SystemSuite: TestSuite = {
     {
       id: 'system-version',
       name: 'Version Info',
-      description: 'Display plugin, Tauri, and shell versions',
+      description: 'Display plugin, Tauri, and demo app versions',
       run: versionInfo,
     },
   ],

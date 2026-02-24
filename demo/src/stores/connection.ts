@@ -1,7 +1,7 @@
 /**
  * Connection state store
  *
- * Manages the connection status between the shell and the
+ * Manages the connection status between the demo app and the
  * NUXP plugin running in Adobe Illustrator.
  */
 

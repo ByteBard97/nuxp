@@ -3,7 +3,7 @@
  *
  * Merges three communication patterns into a single, framework-agnostic class:
  *
- * 1. **Suite calls** (from nuxp/shell bridge) — `callSuite('AIArt', 'GetArtName', { art })`
+ * 1. **Suite calls** (from nuxp/demo bridge) — `callSuite('AIArt', 'GetArtName', { art })`
  *    Direct POST to /api/call with typed {suite, method, args} bodies.
  *
  * 2. **Endpoint-mapped calls** (from HttpApiAdapter) — `call('getDocument')`
