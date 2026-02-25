@@ -386,16 +386,16 @@ std::string HandleShowFileSaveDialog(const std::string& body) {
 
         // Call AIUserSuite::PutFileDialog
         // Signature: PutFileDialog(const ai::UnicodeString& title,
-        //                          const ai::FilePath& defaultFile,
-        //                          const char* fileFilter,
-        //                          ai::FilePath& outFile)
+        //                          const AIFileDialogFilters* filters,
+        //                          const ai::UnicodeString& defaultName,
+        //                          ai::FilePath& ioFilePath)
         // Returns kNoErr if user selected a file, kCanceledErr if cancelled
-        ai::FilePath outFile;
+        ai::UnicodeString defaultNameStr(defaultName.c_str());
         ASErr err = SuitePointers::AIUser()->PutFileDialog(
             dialogTitle,
-            &defaultPath,
-            filterStr.empty() ? nullptr : filterStr.as_Platform().c_str(),
-            &outFile);
+            nullptr,
+            defaultNameStr,
+            defaultPath);
 
         if (err == kCanceledErr) {
             return {{"success", true},
@@ -409,7 +409,7 @@ std::string HandleShowFileSaveDialog(const std::string& body) {
                     {"errorCode", static_cast<int>(err)}};
         }
 
-        std::string resultPath = outFile.GetFullPath().as_UTF8();
+        std::string resultPath = defaultPath.GetFullPath().as_UTF8();
 
         return {{"success", true},
                 {"path", resultPath},
