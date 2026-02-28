@@ -191,4 +191,29 @@ void RegisterCustomRoutes() {
     HttpServer::Post("/api/query/count", [](const std::string& body) {
         return HandleCountItemsOnLayer(body);
     });
+
+    // POST /api/art/rectangle - Create a rectangle path art object at the given position and size. Uses AIPathSuite to create a new path and set four corner segments.
+    HttpServer::Post("/api/art/rectangle", [](const std::string& body) {
+        return HandleCreateRectangle(body);
+    });
+
+    // POST /api/art/ellipse - Create an ellipse path art object with the given center and radii. Uses AIPathSuite to create a new path with bezier-approximated ellipse segments.
+    HttpServer::Post("/api/art/ellipse", [](const std::string& body) {
+        return HandleCreateEllipse(body);
+    });
+
+    // POST /api/art/path - Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments/SetPathSegments.
+    HttpServer::Post("/api/art/path", [](const std::string& body) {
+        return HandleCreatePath(body);
+    });
+
+    // POST /api/art/line - Create a line (open path with two segments) between two points. Uses AIPathSuite to create a new path with start and end segments.
+    HttpServer::Post("/api/art/line", [](const std::string& body) {
+        return HandleCreateLine(body);
+    });
+
+    // POST /api/dialog/save-file - Show a native file save dialog. Uses AIUserSuite::PutFileDialog to display a platform save dialog and return the selected path.
+    HttpServer::Post("/api/dialog/save-file", [](const std::string& body) {
+        return HandleShowFileSaveDialog(body);
+    });
 }

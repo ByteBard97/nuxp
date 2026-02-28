@@ -208,4 +208,39 @@ std::string HandleQueryPathItems();
  */
 std::string HandleCountItemsOnLayer(const std::string& body);
 
+/**
+ * POST /api/art/rectangle - Create a rectangle path art object at the given position and size. Uses AIPathSuite to create a new path and set four corner segments.
+ * @param body JSON: { x: number, y: number, width: number, height: number }
+ * @returns JSON: { handle: number, uuid: string }
+ */
+std::string HandleCreateRectangle(const std::string& body);
+
+/**
+ * POST /api/art/ellipse - Create an ellipse path art object with the given center and radii. Uses AIPathSuite to create a new path with bezier-approximated ellipse segments.
+ * @param body JSON: { cx: number, cy: number, rx: number, ry: number }
+ * @returns JSON: { handle: number, uuid: string }
+ */
+std::string HandleCreateEllipse(const std::string& body);
+
+/**
+ * POST /api/art/path - Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments/SetPathSegments.
+ * @param body JSON: { segments: object, closed?: bool }
+ * @returns JSON: { handle: number, uuid: string }
+ */
+std::string HandleCreatePath(const std::string& body);
+
+/**
+ * POST /api/art/line - Create a line (open path with two segments) between two points. Uses AIPathSuite to create a new path with start and end segments.
+ * @param body JSON: { x1: number, y1: number, x2: number, y2: number }
+ * @returns JSON: { handle: number, uuid: string }
+ */
+std::string HandleCreateLine(const std::string& body);
+
+/**
+ * POST /api/dialog/save-file - Show a native file save dialog. Uses AIUserSuite::PutFileDialog to display a platform save dialog and return the selected path.
+ * @param body JSON: { defaultName?: string, title?: string, fileTypes?: string[] }
+ * @returns JSON: { path: string, cancelled: bool }
+ */
+std::string HandleShowFileSaveDialog(const std::string& body);
+
 } // namespace NUXP

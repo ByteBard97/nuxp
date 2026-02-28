@@ -176,7 +176,7 @@ Three files are updated:
 |------|---------|
 | `plugin/src/endpoints/generated/CustomRouteHandlers.h` | Adds the C++ function declaration |
 | `plugin/src/endpoints/generated/CustomRouteRegistration.cpp` | Wires the HTTP route to your handler |
-| `shell/src/sdk/generated/customRoutes.ts` | Adds a typed TypeScript client function |
+| `sdk/src/generated/customRoutes.ts` | Adds a typed TypeScript client function |
 
 For our `GetArtboardCount` example, the codegen produces:
 
@@ -446,7 +446,7 @@ cd plugin && cmake --build build
 Restart Illustrator so it loads the updated `.aip` plugin, then test from the frontend:
 
 ```typescript
-import { GetArtboardCount } from '@/sdk/generated/customRoutes'
+import { GetArtboardCount } from '@nuxp/sdk/generated/customRoutes'
 
 const result = await GetArtboardCount()
 console.log(result.count)  // e.g. 3
@@ -505,7 +505,7 @@ curl http://localhost:8080/api/artboard/count
 
 ## When NOT to Use Custom Routes
 
-NUXP's auto-generated SDK wrappers already cover 442+ functions across all standard Illustrator suites. If you just need to call a single SDK function (get a property, set a value), check `shell/src/sdk/generated/` first -- it is probably already there.
+NUXP's auto-generated SDK wrappers already cover 442+ functions across all standard Illustrator suites. If you just need to call a single SDK function (get a property, set a value), check `sdk/src/generated/` first -- it is probably already there.
 
 Custom routes are the right choice when you need:
 

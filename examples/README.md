@@ -5,7 +5,7 @@
 The best way to see NUXP in action is the built-in Script Toolkit. Run:
 
 ```bash
-cd shell
+cd demo
 npm run dev
 ```
 

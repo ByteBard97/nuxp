@@ -9,11 +9,14 @@ title: Architecture
   <img src="images/nuxp-dance.gif" alt="Captain NUXP" width="200">
 </p>
 
-NUXP bridges a Vue/TypeScript frontend to Adobe Illustrator's C++ SDK via an HTTP/JSON server embedded in the plugin. The frontend (Tauri desktop app or dev server) sends HTTP requests to `localhost:8080`. The C++ plugin, loaded as a `.aip` file inside Illustrator, runs an embedded HTTP server that translates JSON requests into SDK calls and returns JSON responses.
+NUXP bridges a TypeScript frontend to Adobe Illustrator's C++ SDK via an HTTP/JSON server embedded in the plugin. Three layers are in play:
 
 ```
-Vue/TypeScript Frontend  <--HTTP/JSON-->  C++ Plugin (.aip)  <--PICA Suites-->  Adobe Illustrator
+TypeScript SDK (Bridge + AutoQueue)  <--HTTP/JSON-->  C++ Plugin (MainThreadDispatch)  <--PICA Suites-->  Adobe Illustrator
+                                     <--SSE Stream--
 ```
+
+The TypeScript SDK (`@nuxp/sdk`) serializes outgoing requests and manages event subscriptions. The C++ plugin, loaded as a `.aip` inside Illustrator, runs an embedded HTTP server that marshals requests to Illustrator's main thread and returns JSON responses. The frontend can be a Tauri desktop app, a dev server, or any HTTP client.
 
 ---
 
@@ -21,14 +24,70 @@ Vue/TypeScript Frontend  <--HTTP/JSON-->  C++ Plugin (.aip)  <--PICA Suites-->  
 
 This is the most important concept in NUXP. Get this wrong and Illustrator will crash.
 
-**Two threads are in play:**
+**Three layers handle concurrency:**
 
-| Thread | Role |
-|--------|------|
-| **HTTP server thread** | Background `std::thread` running cpp-httplib. Receives all HTTP requests. |
-| **Illustrator main thread** | The only thread where Adobe SDK calls are permitted. Runs the plugin's timer callback. |
+| Layer | Role |
+|-------|------|
+| **TypeScript AutoQueue** | Serializes outgoing HTTP requests so only one is in flight at a time. Prevents connection pool exhaustion on the C++ server. |
+| **C++ HTTP server thread** | Background `std::thread` running cpp-httplib. Receives HTTP requests and blocks until the main thread processes them. |
+| **Illustrator main thread** | The only thread where Adobe SDK calls are permitted. Drains queued work via a timer callback (~16ms). |
 
-Adobe Illustrator's SDK is not thread-safe. Every suite function pointer (`SuitePointers::AIArt()`, `SuitePointers::AIDocument()`, etc.) must be called from Illustrator's main thread. The HTTP server runs on a background thread. `MainThreadDispatch` bridges the gap.
+Adobe Illustrator's SDK is not thread-safe. Every suite function pointer (`SuitePointers::AIArt()`, `SuitePointers::AIDocument()`, etc.) must be called from Illustrator's main thread. The HTTP server runs on a background thread. `MainThreadDispatch` bridges the gap on the C++ side. The TypeScript `AutoQueue` provides client-side serialization.
+
+### Full Request Lifecycle
+
+A call from TypeScript to the Illustrator SDK passes through both queues:
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'actorBkg': '#1B3A6B',
+  'actorBorder': '#F5C518',
+  'actorTextColor': '#FFFFFF',
+  'actorLineColor': '#F5C518',
+  'signalColor': '#F5C518',
+  'signalTextColor': '#FFFFFF',
+  'noteBkgColor': '#C41E24',
+  'noteTextColor': '#FFFFFF',
+  'noteBorderColor': '#F5C518',
+  'activationBkgColor': '#1B3A6B',
+  'activationBorderColor': '#F5C518',
+  'sequenceNumberColor': '#FFFFFF'
+}}}%%
+sequenceDiagram
+    participant App as Your TypeScript Code
+    participant AQ as AutoQueue
+    participant HTTP as HTTP Server Thread
+    participant MTD as MainThreadDispatch
+    participant AI as Illustrator Main Thread
+
+    App->>AQ: bridge.callSuite('AIArt', 'GetArtName', { art })
+    Note over AQ: Waits if another call is in flight
+    AQ->>HTTP: POST /api/call { suite, method, args }
+    HTTP->>MTD: Run(lambda)
+    Note over HTTP: Blocked (cv.wait)
+    AI->>MTD: Timer callback (~16ms) drains queue
+    MTD->>AI: Execute lambda (SDK call)
+    AI-->>MTD: Result (JSON)
+    MTD-->>HTTP: cv.notify
+    HTTP-->>AQ: HTTP 200 { success, result }
+    AQ-->>App: Promise resolves
+    Note over AQ: Dequeues next pending call
+```
+
+**Why two queues?** They solve different problems:
+- **AutoQueue (TypeScript)** prevents connection pool exhaustion. The C++ HTTP server blocks one server thread per in-flight request (waiting on `condition_variable`). Flooding it with concurrent requests would exhaust server threads and cause timeouts.
+- **MainThreadDispatch (C++)** ensures thread safety. SDK calls must happen on Illustrator's main thread, period. The work queue + timer callback pattern marshals execution from the HTTP thread to the main thread.
+
+**`batch()` bypasses AutoQueue.** When you have multiple independent calls (e.g., fetching names for 10 art objects), `Bridge.batch()` sends them as parallel HTTP requests. The C++ `MainThreadDispatch` still serializes their execution on the main thread, but you eliminate the HTTP round-trip gap between each call. Use `batch()` when calls don't depend on each other.
+
+### Server-Sent Events (Reverse Channel)
+
+While HTTP request/response handles commands, SSE provides real-time push events from Illustrator to the frontend:
+
+- Selection changes, document lifecycle, layer modifications, art changes
+- Persistent EventSource connection to `/events/stream`
+- Automatic reconnection with back-off (capped at 5x base delay, max 10 attempts)
+- Independent of the HTTP request path — events arrive regardless of pending calls
 
 ### How MainThreadDispatch Works
 
@@ -241,13 +300,13 @@ flowchart TB
     end
 
     subgraph Output_CPP [" C++ Output (plugin/src/endpoints/generated/) "]
-        Wrappers["FloraAI*SuiteWrapper.h (one per suite)"]
+        Wrappers["AI*SuiteWrapper.h (one per suite)"]
         Central["CentralDispatcher.h"]
         CRHandlers["CustomRouteHandlers.h"]
         CRReg["CustomRouteRegistration.cpp"]
     end
 
-    subgraph Output_TS [" TypeScript Output (shell/src/sdk/generated/) "]
+    subgraph Output_TS [" TypeScript Output (sdk/src/generated/) "]
         TsClients["ai*.ts (one per suite)"]
         TsCustom["customRoutes.ts"]
     end
@@ -279,7 +338,7 @@ flowchart TB
    - **Enum** -- `AIArtType`, etc. Mapped to integers.
    - **Error** -- `ASErr` return values. Checked for `kNoErr`.
 
-3. **Generate C++**: `CppGenerator` produces a `FloraAI*SuiteWrapper.h` for each suite. Each wrapper has a `Dispatch(method, params)` function that switches on method name, extracts params from JSON, calls the SDK, and returns JSON.
+3. **Generate C++**: `CppGenerator` produces an `AI*SuiteWrapper.h` for each suite. Each wrapper has a `Dispatch(method, params)` function that switches on method name, extracts params from JSON, calls the SDK, and returns JSON.
 
 4. **Generate TypeScript**: `TypeScriptGenerator` produces a matching `ai*.ts` file for each suite, with typed function signatures that call `callCpp(suite, method, args)`.
 
@@ -300,7 +359,7 @@ This script:
 1. Installs codegen npm dependencies if needed
 2. Runs `npm run generate` in `codegen/`
 3. Copies generated C++ to `plugin/src/endpoints/generated/`
-4. Copies generated TypeScript to `shell/src/sdk/generated/`
+4. Copies generated TypeScript to `sdk/src/generated/`
 
 CMake also provides targets:
 ```bash
@@ -338,7 +397,7 @@ flowchart TB
     Custom --> Handler["Hand-written Handler"]
     Handler --> MTD3["MainThreadDispatch::Run()"]
 
-    MTD1 --> CD["Flora::Dispatch(suite, method, args)"]
+    MTD1 --> CD["CentralDispatcher::Dispatch(suite, method, args)"]
     MTD2 --> CD
     CD --> Wrapper["Generated Suite Wrapper"]
     Wrapper --> SDKCall["SDK Function Call"]
@@ -363,13 +422,15 @@ POST /AIArtSuite/NewArt
 Body: { "type": 1 }
 ```
 
-Both go through `MainThreadDispatch::Run()`, then `Flora::Dispatch()`, then the generated wrapper. The `/api/call` form is preferred for the TypeScript SDK. The `/{suite}/{method}` shorthand is a regex catch-all (`R"(/(\w+)/(\w+))"`) registered last so it does not shadow custom routes.
+Both go through `MainThreadDispatch::Run()`, then `CentralDispatcher::Dispatch()`, then the generated wrapper. The `/api/call` form is preferred for the TypeScript SDK. The `/{suite}/{method}` shorthand is a regex catch-all (`R"(/(\w+)/(\w+))"`) registered last so it does not shadow custom routes.
 
 ### Path 2: Custom Routes
 
 Defined in `routes.json`, wired by generated `CustomRouteRegistration.cpp`, implemented in hand-written `.cpp` files under `plugin/src/endpoints/handwritten/`.
 
 Custom routes are registered **before** the generic suite dispatcher to ensure specific paths like `/api/selection` are not captured by the `/{suite}/{method}` regex.
+
+Planned custom routes (defined in `routes.json`, C++ handlers not yet implemented) include shape creation endpoints (`CreateRectangle`, `CreateEllipse`, `CreatePath`, `CreateLine`) and a native file save dialog (`ShowFileSaveDialog`). Once their C++ handlers are written, the TypeScript clients will be auto-generated.
 
 There are two sub-types:
 
@@ -458,4 +519,96 @@ std::string HandleMyNewEndpoint(const std::string& body) {
 
 4. **Build**: `cd plugin && cmake --build build`
 
-The TypeScript client function is generated automatically in `shell/src/sdk/generated/customRoutes.ts`.
+The TypeScript client function is generated automatically in `sdk/src/generated/customRoutes.ts`.
+
+---
+
+## 6. TypeScript SDK (`@nuxp/sdk`)
+
+The SDK package (`sdk/`) is a framework-agnostic TypeScript library that provides the complete communication and utility layer between any frontend and the C++ plugin. It is consumed by the demo app via `workspace:*` and by downstream projects (like flora-uxp) via git submodule.
+
+### Module Overview
+
+```
+sdk/src/
+├── bridge/         # Bridge, AutoQueue — core communication
+├── adapters/       # HTTP, SSE, Plugin, Document, Placement
+├── services/       # Settings, logging, fonts, appearance, assets, SVG, symbols, document index
+├── geometry/       # Coordinate transforms, artboard bounds
+├── primitives/     # Low-level art/text/group/layer/duplication (dependency-injected)
+├── generated/      # Auto-generated suite clients (19 suites, 442+ functions)
+├── tauri/          # Desktop filesystem and dialog wrappers
+├── utils/          # Async safety, environment detection, unit conversions
+├── schemas/        # Zod validation schemas for document responses
+└── types/          # Shared type definitions
+```
+
+### Adapters
+
+Adapters wrap communication patterns into reusable, composable layers:
+
+| Adapter | Purpose |
+|---------|---------|
+| **HttpAdapter** | HTTP transport with configurable base URL, retry logic, and timeout handling |
+| **SSEAdapter** | Typed Server-Sent Events with automatic reconnection and backoff |
+| **PluginAdapter** | Composes HttpAdapter + SSEAdapter into a unified interface with environment detection |
+| **DocumentAdapter** | 5 generic document operations: `getDocumentInfo`, `getArtboards`, `getSelection`, `getLayers`, `getDocumentItems` |
+| **PlacementAdapter** | 7 placement workflow functions: `placeItem`, `positionItem`, `scaleItem`, `rotateItem`, `groupItems`, `ungroupItems`, `deleteItems` |
+
+### Services
+
+| Service | Purpose |
+|---------|---------|
+| **LoggerService** | Per-module logging with ring buffer, console interception, and persistent config |
+| **SettingsService** | Type-safe localStorage persistence with schema validation |
+| **FontConfigService** | Font enumeration, caching, and lookup |
+| **AppearanceConfigService** | UI theme and preset management |
+| **AssetCache** | In-memory asset caching with LRU eviction |
+| **SvgLoader** | SVG loading from URLs and local paths |
+| **SvgPlacementService** | SVG metadata extraction and placement coordinate calculation |
+| **SymbolManagementService** | Illustrator symbol import and lifecycle management |
+| **DocumentIndexService** | Typed item indexing stored in document XMP metadata |
+
+### Primitives
+
+Low-level art and text manipulation functions that use dependency injection via `BridgeCallFn` — they accept a bridge call function as a parameter rather than importing a global bridge, making them testable and composable.
+
+| Module | Functions | Description |
+|--------|-----------|-------------|
+| **art.ts** | `getArtBounds`, `transformArt`, `setArtVisibility`, `getArtChildren`, `getGroupChildByType`, `setArtName`, `deleteArt`, `findArtByName`, `getArtboardInfo` | Core art object queries and transforms |
+| **text.ts** | `setTextFont`, `setTextFontSize`, `setTextContent`, `getPathSegments` | Text styling and path segment access |
+| **group.ts** | `createGroup`, `addToGroup`, `ungroup`, `getGroupChildren` | Group creation, child iteration, ungrouping |
+| **layer.ts** | `getLayerByName`, `createLayer`, `getLayerArt`, `getAllLayers` | Layer queries, creation, art enumeration |
+| **duplication.ts** | `duplicateArt`, `duplicateArtToPosition` | Art cloning and repositioning |
+
+The group, layer, and duplication primitives compose auto-generated `AIArtSuite` and `AILayerSuite` functions internally, providing higher-level operations while maintaining the same dependency-injection pattern.
+
+### Geometry
+
+| Module | Purpose |
+|--------|---------|
+| **CoordinateSystemManager** | 30+ static methods for coordinate system conversions (D3 ↔ Illustrator), bounds operations (get, inset, expand, intersect, validate), point transforms (translate, rotate, scale), polygon area/centroid, circle overlap detection, and unit conversions (inches ↔ points ↔ feet, drawing scale application) |
+| **ArtboardBoundsManager** | Artboard bounds calculations, artboard-relative positioning |
+
+### Tauri Desktop Integration
+
+| Module | Purpose |
+|--------|---------|
+| **tauriFs** | Filesystem wrappers: `exists`, `mkdir`, `readTextFile`, `writeTextFile`, `remove` |
+| **TauriDialogService** | Save dialogs: `saveTextFile`, `saveBinaryFile` |
+
+### Utilities
+
+| Module | Purpose |
+|--------|---------|
+| **apiHelpers** | HTTP result parsing and error extraction |
+| **asyncErrorHandling** | Safe async wrappers to prevent unhandled rejections |
+| **contrastChecker** | Color contrast ratio calculation for accessibility |
+| **sizeCalculator** | Unit conversions (inches, points, feet, drawing scales) |
+| **environment** | Runtime environment detection (Tauri, browser, mock mode) |
+
+### Schemas
+
+Zod validation schemas for document responses, used to validate data at the boundary between the SDK and the C++ plugin:
+
+`InitializeDocumentResponseSchema`, `ArtboardInfoSchema`, `CreateArtboardResponseSchema`, `SuccessResponseSchema`, `ViewZoomResponseSchema`, and associated parsing helpers.

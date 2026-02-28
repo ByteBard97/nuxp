@@ -137,23 +137,29 @@ Content-Type: application/json
 Subscribe to real-time events from Illustrator:
 
 ```http
-GET /events
+GET /events/stream
 ```
 
-This returns an SSE stream. Events include:
-- Document changes
-- Selection changes
-- Layer modifications
-- Heartbeat (every 30 seconds)
+This returns an SSE stream with typed events:
 
-**Example event:**
-```
-event: selectionChanged
-data: {"count": 3}
+| Event | Payload | Fires When |
+|-------|---------|------------|
+| `selection` | `{ count, selectedIds }` | Selection changes |
+| `document` | `{ type, documentName }` | Document opened, closed, or switched |
+| `layers` | `{ layerCount }` | Layers added, removed, or reordered |
+| `artChanged` | `{ artIds, changeType }` | Art objects created, modified, or deleted |
+| `version` | `{ version, build }` | Sent once on initial connection |
 
-event: heartbeat
-data: {"timestamp": 1234567890}
+**Example events:**
 ```
+event: selection
+data: {"count": 3, "selectedIds": [1, 2, 3]}
+
+event: document
+data: {"type": "activated", "documentName": "my-design.ai"}
+```
+
+The TypeScript SDK provides a typed `SSEAdapter` that wraps EventSource with automatic reconnection. See [`sdk/README.md`](../../sdk/README.md) for usage.
 
 ---
 
@@ -197,18 +203,24 @@ Common error codes:
 
 ## TypeScript SDK
 
-The frontend shell includes a TypeScript SDK that wraps these endpoints:
+The `@nuxp/sdk` package wraps these endpoints with typed Bridge calls, request serialization, and event streaming:
 
 ```typescript
-import { callCpp } from '@/sdk/bridge'
+import { createBridge, setBridgeInstance, connectSSE } from '@nuxp/sdk'
 
-// Generic call
-const result = await callCpp('AIDocument', 'GetDocument', {})
+// Setup
+const bridge = createBridge({ port: 8080 })
+setBridgeInstance(bridge)
 
-// Or use generated suite clients
-import { AIDocumentSuite } from '@/sdk/generated'
-const doc = await AIDocumentSuite.GetDocument()
+// Suite call
+const result = await bridge.callSuite('AIDocument', 'GetDocument', {})
+
+// Events
+const sse = connectSSE({ serverUrl: 'http://localhost:8080' })
+sse.on('selection', (data) => console.log(data.count))
 ```
+
+See [`sdk/README.md`](../../sdk/README.md) for full SDK documentation.
 
 ---
 

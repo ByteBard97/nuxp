@@ -145,13 +145,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-codegen-
 
-      - name: Cache npm dependencies (shell)
+      - name: Cache npm dependencies (demo)
         uses: actions/cache@v4
         with:
-          path: shell/node_modules
-          key: ${{ runner.os }}-shell-${{ hashFiles('shell/package-lock.json', 'shell/package.json') }}
+          path: demo/node_modules
+          key: ${{ runner.os }}-demo-${{ hashFiles('demo/package-lock.json', 'demo/package.json') }}
           restore-keys: |
-            ${{ runner.os }}-shell-
+            ${{ runner.os }}-demo-
 
       - name: Install codegen dependencies
         run: npm ci || npm install
@@ -165,18 +165,18 @@ jobs:
         run: npm test
         working-directory: codegen
 
-      - name: Install shell dependencies
+      - name: Install demo dependencies
         run: npm ci || npm install
-        working-directory: shell
+        working-directory: demo
 
-      - name: Build shell
+      - name: Build demo
         run: npm run build
-        working-directory: shell
+        working-directory: demo
 
       - name: Package frontend
         run: |
           mkdir -p release
-          cp -r shell/dist release/shell
+          cp -r demo/dist release/demo
           cp -r codegen/dist release/codegen
           cd release && zip -r ../nuxp-frontend.zip .
 
@@ -231,7 +231,7 @@ jobs:
           |----------|------|
           | macOS Plugin | `nuxp-plugin-mac.zip` |
           | Windows Plugin | `nuxp-plugin-win.zip` |
-          | Frontend (Shell + Codegen) | `nuxp-frontend.zip` |
+          | Frontend (Demo + Codegen) | `nuxp-frontend.zip` |
 
           ### Installation
 
@@ -245,7 +245,7 @@ jobs:
 
           #### Frontend Setup
           1. Download and extract `nuxp-frontend.zip`
-          2. Open `shell/index.html` in a browser or serve with a local HTTP server
+          2. Open `demo/index.html` in a browser or serve with a local HTTP server
           3. Connect to the plugin's HTTP endpoint (default: `http://localhost:8080`)
 
           ### Requirements
