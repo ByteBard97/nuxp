@@ -117,6 +117,9 @@ class SSEClient {
       this.registerHandler('layers');
       this.registerHandler('artChanged');
       this.registerHandler('version');
+      this.registerHandler('click');
+      this.registerHandler('deleted');
+      this.registerHandler('paste');
     } catch (error) {
       console.error('[SSE] Failed to create EventSource:', error);
       this.handleDisconnect();

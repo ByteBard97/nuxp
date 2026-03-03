@@ -55,8 +55,30 @@ export interface VersionEvent {
 // Event Type Union and Map
 // ---------------------------------------------------------------------------
 
+/** Fired when the Flora click tool is used on the artboard. */
+export interface ClickEvent {
+  /** X coordinate of the click */
+  x: number
+  /** Y coordinate of the click */
+  y: number
+  /** Artboard index */
+  artboard: number
+}
+
+/** Fired when art objects are deleted (e.g. cascade delete of plant entities). */
+export interface DeletedEvent {
+  /** UUIDs of deleted items */
+  uuids: string[]
+}
+
+/** Fired when a paste operation is detected. */
+export interface PasteEvent {
+  /** UUIDs of pasted items */
+  uuids: string[]
+}
+
 /** All recognised event names. */
-export type EventName = 'selection' | 'document' | 'layers' | 'artChanged' | 'version'
+export type EventName = 'selection' | 'document' | 'layers' | 'artChanged' | 'version' | 'click' | 'deleted' | 'paste'
 
 /** Maps event names to their payload types. */
 export interface EventPayloadMap {
@@ -65,6 +87,9 @@ export interface EventPayloadMap {
   layers: LayersEvent
   artChanged: ArtChangedEvent
   version: VersionEvent
+  click: ClickEvent
+  deleted: DeletedEvent
+  paste: PasteEvent
 }
 
 /** Strongly-typed callback for a specific event. */
@@ -104,6 +129,9 @@ const ALL_EVENT_NAMES: readonly EventName[] = [
   'layers',
   'artChanged',
   'version',
+  'click',
+  'deleted',
+  'paste',
 ] as const
 
 // ---------------------------------------------------------------------------
