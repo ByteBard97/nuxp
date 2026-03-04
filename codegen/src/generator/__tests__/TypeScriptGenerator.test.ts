@@ -572,7 +572,7 @@ describe('TypeScriptGenerator', () => {
             const suite = mockSuite([]);
             const file = generator.generate(suite);
 
-            expect(file.content).toContain("import { callCpp } from '@/sdk/bridge'");
+            expect(file.content).toContain("import { callCpp } from './_bridge'");
         });
 
         it('should define SUITE_NAME constant', () => {
@@ -772,7 +772,7 @@ describe('TypeScriptGenerator', () => {
 
             expect(file.filename).toBe('AIArtSuite.ts');
             expect(file.content).toContain('AIArtSuite client functions');
-            expect(file.content).toContain("import { callCpp } from '@/sdk/bridge'");
+            expect(file.content).toContain("import { callCpp } from './_bridge'");
             expect(file.content).toContain("const SUITE_NAME = 'AIArtSuite'");
         });
 

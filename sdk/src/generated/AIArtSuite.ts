@@ -3,7 +3,7 @@
  * Auto-generated from Adobe Illustrator SDK
  */
 
-import { callCpp } from '@/sdk/bridge';
+import { callCpp } from './_bridge';
 import { AIRealMatrix, AIRealRect } from './types';
 
 const SUITE_NAME = 'AIArtSuite';

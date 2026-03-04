@@ -598,7 +598,7 @@ describe('CustomRouteGenerator', () => {
             it('should include import from config for getApiUrl', () => {
                 const result = generator.generateTypeScript();
 
-                expect(result.content).toContain("from '../config'");
+                expect(result.content).toContain("from './_config'");
                 expect(result.content).toContain('getApiUrl');
             });
         });

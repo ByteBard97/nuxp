@@ -298,7 +298,7 @@ describe('SSEGenerator', () => {
             it('should include config import', () => {
                 const result = generator.generateTypeScript();
 
-                expect(result.content).toContain("import { getApiUrl, sdkConfig } from '../config'");
+                expect(result.content).toContain("import { getApiUrl, sdkConfig } from './_config'");
             });
         });
 

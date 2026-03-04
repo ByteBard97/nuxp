@@ -224,7 +224,7 @@ std::string HandleCreateEllipse(const std::string& body);
 
 /**
  * POST /api/art/path - Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments&#x2F;SetPathSegments.
- * @param body JSON: { segments: object, closed?: bool }
+ * @param body JSON: { segments: object[], closed?: bool }
  * @returns JSON: { handle: number, uuid: string }
  */
 std::string HandleCreatePath(const std::string& body);
@@ -249,6 +249,12 @@ std::string HandleShowFileSaveDialog(const std::string& body);
  * @returns JSON: { success: bool, svgContent: string, filePath: string, message: string }
  */
 std::string HandleExportSvgViaAction(const std::string& body);
+
+/**
+ * POST /api/export/selection-svg - Export only the current selection as SVG. Hides all layers, duplicates selection to a temp layer, exports, reads back SVG content, then restores layer state.
+ * @returns JSON: { success: bool, svgContent: string, filePath: string, artBounds: object, message: string }
+ */
+std::string HandleExportSelectionAsSvg();
 
 /**
  * POST /api/export/svg-via-fileformat - Export current document as SVG using AIFileFormatSuite::GoExport with SVG format parameters. Returns SVG file content as a string.

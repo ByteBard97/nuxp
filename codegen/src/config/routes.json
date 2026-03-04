@@ -438,7 +438,7 @@
       "path": "/api/art/path",
       "description": "Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments/SetPathSegments.",
       "request": {
-        "segments": { "type": "object", "description": "Array of { p: {h,v}, in: {h,v}, out: {h,v}, corner: boolean }" },
+        "segments": { "type": "object[]", "description": "Array of { p: {h,v}, in: {h,v}, out: {h,v}, corner: boolean }" },
         "closed": { "type": "boolean", "description": "Whether the path is closed (default false)", "optional": true }
       },
       "response": {
@@ -490,6 +490,19 @@
         "success": { "type": "boolean", "description": "Whether export succeeded" },
         "svgContent": { "type": "string", "description": "SVG file content as string (only if outputPath was empty/omitted)" },
         "filePath": { "type": "string", "description": "Path where SVG was written" },
+        "message": { "type": "string", "description": "Error or status message" }
+      }
+    },
+    {
+      "name": "ExportSelectionAsSvg",
+      "method": "POST",
+      "path": "/api/export/selection-svg",
+      "description": "Export only the current selection as SVG. Hides all layers, duplicates selection to a temp layer, exports, reads back SVG content, then restores layer state.",
+      "response": {
+        "success": { "type": "boolean", "description": "Whether export succeeded" },
+        "svgContent": { "type": "string", "description": "SVG file content as string" },
+        "filePath": { "type": "string", "description": "Path where SVG was written" },
+        "artBounds": { "type": "object", "description": "Bounding box of exported art: { left, top, right, bottom, width, height }" },
         "message": { "type": "string", "description": "Error or status message" }
       }
     },

@@ -222,6 +222,11 @@ void RegisterCustomRoutes() {
         return HandleExportSvgViaAction(body);
     });
 
+    // POST /api/export/selection-svg - Export only the current selection as SVG. Hides all layers, duplicates selection to a temp layer, exports, reads back SVG content, then restores layer state.
+    HttpServer::Post("/api/export/selection-svg", [](const std::string&) {
+        return HandleExportSelectionAsSvg();
+    });
+
     // POST /api/export/svg-via-fileformat - Export current document as SVG using AIFileFormatSuite::GoExport with SVG format parameters. Returns SVG file content as a string.
     HttpServer::Post("/api/export/svg-via-fileformat", [](const std::string& body) {
         return HandleExportSvgViaFileFormat(body);

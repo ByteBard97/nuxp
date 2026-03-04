@@ -744,7 +744,7 @@ export class TypeScriptGenerator {
  * Auto-generated from Adobe Illustrator SDK
  */
 
-import { callCpp } from '@/sdk/bridge';
+import { callCpp } from './_bridge';
 {{#hasStructImports}}
 import { {{{structImportList}}} } from './types';
 {{/hasStructImports}}

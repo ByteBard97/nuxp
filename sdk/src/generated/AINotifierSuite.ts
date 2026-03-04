@@ -3,32 +3,9 @@
  * Auto-generated from Adobe Illustrator SDK
  */
 
-import { callCpp } from '@/sdk/bridge';
+import { callCpp } from './_bridge';
 
 const SUITE_NAME = 'AINotifierSuite';
-
-/**
- * Adds a new item.
- * @param self - The Self value
- * @param name - The name string
- * @param type - The type value
- * @param options - The point coordinates
- * @returns The notifier value
- */
-export async function AddNotifierEx(self: any, name: string, type: string, options: any): Promise<number> {
-    const result = await callCpp<{ notifier: number }>(SUITE_NAME, 'AddNotifierEx', { self, name, type, options });
-    return result.notifier;
-}
-
-/**
- * Retrieves the notifier options of an object.
- * @param notifier - The Notifier value
- * @returns The options value
- */
-export async function GetNotifierOptions(notifier: number): Promise<any> {
-    const result = await callCpp<{ options: any }>(SUITE_NAME, 'GetNotifierOptions', { notifier });
-    return result.options;
-}
 
 /**
  * Retrieves the notifier active of an object.
