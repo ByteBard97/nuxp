@@ -476,6 +476,37 @@
         "path": { "type": "string", "description": "Selected file path (empty string if cancelled)" },
         "cancelled": { "type": "boolean", "description": "Whether the user cancelled the dialog" }
       }
+    },
+
+    {
+      "name": "ExportSvgViaAction",
+      "method": "POST",
+      "path": "/api/export/svg-via-action",
+      "description": "Export current document as SVG using AIActionManagerSuite::PlayActionEvent with adobe_exportDocument action and kDialogOff. Returns SVG file content as a string.",
+      "request": {
+        "outputPath": { "type": "string", "description": "Destination file path for SVG output. If empty, uses a temp file.", "optional": true }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether export succeeded" },
+        "svgContent": { "type": "string", "description": "SVG file content as string (only if outputPath was empty/omitted)" },
+        "filePath": { "type": "string", "description": "Path where SVG was written" },
+        "message": { "type": "string", "description": "Error or status message" }
+      }
+    },
+    {
+      "name": "ExportSvgViaFileFormat",
+      "method": "POST",
+      "path": "/api/export/svg-via-fileformat",
+      "description": "Export current document as SVG using AIFileFormatSuite::GoExport with SVG format parameters. Returns SVG file content as a string.",
+      "request": {
+        "outputPath": { "type": "string", "description": "Destination file path for SVG output. If empty, uses a temp file.", "optional": true }
+      },
+      "response": {
+        "success": { "type": "boolean", "description": "Whether export succeeded" },
+        "svgContent": { "type": "string", "description": "SVG file content as string (only if outputPath was empty/omitted)" },
+        "filePath": { "type": "string", "description": "Path where SVG was written" },
+        "message": { "type": "string", "description": "Error or status message" }
+      }
     }
   ]
 }

@@ -8,6 +8,62 @@ extern "C" AINotifierSuite* sNotifier;
 namespace Flora {
 namespace AINotifierSuite {
 
+nlohmann::json AddNotifierEx(const nlohmann::json& params) {
+    nlohmann::json response;
+
+    // Unknown type: self (SPPluginRef)
+    // WARNING: Using default initialization
+    SPPluginRef self{};
+    // Input string: name
+    std::string name_str = params["name"].get<std::string>();
+    const char* name = name_str.c_str();
+    // Input string: type
+    std::string type_str = params["type"].get<std::string>();
+    const char* type = type_str.c_str();
+    // Unknown type: options (AINotifierOptions)
+    // WARNING: Using default initialization
+    AINotifierOptions options{};
+    // Output handle: notifier
+    AINotifierHandle notifier = nullptr;
+
+    // Call SDK function (returns AIErr)
+    AIErr err = sNotifier->AddNotifierEx(self, name, type, options, &notifier);
+    if (err != kNoErr) {
+        throw std::runtime_error("AddNotifierEx failed with error: " + std::to_string(err));
+    }
+
+    // Marshal output handle: notifier
+    if (notifier) {
+        response["notifier"] = HandleManager::notifiers.Register(notifier);
+    } else {
+        response["notifier"] = -1;
+    }
+
+    return response;
+}
+
+nlohmann::json GetNotifierOptions(const nlohmann::json& params) {
+    nlohmann::json response;
+
+    // Input handle: notifier
+    AINotifierHandle notifier_val = HandleManager::notifiers.Get(params["notifier"].get<int32_t>());
+    if (!notifier_val) {
+        throw std::runtime_error("Invalid AINotifierHandle handle for parameter 'notifier'");
+    }
+    // Output unknown: options
+    AINotifierOptions options{};
+
+    // Call SDK function (returns AIErr)
+    AIErr err = sNotifier->GetNotifierOptions(notifier_val, options);
+    if (err != kNoErr) {
+        throw std::runtime_error("GetNotifierOptions failed with error: " + std::to_string(err));
+    }
+
+    // Unable to marshal unknown type: options
+
+    return response;
+}
+
 nlohmann::json GetNotifierActive(const nlohmann::json& params) {
     nlohmann::json response;
 
@@ -117,7 +173,11 @@ nlohmann::json GetNthNotifier(const nlohmann::json& params) {
 }
 
 nlohmann::json Dispatch(const std::string& method, const nlohmann::json& params) {
-    if (method == "GetNotifierActive") {
+    if (method == "AddNotifierEx") {
+        return AddNotifierEx(params);
+    } else if (method == "GetNotifierOptions") {
+        return GetNotifierOptions(params);
+    } else if (method == "GetNotifierActive") {
         return GetNotifierActive(params);
     } else if (method == "SetNotifierActive") {
         return SetNotifierActive(params);

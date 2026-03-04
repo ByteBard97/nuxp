@@ -45,6 +45,8 @@ AIMaskSuite *SuitePointers::sAIMask = nullptr;
 AINotifierSuite *SuitePointers::sAINotifier = nullptr;
 AITimerSuite *SuitePointers::sAITimer = nullptr;
 AIDocumentViewSuite *SuitePointers::sAIDocumentView = nullptr;
+AIActionManagerSuite *SuitePointers::sAIActionManager = nullptr;
+AIFileFormatSuite *SuitePointers::sAIFileFormat = nullptr;
 
 bool SuitePointers::sAcquired = false;
 
@@ -75,6 +77,8 @@ AIMaskSuite *sMask = nullptr;
 AINotifierSuite *sNotifier = nullptr;
 AITimerSuite *sTimer = nullptr;
 AIDocumentViewSuite *sDocumentView = nullptr;
+AIActionManagerSuite *sActionManager = nullptr;
+AIFileFormatSuite *sFileFormat = nullptr;
 
 // -------------------------------------------------------------------------
 // Global Suite Pointers for SDK Implementation Files (IAI*.cpp)
@@ -161,6 +165,9 @@ ASErr SuitePointers::Acquire() {
   ACQUIRE_SUITE(kAITimerSuite, AITimer, kAITimerSuiteVersion);
   ACQUIRE_SUITE(kAIDocumentViewSuite, AIDocumentView,
                 kAIDocumentViewSuiteVersion);
+  ACQUIRE_SUITE(kAIActionManagerSuite, AIActionManager,
+                kAIActionManagerSuiteVersion);
+  ACQUIRE_SUITE(kAIFileFormatSuite, AIFileFormat, kAIFileFormatSuiteVersion);
 
   // Acquire SDK implementation suites (for IAI*.cpp files)
   {
@@ -228,6 +235,8 @@ ASErr SuitePointers::Acquire() {
   sNotifier = sAINotifier;
   sTimer = sAITimer;
   sDocumentView = sAIDocumentView;
+  sActionManager = sAIActionManager;
+  sFileFormat = sAIFileFormat;
 
   sAcquired = true;
   return kNoErr;
@@ -268,6 +277,9 @@ void SuitePointers::Release() {
   RELEASE_SUITE(kAITimerSuite, AITimer, kAITimerSuiteVersion);
   RELEASE_SUITE(kAIDocumentViewSuite, AIDocumentView,
                 kAIDocumentViewSuiteVersion);
+  RELEASE_SUITE(kAIActionManagerSuite, AIActionManager,
+                kAIActionManagerSuiteVersion);
+  RELEASE_SUITE(kAIFileFormatSuite, AIFileFormat, kAIFileFormatSuiteVersion);
 
   // Release SDK implementation suites
   if (sAIUnicodeString) {
@@ -309,6 +321,8 @@ void SuitePointers::Release() {
   sNotifier = nullptr;
   sTimer = nullptr;
   sDocumentView = nullptr;
+  sActionManager = nullptr;
+  sFileFormat = nullptr;
 
   sAcquired = false;
 }
@@ -376,6 +390,12 @@ AITimerSuite *SuitePointers::AITimer() { return sAITimer; }
 AIDocumentViewSuite *SuitePointers::AIDocumentView() {
   return sAIDocumentView;
 }
+
+AIActionManagerSuite *SuitePointers::AIActionManager() {
+  return sAIActionManager;
+}
+
+AIFileFormatSuite *SuitePointers::AIFileFormat() { return sAIFileFormat; }
 
 // -------------------------------------------------------------------------
 // Cleanup Macros

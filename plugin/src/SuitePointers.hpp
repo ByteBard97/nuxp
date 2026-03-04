@@ -17,9 +17,11 @@
 #include "IllustratorSDK.h"
 
 // Additional SDK headers for suite types not included by IllustratorSDK.h
+#include "AIActionManager.h"
 #include "AIArtboard.h"
 #include "AIDocumentList.h"
 #include "AIDocumentView.h"
+#include "AIFileFormat.h"
 #include "AIGroup.h"
 #include "AITransformArt.h"
 
@@ -133,6 +135,12 @@ public:
   /** Document view suite - zoom, scroll, screen mode */
   static AIDocumentViewSuite *AIDocumentView();
 
+  /** Action manager suite - playback of built-in actions (export, save, etc.) */
+  static AIActionManagerSuite *AIActionManager();
+
+  /** File format suite - file format operations (export, place) */
+  static AIFileFormatSuite *AIFileFormat();
+
 private:
   // Prevent instantiation
   SuitePointers() = delete;
@@ -165,6 +173,8 @@ private:
   static AINotifierSuite *sAINotifier;
   static AITimerSuite *sAITimer;
   static AIDocumentViewSuite *sAIDocumentView;
+  static AIActionManagerSuite *sAIActionManager;
+  static AIFileFormatSuite *sAIFileFormat;
 
   // Track if suites are acquired
   static bool sAcquired;

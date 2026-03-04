@@ -223,7 +223,7 @@ std::string HandleCreateRectangle(const std::string& body);
 std::string HandleCreateEllipse(const std::string& body);
 
 /**
- * POST /api/art/path - Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments/SetPathSegments.
+ * POST /api/art/path - Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments&#x2F;SetPathSegments.
  * @param body JSON: { segments: object, closed?: bool }
  * @returns JSON: { handle: number, uuid: string }
  */
@@ -242,5 +242,19 @@ std::string HandleCreateLine(const std::string& body);
  * @returns JSON: { path: string, cancelled: bool }
  */
 std::string HandleShowFileSaveDialog(const std::string& body);
+
+/**
+ * POST /api/export/svg-via-action - Export current document as SVG using AIActionManagerSuite::PlayActionEvent with adobe_exportDocument action and kDialogOff. Returns SVG file content as a string.
+ * @param body JSON: { outputPath?: string }
+ * @returns JSON: { success: bool, svgContent: string, filePath: string, message: string }
+ */
+std::string HandleExportSvgViaAction(const std::string& body);
+
+/**
+ * POST /api/export/svg-via-fileformat - Export current document as SVG using AIFileFormatSuite::GoExport with SVG format parameters. Returns SVG file content as a string.
+ * @param body JSON: { outputPath?: string }
+ * @returns JSON: { success: bool, svgContent: string, filePath: string, message: string }
+ */
+std::string HandleExportSvgViaFileFormat(const std::string& body);
 
 } // namespace NUXP

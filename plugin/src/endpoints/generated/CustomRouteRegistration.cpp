@@ -202,7 +202,7 @@ void RegisterCustomRoutes() {
         return HandleCreateEllipse(body);
     });
 
-    // POST /api/art/path - Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments/SetPathSegments.
+    // POST /api/art/path - Create a new path art object from an array of segments. Uses AIPathSuite to create a new path and set segments. Segment format matches GetPathSegments&#x2F;SetPathSegments.
     HttpServer::Post("/api/art/path", [](const std::string& body) {
         return HandleCreatePath(body);
     });
@@ -215,5 +215,15 @@ void RegisterCustomRoutes() {
     // POST /api/dialog/save-file - Show a native file save dialog. Uses AIUserSuite::PutFileDialog to display a platform save dialog and return the selected path.
     HttpServer::Post("/api/dialog/save-file", [](const std::string& body) {
         return HandleShowFileSaveDialog(body);
+    });
+
+    // POST /api/export/svg-via-action - Export current document as SVG using AIActionManagerSuite::PlayActionEvent with adobe_exportDocument action and kDialogOff. Returns SVG file content as a string.
+    HttpServer::Post("/api/export/svg-via-action", [](const std::string& body) {
+        return HandleExportSvgViaAction(body);
+    });
+
+    // POST /api/export/svg-via-fileformat - Export current document as SVG using AIFileFormatSuite::GoExport with SVG format parameters. Returns SVG file content as a string.
+    HttpServer::Post("/api/export/svg-via-fileformat", [](const std::string& body) {
+        return HandleExportSvgViaFileFormat(body);
     });
 }

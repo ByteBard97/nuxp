@@ -8,6 +8,23 @@ namespace Flora {
 namespace AINotifierSuite {
 
 /**
+ * Wrapper for AINotifierSuite::AddNotifierEx
+ * @param params["self"] - SPPluginRef
+ * @param params["name"] - const char
+ * @param params["type"] - const char
+ * @param params["options"] - AINotifierOptions
+ * @returns ["notifier"] - AINotifierHandle (handle ID)
+ */
+nlohmann::json AddNotifierEx(const nlohmann::json& params);
+
+/**
+ * Wrapper for AINotifierSuite::GetNotifierOptions
+ * @param params["notifier"] - AINotifierHandle (handle ID)
+ * @returns ["options"] - AINotifierOptions
+ */
+nlohmann::json GetNotifierOptions(const nlohmann::json& params);
+
+/**
  * Wrapper for AINotifierSuite::GetNotifierActive
  * @param params["notifier"] - AINotifierHandle (handle ID)
  * @returns ["active"] - AIBoolean

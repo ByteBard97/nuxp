@@ -20,7 +20,7 @@
 #include "FloraAILayerSuiteWrapper.h"
 #include "FloraAIMaskSuiteWrapper.h"
 #include "FloraAIMdMemorySuiteWrapper.h"
-#include "FloraAINotifierSuiteWrapper.h"
+// #include "FloraAINotifierSuiteWrapper.h"  // Disabled: AINotifierOptions type doesn't exist in SDK
 #include "FloraAITimerSuiteWrapper.h"
 #include "FloraAIToolSuiteWrapper.h"
 #include "FloraAITransformArtSuiteWrapper.h"
@@ -66,8 +66,7 @@ inline nlohmann::json Dispatch(const std::string& suite, const std::string& meth
         return Flora::AIMaskSuite::Dispatch(method, params);
     } else if (suite == "AIMdMemorySuite") {
         return Flora::AIMdMemorySuite::Dispatch(method, params);
-    } else if (suite == "AINotifierSuite") {
-        return Flora::AINotifierSuite::Dispatch(method, params);
+    // AINotifierSuite disabled: AINotifierOptions type doesn't exist in SDK
     } else if (suite == "AITimerSuite") {
         return Flora::AITimerSuite::Dispatch(method, params);
     } else if (suite == "AIToolSuite") {
