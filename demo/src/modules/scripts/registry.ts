@@ -22,6 +22,10 @@ import sdkUtilities from './scripts/sdk-utilities'
 import sdkGroups from './scripts/sdk-groups'
 import sdkLayers from './scripts/sdk-layers'
 import sdkDuplication from './scripts/sdk-duplication'
+import sdkExport from './scripts/sdk-export'
+import createShapes from './scripts/create-shapes'
+import exportSelection from './scripts/export-selection'
+import saveDialog from './scripts/save-dialog'
 
 const scripts: Script[] = []
 
@@ -46,6 +50,7 @@ export function registerScript(script: Script): void {
 registerScript(documentInfo)
 registerScript(objectCounter)
 registerScript(listArtboards)
+registerScript(saveDialog)
 
 // Register layers scripts
 registerScript(listLayers)
@@ -55,11 +60,13 @@ registerScript(lockUnlockAll)
 // Register selection scripts
 registerScript(selectionInfo)
 registerScript(deselectAll)
+registerScript(exportSelection)
 
 // Register objects scripts
 registerScript(renameSelected)
 registerScript(changeOpacity)
 registerScript(duplicateSelected)
+registerScript(createShapes)
 
 // Register text scripts
 registerScript(listTextFrames)
@@ -78,3 +85,4 @@ registerScript(sdkUtilities)
 registerScript(sdkGroups)
 registerScript(sdkLayers)
 registerScript(sdkDuplication)
+registerScript(sdkExport)
