@@ -395,7 +395,7 @@ if(APPLE)
     # -------------------------------------------------------------------------
     # Adobe Illustrator plugins are loadable bundles (.aip) with:
     # - Compiled PiPL (Plugin Property List) resource
-    # - Info.plist with CFBundlePackageType = "BNDL"
+    # - Info.plist with CFBundlePackageType = "ARPI"
     # - Universal binary (arm64 + x86_64)
 
     # Deployment target for modern macOS features
@@ -526,6 +526,20 @@ if(APPLE)
             message(WARNING "Copy Adobe SDK tools/pipl directory to ${CMAKE_CURRENT_SOURCE_DIR}/tools/")
         endif()
     endif()
+
+    # -------------------------------------------------------------------------
+    # PkgInfo — Required for macOS to recognize the .aip as a proper bundle
+    # -------------------------------------------------------------------------
+    # Without PkgInfo, Finder shows the .aip as a plain folder instead of a
+    # plugin bundle icon. Content is CFBundlePackageType + CFBundleSignature.
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "ARPIART5")
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo"
+            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/PkgInfo"
+        COMMENT "Copying PkgInfo to bundle"
+    )
 
     # -------------------------------------------------------------------------
     # macOS Compile Definitions
