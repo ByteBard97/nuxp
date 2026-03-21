@@ -27,6 +27,8 @@
 #include <nlohmann/json.hpp>
 
 #include <chrono>
+#include <cstdio>
+#include <fstream>
 #include <memory>
 
 using json = nlohmann::json;
@@ -141,6 +143,12 @@ void HttpServer::Stop() {
   {
     std::lock_guard<std::mutex> lock(gServerMutex);
     gServer.reset();
+  }
+
+  // Remove runtime port file so stale ports aren't discovered
+  {
+    std::string portFilePath = ConfigManager::GetConfigDir() + "/port";
+    std::remove(portFilePath.c_str());
   }
 
   ready_.store(false);
@@ -599,6 +607,17 @@ void HttpServer::ServerThread() {
     if (!bound) {
       running_.store(false);
       return;
+    }
+  }
+
+  // Write a runtime port file so frontends can discover which port we bound to.
+  // This is especially useful when port auto-retry shifted us to a different port.
+  // File goes next to config: ~/Library/Application Support/{PluginName}/port
+  {
+    std::string portFilePath = ConfigManager::GetConfigDir() + "/port";
+    std::ofstream portFile(portFilePath);
+    if (portFile.is_open()) {
+      portFile << port_;
     }
   }
 
