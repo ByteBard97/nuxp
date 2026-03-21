@@ -193,8 +193,9 @@ void HttpServer::ConfigureRoutes() {
   svr.Get("/health", [](const httplib::Request &, httplib::Response &res) {
     json response = {{"success", true},
                      {"status", "ok"},
-                     {"plugin", "NUXP"},
-                     {"version", NUXP_VERSION}};
+                     {"plugin", PLUGIN_DISPLAY_NAME},
+                     {"version", NUXP_VERSION},
+                     {"port", HttpServer::GetPort()}};
     res.set_content(response.dump(), "application/json");
   });
 
@@ -202,7 +203,7 @@ void HttpServer::ConfigureRoutes() {
   svr.Get("/info", [](const httplib::Request &, httplib::Response &res) {
     json response = {{"success", true},
                      {"plugin",
-                      {{"name", "NUXP"},
+                      {{"name", PLUGIN_DISPLAY_NAME},
                        {"version", NUXP_VERSION},
                        {"description", "Illustrator HTTP/JSON Bridge"}}},
                      {"handles",
@@ -578,10 +579,24 @@ void HttpServer::ServerThread() {
   // Configure routes
   ConfigureRoutes();
 
-  // Attempt to bind to the port
+  // Attempt to bind to the port, trying up to MAX_PORT_RETRIES sequential ports
+  // if the configured port is already in use (e.g., another NUXP-based plugin)
+  static constexpr int MAX_PORT_RETRIES = 10;
   {
     std::lock_guard<std::mutex> lock(gServerMutex);
-    if (!gServer->bind_to_port("localhost", port_)) {
+    bool bound = false;
+    for (int attempt = 0; attempt < MAX_PORT_RETRIES; ++attempt) {
+      int tryPort = port_ + attempt;
+      if (tryPort > ConfigManager::MAX_PORT) break;
+      if (gServer->bind_to_port("localhost", tryPort)) {
+        if (attempt > 0) {
+          port_ = tryPort;  // Update to the port we actually bound to
+        }
+        bound = true;
+        break;
+      }
+    }
+    if (!bound) {
       running_.store(false);
       return;
     }

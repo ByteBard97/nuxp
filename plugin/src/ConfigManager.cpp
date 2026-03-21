@@ -17,16 +17,22 @@ ConfigManager& ConfigManager::Instance() {
 }
 
 std::string ConfigManager::GetConfigDir() {
+    // Use PLUGIN_DISPLAY_NAME for per-plugin config isolation.
+    // Each plugin built with a different display name gets its own config directory.
+    // Falls back to "NUXP" if not defined at compile time.
+#ifndef PLUGIN_DISPLAY_NAME
+#define PLUGIN_DISPLAY_NAME "NUXP"
+#endif
 #ifdef _WIN32
     const char* appdata = std::getenv("APPDATA");
     if (appdata) {
-        return std::string(appdata) + "\\NUXP";
+        return std::string(appdata) + "\\" + PLUGIN_DISPLAY_NAME;
     }
     return ".";
 #else
     const char* home = std::getenv("HOME");
     if (home) {
-        return std::string(home) + "/Library/Application Support/NUXP";
+        return std::string(home) + "/Library/Application Support/" + PLUGIN_DISPLAY_NAME;
     }
     return ".";
 #endif

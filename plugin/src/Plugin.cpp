@@ -245,6 +245,8 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
   ConfigManager::Instance().Load();
 
   // Start HTTP server on configured port
+  // If the port is already taken (e.g., another NUXP-based plugin),
+  // the server will auto-retry on the next sequential ports.
   int port = ConfigManager::Instance().GetPort();
   HttpServer::Start(port);
 
