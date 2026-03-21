@@ -528,6 +528,69 @@ if(APPLE)
     endif()
 
     # -------------------------------------------------------------------------
+    # .rsrc — Empty resource fork required by Illustrator's plugin loader
+    # -------------------------------------------------------------------------
+    # Illustrator checks for a .rsrc file at Contents/Resources/<name>.rsrc
+    # during plugin initialization. Without it, the plugin silently fails to
+    # load with a "Plugin issues detected" error. The file can be empty (just
+    # a valid resource fork header) — the actual PiPL data lives in plugin.pipl.
+    #
+    # This was the root cause of hours of debugging: CMake-built plugins were
+    # structurally identical to working ones but missing this file.
+    set(RSRC_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rsrc")
+    if(NOT EXISTS "${RSRC_FILE}")
+        # Generate an empty macOS resource fork (286 bytes)
+        # Header: version=1, dataOffset=256, mapOffset=256, dataLength=0, mapLength=30
+        # Followed by 240 zero bytes, then repeated header + map trailer
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gen_rsrc.py" [=[
+import struct, sys
+hdr = struct.pack('>IIII', 0x100, 0x100, 0, 0x1e)
+data = hdr + b'\x00' * 240
+map_hdr = hdr + b'\x00' * 4 + struct.pack('>HH', 0x1c, 0x1e) + b'\xff\xff'
+out = data + map_hdr
+open(sys.argv[1], 'wb').write(out)
+]=])
+        execute_process(
+            COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/gen_rsrc.py" "${RSRC_FILE}"
+            RESULT_VARIABLE RSRC_RESULT
+        )
+        if(NOT RSRC_RESULT EQUAL 0)
+            # Fallback: copy from NUXP's bundled template
+            if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/empty.rsrc")
+                file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources/empty.rsrc"
+                     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+                file(RENAME "${CMAKE_CURRENT_BINARY_DIR}/empty.rsrc" "${RSRC_FILE}")
+            else()
+                message(WARNING ".rsrc generation failed — plugin may not load in Illustrator")
+            endif()
+        endif()
+    endif()
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${RSRC_FILE}"
+            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
+        COMMENT "Copying .rsrc to bundle (required by Illustrator)"
+    )
+
+    # -------------------------------------------------------------------------
+    # IDToFile.txt — Resource ID mapping file expected by Illustrator
+    # -------------------------------------------------------------------------
+    set(IDTOFILE "${CMAKE_CURRENT_BINARY_DIR}/IDToFile.txt")
+    if(NOT EXISTS "${IDTOFILE}")
+        file(WRITE "${IDTOFILE}" "\n")
+    endif()
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/txt"
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${IDTOFILE}"
+            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/txt/IDToFile.txt"
+        COMMENT "Copying IDToFile.txt to bundle"
+    )
+
+    # -------------------------------------------------------------------------
     # PkgInfo — Required for macOS to recognize the .aip as a proper bundle
     # -------------------------------------------------------------------------
     # Without PkgInfo, Finder shows the .aip as a plain folder instead of a
