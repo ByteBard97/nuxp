@@ -122,6 +122,14 @@ const DEFAULT_STREAM_PATH = '/events/stream'
 const DEFAULT_RECONNECT_DELAY = 3_000
 const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10
 
+/**
+ * Debounce delay for selection events (ms).
+ * Illustrator fires kAIArtSelectionChangedNotifier many times during
+ * placement, dragging, and tool switches. Without debouncing, every event
+ * triggers HTTP calls and store updates across 4+ listeners.
+ */
+const SELECTION_DEBOUNCE_MS = 150
+
 /** All known event names -- used to register handlers on the EventSource. */
 const ALL_EVENT_NAMES: readonly EventName[] = [
   'selection',
@@ -159,6 +167,8 @@ export class SSEAdapter {
   private reconnectAttempts = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private manuallyDisconnected = false
+  private selectionDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  private pendingSelectionData: EventPayloadMap['selection'] | null = null
 
   constructor(config: SSEAdapterConfig) {
     this.serverUrl = config.serverUrl
@@ -216,6 +226,12 @@ export class SSEAdapter {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer)
       this.reconnectTimer = null
+    }
+
+    if (this.selectionDebounceTimer) {
+      clearTimeout(this.selectionDebounceTimer)
+      this.selectionDebounceTimer = null
+      this.pendingSelectionData = null
     }
 
     if (this.eventSource) {
@@ -310,6 +326,25 @@ export class SSEAdapter {
     this.eventSource.addEventListener(eventType, (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data)
+
+        // Debounce selection events — Illustrator fires many rapid selection
+        // changes during placement, dragging, and tool switches. Only dispatch
+        // the last one after the burst settles.
+        if (eventType === 'selection') {
+          this.pendingSelectionData = data as EventPayloadMap['selection']
+          if (this.selectionDebounceTimer) {
+            clearTimeout(this.selectionDebounceTimer)
+          }
+          this.selectionDebounceTimer = setTimeout(() => {
+            this.selectionDebounceTimer = null
+            if (this.pendingSelectionData) {
+              this.dispatch('selection', this.pendingSelectionData)
+              this.pendingSelectionData = null
+            }
+          }, SELECTION_DEBOUNCE_MS)
+          return
+        }
+
         this.dispatch(eventType, data)
       } catch (error) {
         console.error(`[SSEAdapter] Error parsing ${eventType} event:`, error)
