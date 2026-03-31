@@ -77,8 +77,28 @@ export interface PasteEvent {
   uuids: string[]
 }
 
+/** Fired when a plant is placed natively by the C++ plugin (zero-roundtrip). */
+export interface PlantPlacedEvent {
+  /** UUID of the newly placed plant */
+  uuid: string
+  /** Species ID */
+  speciesId: string
+  /** Full ref designator (e.g. "TR5") */
+  refDesignator: string
+  /** Current counter value for the prefix */
+  refCounter: number
+  /** X coordinate in artboard space */
+  x: number
+  /** Y coordinate in artboard space */
+  y: number
+  /** Art bounds */
+  bounds: { left: number; top: number; right: number; bottom: number }
+  /** Placement duration in milliseconds */
+  timing_ms: number
+}
+
 /** All recognised event names. */
-export type EventName = 'selection' | 'document' | 'layers' | 'artChanged' | 'version' | 'click' | 'deleted' | 'paste'
+export type EventName = 'selection' | 'document' | 'layers' | 'artChanged' | 'version' | 'click' | 'deleted' | 'paste' | 'plantPlaced'
 
 /** Maps event names to their payload types. */
 export interface EventPayloadMap {
@@ -90,6 +110,7 @@ export interface EventPayloadMap {
   click: ClickEvent
   deleted: DeletedEvent
   paste: PasteEvent
+  plantPlaced: PlantPlacedEvent
 }
 
 /** Strongly-typed callback for a specific event. */
@@ -140,6 +161,7 @@ const ALL_EVENT_NAMES: readonly EventName[] = [
   'click',
   'deleted',
   'paste',
+  'plantPlaced',
 ] as const
 
 // ---------------------------------------------------------------------------
