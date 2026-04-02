@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as Mustache from 'mustache';
+import Mustache from 'mustache';
 
 /**
  * Custom Route Code Generator

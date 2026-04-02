@@ -1,5 +1,5 @@
 import * as fs from 'fs-extra';
-import * as Mustache from 'mustache';
+import Mustache from 'mustache';
 import { SuiteInfo, FunctionInfo, ParamInfo } from '../parser/types';
 import { TypeDefinition, TypeCategory } from '../parser/TypeClassifier';
 
