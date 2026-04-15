@@ -45,6 +45,7 @@
 #ifndef NUXP_XMP_UTILS_HPP
 #define NUXP_XMP_UTILS_HPP
 
+#include "NuxpThreadSafety.h"
 #include <string>
 
 namespace XMPUtils {
@@ -60,7 +61,7 @@ namespace XMPUtils {
  *
  * @return true if GetDocumentXMP/SetDocumentXMP will work
  */
-bool IsAvailable();
+bool IsAvailable() REQUIRES_MAIN_THREAD;
 
 /**
  * Check if property-level XMP access is available.
@@ -68,7 +69,7 @@ bool IsAvailable();
  *
  * @return true if GetProperty/SetProperty/RegisterNamespace will work
  */
-bool HasPropertyAccess();
+bool HasPropertyAccess() REQUIRES_MAIN_THREAD;
 
 /**
  * Get the XMP metadata for the current document.
@@ -76,7 +77,7 @@ bool HasPropertyAccess();
  *
  * @return XMP string in XML format, or empty string if unavailable/error
  */
-std::string GetDocumentXMP();
+std::string GetDocumentXMP() REQUIRES_MAIN_THREAD;
 
 /**
  * Set the XMP metadata for the current document.
@@ -86,7 +87,7 @@ std::string GetDocumentXMP();
  * @param xmpString XMP metadata in XML format (UTF-8)
  * @return true if successful, false otherwise
  */
-bool SetDocumentXMP(const std::string& xmpString);
+bool SetDocumentXMP(const std::string& xmpString) REQUIRES_MAIN_THREAD;
 
 // =========================================================================
 // Tier 2: Requires XMP Toolkit SDK (property-level access)
@@ -114,7 +115,7 @@ void Terminate();
  * @param propertyName The property name within the namespace
  * @return Property value as string, or empty string if not found or unavailable
  */
-std::string GetProperty(const std::string& namespaceURI, const std::string& propertyName);
+std::string GetProperty(const std::string& namespaceURI, const std::string& propertyName) REQUIRES_MAIN_THREAD;
 
 /**
  * Set a specific XMP property value in the document's metadata.
@@ -127,7 +128,7 @@ std::string GetProperty(const std::string& namespaceURI, const std::string& prop
  * @param value The value to set
  * @return true if successful, false otherwise
  */
-bool SetProperty(const std::string& namespaceURI, const std::string& propertyName, const std::string& value);
+bool SetProperty(const std::string& namespaceURI, const std::string& propertyName, const std::string& value) REQUIRES_MAIN_THREAD;
 
 /**
  * Register a custom XMP namespace.
@@ -137,7 +138,7 @@ bool SetProperty(const std::string& namespaceURI, const std::string& propertyNam
  * @param suggestedPrefix The suggested prefix for the namespace
  * @return The actual registered prefix (may differ from suggested), or empty on failure
  */
-std::string RegisterNamespace(const std::string& namespaceURI, const std::string& suggestedPrefix);
+std::string RegisterNamespace(const std::string& namespaceURI, const std::string& suggestedPrefix) REQUIRES_MAIN_THREAD;
 
 } // namespace XMPUtils
 

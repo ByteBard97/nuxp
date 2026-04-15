@@ -7,6 +7,7 @@
 #include "ColorUtils.hpp"
 #include "../SuitePointers.hpp"
 
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 
@@ -60,14 +61,14 @@ std::string ColorToHex(const AIColor &color) {
 
   switch (color.kind) {
   case kThreeColor:
-    r = static_cast<int>(color.c.rgb.red * 255.0 + 0.5);
-    g = static_cast<int>(color.c.rgb.green * 255.0 + 0.5);
-    b = static_cast<int>(color.c.rgb.blue * 255.0 + 0.5);
+    r = static_cast<int>(std::lround(color.c.rgb.red * 255.0));
+    g = static_cast<int>(std::lround(color.c.rgb.green * 255.0));
+    b = static_cast<int>(std::lround(color.c.rgb.blue * 255.0));
     break;
 
   case kGrayColor:
     // Convert gray to RGB (same value for all channels)
-    r = g = b = static_cast<int>(color.c.g.gray * 255.0 + 0.5);
+    r = g = b = static_cast<int>(std::lround(color.c.g.gray * 255.0));
     break;
 
   case kFourColor:
@@ -79,9 +80,9 @@ std::string ColorToHex(const AIColor &color) {
       AIReal y = color.c.f.yellow;
       AIReal k = color.c.f.black;
 
-      r = static_cast<int>((1.0 - c) * (1.0 - k) * 255.0 + 0.5);
-      g = static_cast<int>((1.0 - m) * (1.0 - k) * 255.0 + 0.5);
-      b = static_cast<int>((1.0 - y) * (1.0 - k) * 255.0 + 0.5);
+      r = static_cast<int>(std::lround((1.0 - c) * (1.0 - k) * 255.0));
+      g = static_cast<int>(std::lround((1.0 - m) * (1.0 - k) * 255.0));
+      b = static_cast<int>(std::lround((1.0 - y) * (1.0 - k) * 255.0));
     }
     break;
 

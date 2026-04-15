@@ -413,7 +413,7 @@ PathAreaResult CalculatePathArea(AIArtHandle art) {
   // Linearize all bezier segments into a polygon
   // For each segment pair, sample points along the bezier curve
   std::vector<AIRealPoint> polygon;
-  polygon.reserve(segmentCount * kBezierSamples);
+  polygon.reserve(static_cast<size_t>(segmentCount) * static_cast<size_t>(kBezierSamples));
 
   int totalSegments = closed ? segmentCount : (segmentCount - 1);
 

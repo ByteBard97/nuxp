@@ -13,6 +13,7 @@
 #ifndef NUXP_LAYER_UTILS_HPP
 #define NUXP_LAYER_UTILS_HPP
 
+#include "NuxpThreadSafety.h"
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -34,7 +35,7 @@ using json = nlohmann::json;
  *
  * Returns empty array if AILayerSuite is not available or no document is open.
  */
-json GetLayers();
+json GetLayers() REQUIRES_MAIN_THREAD;
 
 /**
  * Get a layer by its name/title.
@@ -42,7 +43,7 @@ json GetLayers();
  * @param name The layer name to search for
  * @return The layer handle, or nullptr if not found
  */
-AILayerHandle GetLayerByName(const std::string &name);
+AILayerHandle GetLayerByName(const std::string &name) REQUIRES_MAIN_THREAD;
 
 /**
  * Get an existing layer by name, or create it if it doesn't exist.
@@ -51,14 +52,14 @@ AILayerHandle GetLayerByName(const std::string &name);
  * @param name The layer name
  * @return The layer handle (existing or newly created), or nullptr on error
  */
-AILayerHandle GetOrCreateLayer(const std::string &name);
+AILayerHandle GetOrCreateLayer(const std::string &name) REQUIRES_MAIN_THREAD;
 
 /**
  * Get the currently active/current layer.
  *
  * @return The current layer handle, or nullptr if none/error
  */
-AILayerHandle GetCurrentLayer();
+AILayerHandle GetCurrentLayer() REQUIRES_MAIN_THREAD;
 
 /**
  * Set a layer as the current/active layer.
@@ -66,14 +67,14 @@ AILayerHandle GetCurrentLayer();
  *
  * @param layer The layer to make current
  */
-void SetCurrentLayer(AILayerHandle layer);
+void SetCurrentLayer(AILayerHandle layer) REQUIRES_MAIN_THREAD;
 
 /**
  * Get the number of layers in the current document.
  *
  * @return Layer count, or 0 if no document/error
  */
-int GetLayerCount();
+int GetLayerCount() REQUIRES_MAIN_THREAD;
 
 } // namespace LayerUtils
 

@@ -14,6 +14,7 @@
 #define NUXP_GEOMETRY_UTILS_HPP
 
 #include "IllustratorSDK.h"
+#include "NuxpThreadSafety.h"
 
 namespace GeometryUtils {
 
@@ -41,7 +42,7 @@ struct PathAreaResult {
  * @param radius Radius of the circle
  * @return Handle to the new path art, or nullptr on failure
  */
-AIArtHandle CreateCircle(AIReal centerX, AIReal centerY, AIReal radius);
+AIArtHandle CreateCircle(AIReal centerX, AIReal centerY, AIReal radius) REQUIRES_MAIN_THREAD;
 
 /**
  * Create a rectangle path from the specified bounds.
@@ -56,7 +57,7 @@ AIArtHandle CreateCircle(AIReal centerX, AIReal centerY, AIReal radius);
  * @return Handle to the new path art, or nullptr on failure
  */
 AIArtHandle CreateRectangle(AIReal left, AIReal top, AIReal right,
-                            AIReal bottom);
+                            AIReal bottom) REQUIRES_MAIN_THREAD;
 
 /**
  * Create a line path between two points.
@@ -69,7 +70,7 @@ AIArtHandle CreateRectangle(AIReal left, AIReal top, AIReal right,
  * @param y2 Ending point Y coordinate
  * @return Handle to the new path art, or nullptr on failure
  */
-AIArtHandle CreateLine(AIReal x1, AIReal y1, AIReal x2, AIReal y2);
+AIArtHandle CreateLine(AIReal x1, AIReal y1, AIReal x2, AIReal y2) REQUIRES_MAIN_THREAD;
 
 /**
  * Get the bounding rectangle of an art item.
@@ -79,7 +80,7 @@ AIArtHandle CreateLine(AIReal x1, AIReal y1, AIReal x2, AIReal y2);
  * @param art Handle to the art item
  * @return Bounding rectangle with left, top, right, bottom coordinates
  */
-AIRealRect GetArtBounds(AIArtHandle art);
+AIRealRect GetArtBounds(AIArtHandle art) REQUIRES_MAIN_THREAD;
 
 /**
  * Move an art item by the specified offset.
@@ -90,7 +91,7 @@ AIRealRect GetArtBounds(AIArtHandle art);
  * @param dx Horizontal offset (positive = right)
  * @param dy Vertical offset (positive = up)
  */
-void MoveArt(AIArtHandle art, AIReal dx, AIReal dy);
+void MoveArt(AIArtHandle art, AIReal dx, AIReal dy) REQUIRES_MAIN_THREAD;
 
 /**
  * Scale an art item uniformly from its center.
@@ -98,7 +99,7 @@ void MoveArt(AIArtHandle art, AIReal dx, AIReal dy);
  * @param art Handle to the art item to scale
  * @param scaleFactor Scale factor (1.0 = no change, 2.0 = double size)
  */
-void ScaleArt(AIArtHandle art, AIReal scaleFactor);
+void ScaleArt(AIArtHandle art, AIReal scaleFactor) REQUIRES_MAIN_THREAD;
 
 /**
  * Calculate the area of a closed path using the shoelace formula.
@@ -112,7 +113,7 @@ void ScaleArt(AIArtHandle art, AIReal scaleFactor);
  * @return PathAreaResult with absolute and signed area.
  *         Returns {0.0, 0.0} on failure (null handle, non-path art, etc.)
  */
-PathAreaResult CalculatePathArea(AIArtHandle art);
+PathAreaResult CalculatePathArea(AIArtHandle art) REQUIRES_MAIN_THREAD;
 
 } // namespace GeometryUtils
 

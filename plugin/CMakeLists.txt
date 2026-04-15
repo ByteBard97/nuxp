@@ -673,6 +673,18 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         # Suppress warnings from Adobe SDK (Windows-1252 encoding, ObjC #import)
         -Wno-invalid-utf8
         -Wno-import-preprocessor-directive-pedantic
+        # Thread-safety analysis: catch SDK calls from non-main thread at compile time.
+        # Functions annotated REQUIRES_MAIN_THREAD must only be called from code that
+        # has GRANTS_MAIN_THREAD in its call chain (i.e. Illustrator entry points).
+        # NOTE: QueueAndWait lambdas generate false positives because the analyzer
+        # cannot trace REQUIRES through std::function type erasure. These are
+        # documented false positives, not real bugs — they correctly show where SDK
+        # calls happen but cannot verify the dispatch mechanism is safe.
+        -Wthread-safety
+        # Stack canaries: detect stack buffer overflows before return address corruption.
+        # Stronger than -fstack-protector (guards all functions with arrays or alloca),
+        # minimal overhead (~1% for typical workloads).
+        -fstack-protector-strong
     )
 
     # Enable debug symbols in debug builds

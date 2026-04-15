@@ -15,9 +15,10 @@
 #ifndef NUXP_TOOL_UTILS_HPP
 #define NUXP_TOOL_UTILS_HPP
 
+#include "IllustratorSDK.h"
+#include "NuxpThreadSafety.h"
 #include <nlohmann/json.hpp>
 #include <string>
-#include "IllustratorSDK.h"
 
 namespace ToolUtils {
 
@@ -28,7 +29,7 @@ using json = nlohmann::json;
  *
  * @return Tool name string, or empty string if error
  */
-std::string GetActiveToolName();
+std::string GetActiveToolName() REQUIRES_MAIN_THREAD;
 
 /**
  * Activate a tool by its name.
@@ -50,7 +51,7 @@ std::string GetActiveToolName();
  * @param toolName The name of the tool to activate
  * @return true if tool was found and activated, false otherwise
  */
-bool ActivateToolByName(const std::string& toolName);
+bool ActivateToolByName(const std::string& toolName) REQUIRES_MAIN_THREAD;
 
 /**
  * List all available tools.
@@ -67,7 +68,7 @@ bool ActivateToolByName(const std::string& toolName);
  *
  * @return JSON array of tool info
  */
-json ListTools();
+json ListTools() REQUIRES_MAIN_THREAD;
 
 } // namespace ToolUtils
 

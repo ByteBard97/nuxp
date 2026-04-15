@@ -109,8 +109,8 @@ int ConfigManager::GetPort() const {
                 return port;
             }
         }
-    } catch (const nlohmann::json::exception&) {
-        // Fall through to default
+    } catch (const nlohmann::json::exception&) { // NOLINT(bugprone-empty-catch)
+        // Fall through to default — malformed config returns DEFAULT_PORT
     }
 
     return DEFAULT_PORT;

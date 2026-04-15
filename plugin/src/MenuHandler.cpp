@@ -167,7 +167,10 @@ bool ShowPortConfigDialog() {
         if (responseValue != nullptr) {
             char buffer[32];
             if (CFStringGetCString(responseValue, buffer, sizeof(buffer), kCFStringEncodingUTF8)) {
-                int newPort = atoi(buffer);
+                char *endPtr = nullptr;
+                long parsedPort = strtol(buffer, &endPtr, 10);
+                int newPort = (endPtr != buffer && *endPtr == '\0')
+                    ? static_cast<int>(parsedPort) : 0;
 
                 if (newPort >= ConfigManager::MIN_PORT && newPort <= ConfigManager::MAX_PORT) {
                     if (newPort != currentPort) {

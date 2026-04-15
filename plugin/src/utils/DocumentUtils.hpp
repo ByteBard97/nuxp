@@ -14,6 +14,7 @@
 #ifndef NUXP_DOCUMENT_UTILS_HPP
 #define NUXP_DOCUMENT_UTILS_HPP
 
+#include "NuxpThreadSafety.h"
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -26,7 +27,7 @@ using json = nlohmann::json;
  *
  * @return true if at least one document is open
  */
-bool HasDocument();
+bool HasDocument() REQUIRES_MAIN_THREAD;
 
 /**
  * Get current document information as JSON.
@@ -45,7 +46,7 @@ bool HasDocument();
  *
  * @return JSON object with document info
  */
-json GetDocumentInfo();
+json GetDocumentInfo() REQUIRES_MAIN_THREAD;
 
 /**
  * Get all artboards information as JSON array.
@@ -75,7 +76,7 @@ json GetDocumentInfo();
  *
  * @return JSON object with artboards array
  */
-json GetArtboards();
+json GetArtboards() REQUIRES_MAIN_THREAD;
 
 /**
  * Get document ruler units as string.
@@ -91,7 +92,7 @@ json GetArtboards();
  *
  * @return String representation of ruler units
  */
-std::string GetRulerUnits();
+std::string GetRulerUnits() REQUIRES_MAIN_THREAD;
 
 /**
  * Get available fonts as JSON array.
@@ -112,7 +113,7 @@ std::string GetRulerUnits();
  *
  * @return JSON object with fonts array
  */
-json GetFonts();
+json GetFonts() REQUIRES_MAIN_THREAD;
 
 } // namespace DocumentUtils
 

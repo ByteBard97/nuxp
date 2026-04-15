@@ -57,7 +57,7 @@ bool ActivateToolByName(const std::string& toolName) {
 
     for (ai::int32 i = 0; i < toolCount; i++) {
         AIToolHandle tool = nullptr;
-        err = sTool->GetToolHandleFromNumber(i, &tool);
+        err = sTool->GetToolHandleFromNumber(static_cast<AIToolType>(i), &tool);
         if (err != kNoErr || !tool) {
             continue;
         }
@@ -99,7 +99,7 @@ json ListTools() {
     // Iterate through all tools
     for (ai::int32 i = 0; i < toolCount; i++) {
         AIToolHandle tool = nullptr;
-        err = sTool->GetToolHandleFromNumber(i, &tool);
+        err = sTool->GetToolHandleFromNumber(static_cast<AIToolType>(i), &tool);
         if (err != kNoErr || !tool) {
             continue;
         }

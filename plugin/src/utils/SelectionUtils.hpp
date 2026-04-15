@@ -19,9 +19,10 @@
 #ifndef NUXP_SELECTION_UTILS_HPP
 #define NUXP_SELECTION_UTILS_HPP
 
+#include "IllustratorSDK.h"
+#include "NuxpThreadSafety.h"
 #include <nlohmann/json.hpp>
 #include <string>
-#include "IllustratorSDK.h"
 
 // Note: AIArtHandle is defined in IllustratorSDK.h via AITypes.h
 
@@ -51,20 +52,20 @@ using json = nlohmann::json;
  *
  * Returns empty array if no document is open or nothing is selected.
  */
-json GetSelection();
+json GetSelection() REQUIRES_MAIN_THREAD;
 
 /**
  * Get count of selected items.
  *
  * @return Number of selected art items, or 0 if none/error
  */
-int GetSelectionCount();
+int GetSelectionCount() REQUIRES_MAIN_THREAD;
 
 /**
  * Clear all selection (deselect all art).
  * Safe to call even if nothing is selected.
  */
-void ClearSelection();
+void ClearSelection() REQUIRES_MAIN_THREAD;
 
 /**
  * Delete all selected items.
@@ -74,7 +75,7 @@ void ClearSelection();
  *
  * @return Number of items deleted
  */
-int DeleteSelection();
+int DeleteSelection() REQUIRES_MAIN_THREAD;
 
 /**
  * Select all art on a layer by the layer's name.
@@ -85,14 +86,14 @@ int DeleteSelection();
  * @param layerName The name of the layer whose art should be selected
  * @return Number of items selected, or 0 if layer not found/empty
  */
-int SelectByLayerName(const std::string& layerName);
+int SelectByLayerName(const std::string& layerName) REQUIRES_MAIN_THREAD;
 
 /**
  * Deselect all art and select only the specified art handle.
  *
  * @param art The art handle to select (must be valid)
  */
-void SelectArt(AIArtHandle art);
+void SelectArt(AIArtHandle art) REQUIRES_MAIN_THREAD;
 
 } // namespace SelectionUtils
 

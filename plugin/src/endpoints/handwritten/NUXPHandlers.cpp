@@ -557,7 +557,7 @@ std::string HandleSetPathSegments(const std::string& id, const std::string& body
                     {"error", "AIPath suite not available"}};
         }
 
-        ai::int16 startIndex = params.value("startIndex", 0);
+        ai::int16 startIndex = static_cast<ai::int16>(params.value("startIndex", 0));
         const auto& segArray = params["segments"];
 
         std::vector<AIPathSegment> segs;

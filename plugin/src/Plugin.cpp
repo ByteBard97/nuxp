@@ -29,6 +29,7 @@
 #include "HttpServer.hpp"
 #include "MainThreadDispatch.hpp"
 #include "MenuHandler.hpp"
+#include "NuxpThreadSafety.h"
 #include "SuitePointers.hpp"
 
 #include "IllustratorSDK.h"
@@ -49,6 +50,12 @@ using json = nlohmann::json;
 extern "C" {
 SPBasicSuite *sSPBasic = nullptr;
 }
+
+// Thread-safety capability globals (declared extern in NuxpThreadSafety.h).
+// gMainThread models Illustrator's main thread as a capability "lock".
+// gMainThreadId is captured at startup for ASSERT_MAIN_THREAD() runtime checks.
+MainThreadCapability gMainThread;
+std::thread::id gMainThreadId;
 
 // Timer suite for main thread dispatch
 static AITimerSuite *sAITimer = nullptr;
@@ -126,6 +133,10 @@ extern "C" ASAPI ASErr PluginMain(char *caller, char *selector, void *message) {
 
 ASErr StartupPlugin(SPInterfaceMessage *message) {
   ASErr error = kNoErr;
+
+  // Capture the main thread ID for ASSERT_MAIN_THREAD() runtime checks.
+  // Must be set before any SDK calls so the assertion has a valid baseline.
+  gMainThreadId = std::this_thread::get_id();
 
   // Store basic suite and plugin reference
   sSPBasic = message->d.basic;

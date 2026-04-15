@@ -1,0 +1,47 @@
+---
+# NUXP clang-tidy configuration
+#
+# Runs automatically during every build via build-cpp-plugin.sh.
+# Only NUXP's own sources are analyzed — Adobe SDK and third-party
+# headers are excluded by HeaderFilterRegex.
+#
+# Check selection philosophy:
+#   ✓ bugprone-*  — catches real bugs (use-after-move, swapped args, etc.)
+#   ✓ clang-analyzer-* — Clang Static Analyzer: null-deref, use-after-free,
+#                         uninitialized memory (the deep crash bugs)
+#   ✓ misc-* (selective) — redundant expressions, unused imports
+#   ✗ modernize-*   — style-only, no safety value
+#   ✗ readability-* — style-only, no safety value
+#   ✗ performance-* — premature optimization
+#   ✗ cppcoreguidelines-* — too opinionated for SDK plugin context
+#   ✗ google-*, llvm-*, fuchsia-* — wrong project style guides
+
+Checks: >-
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -bugprone-reserved-identifier,
+  -bugprone-branch-clone,
+  -bugprone-derived-method-shadowing-base-method,
+  -bugprone-suspicious-include,
+  -bugprone-throwing-static-initialization,
+  clang-analyzer-core.*,
+  clang-analyzer-cplusplus.*,
+  clang-analyzer-security.*,
+  misc-redundant-expression,
+  misc-unused-using-decls,
+  -clang-diagnostic-*
+
+# Only report findings in NUXP's own source files.
+# Warnings from Adobe SDK headers (illustratorapi/) are suppressed.
+HeaderFilterRegex: '.*/nuxp/plugin/src/.*'
+
+# Suppress warnings in files we don't own and can't fix.
+ExcludeHeaderFilterRegex: '.*(illustratorapi|common/includes|nlohmann|pica_sp|ate)/.*|.*httplib\.h$'
+
+WarningsAsErrors: ''
+
+CheckOptions:
+  - key: bugprone-signed-char-misuse.CharTypdefsToIgnore
+    value: 'ASInt8'
+...

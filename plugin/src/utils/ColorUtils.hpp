@@ -9,6 +9,7 @@
 #define NUXP_COLOR_UTILS_HPP
 
 #include "IllustratorSDK.h"
+#include "NuxpThreadSafety.h"
 #include <string>
 
 namespace ColorUtils {
@@ -70,7 +71,7 @@ AIColor NoColor();
  * @param art The art handle to modify
  * @param color The fill color to apply
  */
-void SetFillColor(AIArtHandle art, const AIColor &color);
+void SetFillColor(AIArtHandle art, const AIColor &color) REQUIRES_MAIN_THREAD;
 
 /**
  * Apply stroke color to art.
@@ -78,7 +79,7 @@ void SetFillColor(AIArtHandle art, const AIColor &color);
  * @param art The art handle to modify
  * @param color The stroke color to apply
  */
-void SetStrokeColor(AIArtHandle art, const AIColor &color);
+void SetStrokeColor(AIArtHandle art, const AIColor &color) REQUIRES_MAIN_THREAD;
 
 /**
  * Set stroke width on art.
@@ -86,7 +87,7 @@ void SetStrokeColor(AIArtHandle art, const AIColor &color);
  * @param art The art handle to modify
  * @param width The stroke width in points
  */
-void SetStrokeWidth(AIArtHandle art, AIReal width);
+void SetStrokeWidth(AIArtHandle art, AIReal width) REQUIRES_MAIN_THREAD;
 
 } // namespace ColorUtils
 
