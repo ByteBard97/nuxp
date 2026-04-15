@@ -547,7 +547,7 @@ export class Bridge {
       return { args }
     }
 
-    // Handle CEP-style single-array convention: callHost('fn', [a, b, c])
+    // Handle legacy single-array convention: callHost('fn', [a, b, c])
     let effectiveArgs: unknown[] = args
     if (args.length === 1 && Array.isArray(args[0]) && mapping.length > 1) {
       effectiveArgs = args[0] as unknown[]

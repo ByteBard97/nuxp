@@ -236,7 +236,7 @@ describe('DocumentSchemas', () => {
 
     it('throws a descriptive error on invalid data', () => {
       expect(() => parseDocumentResponse({}, ErrorResponseSchema)).toThrow(
-        'Invalid document response from ExtendScript',
+        'Invalid document response from C++ plugin',
       )
     })
 
@@ -247,7 +247,7 @@ describe('DocumentSchemas', () => {
       } catch (e: unknown) {
         const msg = (e as Error).message
         expect(msg).toContain('error')
-        expect(msg).toContain('Invalid document response from ExtendScript')
+        expect(msg).toContain('Invalid document response from C++ plugin')
       }
     })
 

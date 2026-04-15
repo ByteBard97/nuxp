@@ -254,7 +254,7 @@ export class HttpAdapter {
       return args.length === 1 ? { data: args[0] } : { args }
     }
 
-    // Unpack the CEP calling convention: callHost('fn', [a, b]) -> single array
+    // Unpack legacy single-array calling convention: callHost('fn', [a, b]) -> single array
     let effectiveArgs = args
     if (args.length === 1 && Array.isArray(args[0]) && mapping.length > 1) {
       effectiveArgs = args[0] as unknown[]

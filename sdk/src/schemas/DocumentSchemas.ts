@@ -1,8 +1,8 @@
 /**
  * Document Operation Validation Schemas
  *
- * Zod schemas for validating responses from document-related ExtendScript
- * bridge calls. Covers generic document operations -- artboard queries,
+ * Zod schemas for validating responses from document-related FloraBridge
+ * C++ plugin HTTP calls. Covers generic document operations -- artboard queries,
  * document initialization, view zoom, and units.
  *
  * Zod is a peer dependency. If your application does not use Zod, you can
@@ -182,7 +182,7 @@ export type SetDocumentUnitsResponse = z.infer<typeof SetDocumentUnitsResponseSc
 /**
  * Safely parse a raw bridge response against a Zod schema.
  *
- * @param data - The raw data returned from an ExtendScript bridge call.
+ * @param data - The raw data returned from a C++ plugin HTTP call.
  * @param schema - The Zod schema to validate against.
  * @returns The validated, typed response.
  * @throws Error with a descriptive message if validation fails.
@@ -195,7 +195,7 @@ export function parseDocumentResponse<T>(data: unknown, schema: z.ZodType<T>): T
       const issues = error.issues
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join(', ')
-      throw new Error(`Invalid document response from ExtendScript: ${issues}`)
+      throw new Error(`Invalid document response from C++ plugin: ${issues}`)
     }
     throw error
   }
