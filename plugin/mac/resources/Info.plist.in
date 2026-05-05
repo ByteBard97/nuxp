@@ -17,16 +17,12 @@
 	<key>CFBundleName</key>
 	<string>@PLUGIN_DISPLAY_NAME@</string>
 	<key>CFBundlePackageType</key>
-	<string>ARPI</string>
+	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>@PLUGIN_VERSION@</string>
-	<key>CFBundleSignature</key>
-	<string>ART5</string>
 	<key>CFBundleVersion</key>
 	<string>@PLUGIN_VERSION@</string>
 	<key>CSResourcesFileMapped</key>
-	<true/>
-	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright (c) 2024-2025. All rights reserved.</string>

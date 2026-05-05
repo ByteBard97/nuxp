@@ -395,7 +395,7 @@ if(APPLE)
     # -------------------------------------------------------------------------
     # Adobe Illustrator plugins are loadable bundles (.aip) with:
     # - Compiled PiPL (Plugin Property List) resource
-    # - Info.plist with CFBundlePackageType = "ARPI"
+    # - Info.plist with CFBundlePackageType = "BNDL"
     # - Universal binary (arm64 + x86_64)
 
     # Deployment target for modern macOS features
@@ -594,8 +594,8 @@ open(sys.argv[1], 'wb').write(out)
     # PkgInfo — Required for macOS to recognize the .aip as a proper bundle
     # -------------------------------------------------------------------------
     # Without PkgInfo, Finder shows the .aip as a plain folder instead of a
-    # plugin bundle icon. Content is CFBundlePackageType + CFBundleSignature.
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "ARPIART5")
+    # plugin bundle icon. Content is CFBundlePackageType + 4-char creator code.
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "BNDL????")
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
