@@ -543,36 +543,8 @@ with open(output_path, "wb") as f:
             COMMENT "Copying plugin.pipl to bundle"
         )
     else()
-        # Fallback to old Rez method if Python tool not available
-        find_program(REZ_EXECUTABLE Rez
-            HINTS /usr/bin /Applications/Xcode.app/Contents/Developer/usr/bin
-        )
-        set(PIPL_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources")
-
-        if(REZ_EXECUTABLE AND EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
-            message(STATUS "Using legacy Rez method for PiPL")
-            message(STATUS "Found Rez compiler: ${REZ_EXECUTABLE}")
-
-            add_custom_command(
-                TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory
-                    "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources"
-                COMMAND ${REZ_EXECUTABLE}
-                    "-d" "PIPL_PLUGIN_NAME=\"${PLUGIN_NAME}\""
-                    "-d" "TargetOS_Mac=1"
-                    "-i" "${PIPL_RESOURCES_DIR}"
-                    "-i" "${AI_SDK_PATH}"
-                    "-useDF"
-                    "-o" "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
-                    "${PIPL_RESOURCES_DIR}/Plugin.r"
-                COMMENT "Compiling PiPL resource with Rez (legacy)"
-                VERBATIM
-            )
-        else()
-            message(WARNING "Neither Python PIPL tool nor Rez compiler found")
-            message(WARNING "PiPL resource is required for Illustrator to load the plugin")
-            message(WARNING "Copy Adobe SDK tools/pipl directory to ${CMAKE_CURRENT_SOURCE_DIR}/tools/")
-        endif()
+        message(WARNING "Python 3 not found; plugin.pipl will not be generated")
+        message(WARNING "PiPL resource is required for Illustrator to load the plugin")
     endif()
 
     # -------------------------------------------------------------------------
@@ -670,19 +642,6 @@ open(sys.argv[1], 'wb').write(out)
             "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/PkgInfo"
         COMMENT "Copying PkgInfo to bundle"
     )
-
-    # Re-sign the full bundle after assembly (required for macOS to load it).
-    # The linker auto-signs only the binary; the bundle needs a fresh signature
-    # that seals all resources. Ad-hoc (-) is sufficient for local development.
-    # Xcode builds handle this automatically; Unix Makefiles builds need this.
-    if(NOT CMAKE_GENERATOR MATCHES "Xcode")
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND codesign --force --deep --sign -
-                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>"
-            COMMENT "Ad-hoc signing plugin bundle"
-        )
-    endif()
 
     # -------------------------------------------------------------------------
     # macOS Compile Definitions
