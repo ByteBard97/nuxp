@@ -82,16 +82,7 @@ static SPPluginRef gPluginRef = nullptr;
  * It dispatches to the appropriate handler based on caller and selector.
  ******************************************************************************/
 
-// Fires at dylib load time — before PluginMain
-__attribute__((constructor))
-static void NUXPLoaded() {
-  FILE *f = fopen("/Users/guillem/Desktop/nuxp-loaded.log", "a");
-  if (f) { fprintf(f, "NUXPPlugin dylib loaded\n"); fclose(f); }
-}
-
 extern "C" ASAPI ASErr PluginMain(char *caller, char *selector, void *message) {
-  { FILE *f = fopen("/Users/guillem/Desktop/nuxp-started.log", "a");
-    if (f) { fprintf(f, "PluginMain: caller=%s selector=%s\n", caller, selector); fclose(f); } }
   ASErr error = kNoErr;
 
   // Interface messages (startup, shutdown)

@@ -464,24 +464,66 @@ if(APPLE)
     )
 
     # Path to Adobe's PIPL tool (check project first, then SDK)
-    set(PIPL_TOOL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl")
-    if(NOT EXISTS "${PIPL_TOOL_DIR}/create_pipl.py")
+    set(PIPL_TOOL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/create_pipl.py")
+    if(NOT EXISTS "${PIPL_TOOL_PATH}")
         # Fallback: check in SDK installation
-        set(PIPL_TOOL_DIR "${AI_SDK_PATH}/../tools/pipl")
+        set(PIPL_TOOL_PATH "${AI_SDK_PATH}/../tools/pipl/create_pipl.py")
+    endif()
+    if(NOT EXISTS "${PIPL_TOOL_PATH}")
+        # Final fallback: emit a compact generator in the build tree. This keeps
+        # the repo free of copied SDK tooling while still producing a PiPL that
+        # matches the working plugins verified on disk.
+        set(PIPL_TOOL_PATH "${CMAKE_CURRENT_BINARY_DIR}/gen_pipl.py")
+        file(WRITE "${PIPL_TOOL_PATH}" [=[
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+import struct
+
+def pad4(data: bytes) -> bytes:
+    remainder = len(data) % 4
+    if remainder:
+        data += b'\x00' * (4 - remainder)
+    return data
+
+def make_property(vendor: bytes, key: bytes, prop_id: int, value: bytes) -> bytes:
+    return vendor + key + struct.pack('>I', prop_id) + struct.pack('>I', len(value)) + value
+
+def make_pipl(name: str) -> bytes:
+    props = [
+        make_property(b'ADBE', b'kind', 0, b'SPEA'),
+        make_property(b'ADBE', b'ivrs', 0, struct.pack('>I', 2)),
+        make_property(b'ADBE', b'mi32', 0, b''),
+        make_property(b'ADBE', b'pinm', 0, pad4(name.encode('ascii'))),
+    ]
+    return struct.pack('>II', 0, len(props)) + b''.join(props)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-input", required=True)
+args = parser.parse_args()
+
+plugins = json.loads(args.input)
+output_path = os.path.join(os.getcwd(), "plugin.pipl")
+with open(output_path, "wb") as f:
+    f.write(struct.pack('>I', len(plugins)))
+    for desc in plugins:
+        f.write(make_pipl(desc.get("name", "Plugin")))
+]=])
     endif()
 
-    if(PYTHON_EXECUTABLE AND EXISTS "${PIPL_TOOL_DIR}/create_pipl.py")
+    if(PYTHON_EXECUTABLE AND EXISTS "${PIPL_TOOL_PATH}")
         message(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
-        message(STATUS "PiPL tool dir: ${PIPL_TOOL_DIR}")
+        message(STATUS "PiPL tool path: ${PIPL_TOOL_PATH}")
 
         # Generate plugin.pipl in build directory (pre-build)
         set(PIPL_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/plugin.pipl")
         add_custom_command(
             OUTPUT "${PIPL_OUTPUT}"
-            COMMAND ${PYTHON_EXECUTABLE} "${PIPL_TOOL_DIR}/create_pipl.py"
+            COMMAND ${PYTHON_EXECUTABLE} "${PIPL_TOOL_PATH}"
                 -input "[{\"name\":\"${PLUGIN_NAME}\", \"entry_point\":\"PluginMain\"}]"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            DEPENDS "${PIPL_TOOL_DIR}/create_pipl.py"
+            DEPENDS "${PIPL_TOOL_PATH}"
             COMMENT "Generating PiPL with Python tool"
             VERBATIM
         )
