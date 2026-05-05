@@ -184,7 +184,7 @@ Open http://localhost:5173 to see the debug panel and design system demo.
 
 1. Go to **[Adobe Illustrator SDK Download](https://developer.adobe.com/console/servicesandapis/ai)**
 2. Sign in with your Adobe ID
-3. Download the **Illustrator 2026 SDK** (recommended) or another nearby SDK version you intend to build against
+3. Download the **Illustrator 2026 SDK** (or matching your Illustrator version)
 4. Download the `.dmg` file
 
 #### b. Setup the SDK
@@ -227,7 +227,7 @@ cmake -B build-xcode -G Xcode
 cmake --build build-xcode --config Release
 ```
 
-> **macOS Note**: NUXP's CMake build automatically configures the bundle metadata required by Illustrator (`CFBundlePackageType=BNDL`, `PkgInfo=BNDL????`) and signs the assembled bundle. If your plugin doesn't load, see [Troubleshooting](#troubleshooting) below.
+> **macOS Note**: NUXP's CMake build automatically configures the bundle metadata required by Illustrator (`CFBundlePackageType=ARPI`, `CFBundleSignature=ART5`). If your plugin doesn't load, see [Troubleshooting](#troubleshooting) below.
 
 **Customizing the Plugin Name:**
 

@@ -160,7 +160,9 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
   error = sAITimer->AddTimer(gPluginRef, NUXP_TIMER_NAME, NUXP_TIMER_PERIOD,
                              &gTimerHandle);
   if (error != kNoErr) {
-    sSPBasic->ReleaseSuite(kAINotifierSuite, kAINotifierSuiteVersion);
+    if (sAINotifier != nullptr) {
+      sSPBasic->ReleaseSuite(kAINotifierSuite, kAINotifierSuiteVersion);
+    }
     sSPBasic->ReleaseSuite(kAITimerSuite, kAITimerSuiteVersion);
     sAINotifier = nullptr;
     sAITimer = nullptr;

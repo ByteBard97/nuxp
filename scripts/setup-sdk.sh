@@ -91,9 +91,7 @@ fi
 
 # Clear and recreate destination
 print_step "Setting up plugin/sdk directory..."
-if [ -e "$SDK_DEST" ]; then
-    trash "$SDK_DEST"
-fi
+trash "$SDK_DEST"
 mkdir -p "$SDK_DEST"
 
 # Copy Illustrator API headers
@@ -161,18 +159,6 @@ cat > "$SDK_DEST/IllustratorSDK.h" << 'HEADER_EOF'
 #include "AITransformArt.h"
 #include "AIMatchingArt.h"
 #include "IAIUnicodeString.h"
-
-// Additional headers required by HandleManager and SuitePointers
-#include "AIContext.h"
-#include "AIUser.h"
-#include "AIUndo.h"
-#include "AIMdMemory.h"
-#include "AIMenu.h"
-#include "AIMask.h"
-#include "AITool.h"
-#include "AIArtboard.h"
-#include "AIDictionary.h"
-#include "AIEntry.h"
 
 #endif // __IllustratorSDK__
 HEADER_EOF
