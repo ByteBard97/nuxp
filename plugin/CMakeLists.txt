@@ -29,6 +29,12 @@ set(PLUGIN_BUNDLE_ID "com.nuxp.illustrator.plugin" CACHE STRING "Bundle identifi
 set(PLUGIN_AUTHOR "" CACHE STRING "Plugin author name")
 set(PLUGIN_DESCRIPTION "Adobe Illustrator Plugin with HTTP/JSON Bridge" CACHE STRING "Plugin description")
 
+# macOS deployment target must be established before project() so modern Xcode
+# toolchains do not default the bundle to the host SDK version.
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND (NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET OR CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL ""))
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum macOS version")
+endif()
+
 # HTTP Server Configuration
 set(NUXP_DEFAULT_PORT 8080 CACHE STRING "Default HTTP server port (1024-65535)")
 
@@ -398,9 +404,6 @@ if(APPLE)
     # - Info.plist with CFBundlePackageType = "BNDL"
     # - Universal binary (arm64 + x86_64)
 
-    # Deployment target for modern macOS features
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS version")
-
     # Build Universal Binary (Apple Silicon + Intel)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS")
 
@@ -442,9 +445,11 @@ if(APPLE)
         XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Automatic"
         XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-"
         XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+        XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "${CMAKE_OSX_DEPLOYMENT_TARGET}"
         # Other settings
         XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${PLUGIN_BUNDLE_ID}"
         XCODE_ATTRIBUTE_INFOPLIST_KEY_CFBundleDisplayName "${PLUGIN_DISPLAY_NAME}"
+        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSMinimumSystemVersion "${CMAKE_OSX_DEPLOYMENT_TARGET}"
     )
 
     # -------------------------------------------------------------------------
@@ -476,6 +481,7 @@ if(APPLE)
             COMMAND ${PYTHON_EXECUTABLE} "${PIPL_TOOL_DIR}/create_pipl.py"
                 -input "[{\"name\":\"${PLUGIN_NAME}\", \"entry_point\":\"PluginMain\"}]"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            DEPENDS "${PIPL_TOOL_DIR}/create_pipl.py"
             COMMENT "Generating PiPL with Python tool"
             VERBATIM
         )
@@ -528,20 +534,39 @@ if(APPLE)
     endif()
 
     # -------------------------------------------------------------------------
-    # .rsrc — Empty resource fork required by Illustrator's plugin loader
+    # .rsrc — Prefer a Rez-compiled resource fork when available
     # -------------------------------------------------------------------------
-    # Illustrator checks for a .rsrc file at Contents/Resources/<name>.rsrc
-    # during plugin initialization. Without it, the plugin silently fails to
-    # load with a "Plugin issues detected" error. The file can be empty (just
-    # a valid resource fork header) — the actual PiPL data lives in plugin.pipl.
-    #
-    # This was the root cause of hours of debugging: CMake-built plugins were
-    # structurally identical to working ones but missing this file.
+    # Working Illustrator plugins on this machine ship a non-empty .rsrc file.
+    # Keep the synthetic empty resource fork only as a fallback for environments
+    # without Rez.
     set(RSRC_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rsrc")
-    if(NOT EXISTS "${RSRC_FILE}")
-        # Generate an empty macOS resource fork (286 bytes)
-        # Header: version=1, dataOffset=256, mapOffset=256, dataLength=0, mapLength=30
-        # Followed by 240 zero bytes, then repeated header + map trailer
+
+    find_program(REZ_EXECUTABLE NAMES Rez
+        HINTS /usr/bin /Applications/Xcode.app/Contents/Developer/usr/bin
+    )
+    set(PIPL_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources")
+
+    if(REZ_EXECUTABLE AND EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
+        add_custom_command(
+            OUTPUT "${RSRC_FILE}"
+            COMMAND "${REZ_EXECUTABLE}"
+                "-d" "PIPL_PLUGIN_NAME=\"${PLUGIN_NAME}\""
+                "-d" "TargetOS_Mac=1"
+                "-i" "${PIPL_RESOURCES_DIR}"
+                "-i" "${AI_SDK_PATH}"
+                "-useDF"
+                "-o" "${RSRC_FILE}"
+                "${PIPL_RESOURCES_DIR}/Plugin.r"
+            DEPENDS
+                "${PIPL_RESOURCES_DIR}/Plugin.r"
+                "${PIPL_RESOURCES_DIR}/PiPL.r"
+            COMMENT "Compiling ${PROJECT_NAME}.rsrc with Rez"
+            VERBATIM
+        )
+        add_custom_target(generate_rsrc DEPENDS "${RSRC_FILE}")
+        add_dependencies(${PROJECT_NAME} generate_rsrc)
+    elseif(NOT EXISTS "${RSRC_FILE}")
+        # Fallback: generate an empty macOS resource fork
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gen_rsrc.py" [=[
 import struct, sys
 hdr = struct.pack('>IIII', 0x100, 0x100, 0, 0x1e)
@@ -603,6 +628,19 @@ open(sys.argv[1], 'wb').write(out)
             "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/PkgInfo"
         COMMENT "Copying PkgInfo to bundle"
     )
+
+    # Re-sign the full bundle after assembly (required for macOS to load it).
+    # The linker auto-signs only the binary; the bundle needs a fresh signature
+    # that seals all resources. Ad-hoc (-) is sufficient for local development.
+    # Xcode builds handle this automatically; Unix Makefiles builds need this.
+    if(NOT CMAKE_GENERATOR MATCHES "Xcode")
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND codesign --force --deep --sign -
+                "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>"
+            COMMENT "Ad-hoc signing plugin bundle"
+        )
+    endif()
 
     # -------------------------------------------------------------------------
     # macOS Compile Definitions
