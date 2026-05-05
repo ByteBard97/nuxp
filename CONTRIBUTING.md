@@ -7,7 +7,7 @@ Thank you for your interest in contributing to NUXP! This document provides guid
 ### Prerequisites
 
 - **macOS or Windows** (required for Adobe Illustrator)
-- **Adobe Illustrator 2024+** (SDK version must match)
+- **Adobe Illustrator 2024+**
 - **Adobe Illustrator SDK** - Download from [Adobe Developer Console](https://developer.adobe.com)
 - **CMake 3.20+**
 - **Node.js 18+**
@@ -24,7 +24,7 @@ Thank you for your interest in contributing to NUXP! This document provides guid
 2. **Set up the Adobe SDK**
    ```bash
    # Download the SDK DMG from Adobe Developer Console
-   ./scripts/setup-sdk.sh ~/Downloads/AI_2024_SDK_Mac.dmg
+   ./scripts/setup-sdk.sh ~/Downloads/AI_2026_SDK_Mac.dmg
    ```
 
 3. **Build the C++ plugin**
