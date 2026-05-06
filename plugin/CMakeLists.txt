@@ -400,7 +400,7 @@ if(APPLE)
     # macOS Bundle Configuration
     # -------------------------------------------------------------------------
     # Adobe Illustrator plugins are loadable bundles (.aip) with:
-    # - Compiled PiPL (Plugin Property List) resource
+    # - Rez-compiled .rsrc bundle resource
     # - Info.plist with CFBundlePackageType = "BNDL"
     # - Universal binary (arm64 + x86_64)
 
@@ -451,107 +451,10 @@ if(APPLE)
     )
 
     # -------------------------------------------------------------------------
-    # PiPL Generation (New Python-based method)
+    # .rsrc — Single macOS plugin resource path
     # -------------------------------------------------------------------------
-    # The PiPL (Plugin Property List) tells Illustrator how to load the plugin.
-    # Since Illustrator 2022, Adobe recommends using create_pipl.py instead of Rez.
-    # The generated plugin.pipl goes in Contents/Resources/pipl/
-
-    find_program(PYTHON_EXECUTABLE python3
-        HINTS /opt/homebrew/bin /usr/local/bin /usr/bin
-    )
-
-    # Prefer the repo-local adapter around Adobe's bundled pipl_gen module.
-    set(PIPL_TOOL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/create_pipl.py")
-    set(PIPL_TOOL_DEPENDS
-        "${PIPL_TOOL_PATH}"
-        "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/pipl_gen/__init__.py"
-        "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/pipl_gen/pipl_gen.py"
-        "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/pipl_gen/template_plugin.json"
-    )
-    if(NOT EXISTS "${PIPL_TOOL_PATH}")
-        # Fallback: check in SDK installation
-        set(PIPL_TOOL_PATH "${AI_SDK_PATH}/../tools/pipl/create_pipl.py")
-        set(PIPL_TOOL_DEPENDS "${PIPL_TOOL_PATH}")
-    endif()
-    if(NOT EXISTS "${PIPL_TOOL_PATH}")
-        # Final fallback: emit a compact generator in the build tree. This keeps
-        # the repo free of copied SDK tooling while still producing a PiPL that
-        # matches the working plugins verified on disk.
-        set(PIPL_TOOL_PATH "${CMAKE_CURRENT_BINARY_DIR}/gen_pipl.py")
-        set(PIPL_TOOL_DEPENDS "${PIPL_TOOL_PATH}")
-        file(WRITE "${PIPL_TOOL_PATH}" [=[
-#!/usr/bin/env python3
-import argparse
-import json
-import os
-import struct
-
-def pad4(data: bytes) -> bytes:
-    remainder = len(data) % 4
-    if remainder:
-        data += b'\x00' * (4 - remainder)
-    return data
-
-def make_property(vendor: bytes, key: bytes, prop_id: int, value: bytes) -> bytes:
-    return vendor + key + struct.pack('>I', prop_id) + struct.pack('>I', len(value)) + value
-
-def make_pipl(name: str, entry_point: str) -> bytes:
-    props = [
-        make_property(b'ADBE', b'kind', 0, b'SPEA'),
-        make_property(b'ADBE', b'ivrs', 0, struct.pack('>I', 2)),
-        make_property(b'ADBE', b'mi32', 0, pad4(entry_point.encode('ascii'))),
-        make_property(b'ADBE', b'pinm', 0, pad4(name.encode('ascii'))),
-    ]
-    return struct.pack('>II', 0, len(props)) + b''.join(props)
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-input", required=True)
-args = parser.parse_args()
-
-plugins = json.loads(args.input)
-output_path = os.path.join(os.getcwd(), "plugin.pipl")
-with open(output_path, "wb") as f:
-    f.write(struct.pack('>I', len(plugins)))
-    for desc in plugins:
-        f.write(make_pipl(
-            desc.get("name", "Plugin"),
-            desc.get("entry_point", "PluginMain"),
-        ))
-]=])
-    endif()
-
-    if(PYTHON_EXECUTABLE AND EXISTS "${PIPL_TOOL_PATH}")
-        message(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
-        message(STATUS "PiPL tool path: ${PIPL_TOOL_PATH}")
-
-        # Generate plugin.pipl in build directory (pre-build)
-        set(PIPL_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/plugin.pipl")
-        add_custom_command(
-            OUTPUT "${PIPL_OUTPUT}"
-            COMMAND ${PYTHON_EXECUTABLE} "${PIPL_TOOL_PATH}"
-                -input "[{\"name\":\"${PLUGIN_NAME}\", \"entry_point\":\"PluginMain\"}]"
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            DEPENDS ${PIPL_TOOL_DEPENDS}
-            COMMENT "Generating PiPL with Python tool"
-            VERBATIM
-        )
-        set_source_files_properties("${PIPL_OUTPUT}" PROPERTIES
-            GENERATED TRUE
-            MACOSX_PACKAGE_LOCATION "Resources/pipl"
-        )
-        target_sources(${PROJECT_NAME} PRIVATE "${PIPL_OUTPUT}")
-    else()
-        message(WARNING "Python 3 not found; plugin.pipl will not be generated")
-        message(WARNING "PiPL resource is required for Illustrator to load the plugin")
-    endif()
-
-    # -------------------------------------------------------------------------
-    # .rsrc — Prefer a Rez-compiled resource fork when available
-    # -------------------------------------------------------------------------
-    # Working Illustrator plugins on this machine ship a non-empty .rsrc file.
-    # Keep the synthetic empty resource fork only as a fallback for environments
-    # without Rez.
+    # Verified on-disk bundles load in Illustrator 2025 and 2026 with Rez-only
+    # resources, so package the .rsrc bundle resource directly.
     set(RSRC_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rsrc")
 
     find_program(REZ_EXECUTABLE NAMES Rez
@@ -847,7 +750,7 @@ message(STATUS "  Deployment Target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
 if(REZ_EXECUTABLE)
 message(STATUS "  Rez Compiler:     ${REZ_EXECUTABLE}")
 else()
-message(STATUS "  Rez Compiler:     NOT FOUND (PiPL will not be compiled)")
+message(STATUS "  Rez Compiler:     NOT FOUND (.rsrc will not be compiled)")
 endif()
 endif()
 message(STATUS "")
