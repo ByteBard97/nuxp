@@ -445,11 +445,9 @@ if(APPLE)
         XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Automatic"
         XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-"
         XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
-        XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "${CMAKE_OSX_DEPLOYMENT_TARGET}"
         # Other settings
         XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${PLUGIN_BUNDLE_ID}"
         XCODE_ATTRIBUTE_INFOPLIST_KEY_CFBundleDisplayName "${PLUGIN_DISPLAY_NAME}"
-        XCODE_ATTRIBUTE_INFOPLIST_KEY_LSMinimumSystemVersion "${CMAKE_OSX_DEPLOYMENT_TARGET}"
     )
 
     # -------------------------------------------------------------------------
@@ -633,8 +631,8 @@ open(sys.argv[1], 'wb').write(out)
     # PkgInfo — Required for macOS to recognize the .aip as a proper bundle
     # -------------------------------------------------------------------------
     # Without PkgInfo, Finder shows the .aip as a plain folder instead of a
-    # plugin bundle icon. Content is CFBundlePackageType + 4-char creator code.
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "BNDL????")
+    # plugin bundle icon. Content is CFBundlePackageType + CFBundleSignature.
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "ARPIART5")
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
