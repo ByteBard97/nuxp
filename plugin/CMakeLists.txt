@@ -461,17 +461,25 @@ if(APPLE)
         HINTS /opt/homebrew/bin /usr/local/bin /usr/bin
     )
 
-    # Path to Adobe's PIPL tool (check project first, then SDK)
+    # Prefer the repo-local adapter around Adobe's bundled pipl_gen module.
     set(PIPL_TOOL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/create_pipl.py")
+    set(PIPL_TOOL_DEPENDS
+        "${PIPL_TOOL_PATH}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/pipl_gen/__init__.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/pipl_gen/pipl_gen.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl/pipl_gen/template_plugin.json"
+    )
     if(NOT EXISTS "${PIPL_TOOL_PATH}")
         # Fallback: check in SDK installation
         set(PIPL_TOOL_PATH "${AI_SDK_PATH}/../tools/pipl/create_pipl.py")
+        set(PIPL_TOOL_DEPENDS "${PIPL_TOOL_PATH}")
     endif()
     if(NOT EXISTS "${PIPL_TOOL_PATH}")
         # Final fallback: emit a compact generator in the build tree. This keeps
         # the repo free of copied SDK tooling while still producing a PiPL that
         # matches the working plugins verified on disk.
         set(PIPL_TOOL_PATH "${CMAKE_CURRENT_BINARY_DIR}/gen_pipl.py")
+        set(PIPL_TOOL_DEPENDS "${PIPL_TOOL_PATH}")
         file(WRITE "${PIPL_TOOL_PATH}" [=[
 #!/usr/bin/env python3
 import argparse
@@ -488,11 +496,11 @@ def pad4(data: bytes) -> bytes:
 def make_property(vendor: bytes, key: bytes, prop_id: int, value: bytes) -> bytes:
     return vendor + key + struct.pack('>I', prop_id) + struct.pack('>I', len(value)) + value
 
-def make_pipl(name: str) -> bytes:
+def make_pipl(name: str, entry_point: str) -> bytes:
     props = [
         make_property(b'ADBE', b'kind', 0, b'SPEA'),
         make_property(b'ADBE', b'ivrs', 0, struct.pack('>I', 2)),
-        make_property(b'ADBE', b'mi32', 0, b''),
+        make_property(b'ADBE', b'mi32', 0, pad4(entry_point.encode('ascii'))),
         make_property(b'ADBE', b'pinm', 0, pad4(name.encode('ascii'))),
     ]
     return struct.pack('>II', 0, len(props)) + b''.join(props)
@@ -506,7 +514,10 @@ output_path = os.path.join(os.getcwd(), "plugin.pipl")
 with open(output_path, "wb") as f:
     f.write(struct.pack('>I', len(plugins)))
     for desc in plugins:
-        f.write(make_pipl(desc.get("name", "Plugin")))
+        f.write(make_pipl(
+            desc.get("name", "Plugin"),
+            desc.get("entry_point", "PluginMain"),
+        ))
 ]=])
     endif()
 
@@ -521,25 +532,15 @@ with open(output_path, "wb") as f:
             COMMAND ${PYTHON_EXECUTABLE} "${PIPL_TOOL_PATH}"
                 -input "[{\"name\":\"${PLUGIN_NAME}\", \"entry_point\":\"PluginMain\"}]"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            DEPENDS "${PIPL_TOOL_PATH}"
+            DEPENDS ${PIPL_TOOL_DEPENDS}
             COMMENT "Generating PiPL with Python tool"
             VERBATIM
         )
-
-        # Add as dependency to ensure it's generated before build
-        add_custom_target(generate_pipl DEPENDS "${PIPL_OUTPUT}")
-        add_dependencies(${PROJECT_NAME} generate_pipl)
-
-        # Copy plugin.pipl to bundle after build
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory
-                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/pipl"
-            COMMAND ${CMAKE_COMMAND} -E copy
-                "${PIPL_OUTPUT}"
-                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/pipl/plugin.pipl"
-            COMMENT "Copying plugin.pipl to bundle"
+        set_source_files_properties("${PIPL_OUTPUT}" PROPERTIES
+            GENERATED TRUE
+            MACOSX_PACKAGE_LOCATION "Resources/pipl"
         )
+        target_sources(${PROJECT_NAME} PRIVATE "${PIPL_OUTPUT}")
     else()
         message(WARNING "Python 3 not found; plugin.pipl will not be generated")
         message(WARNING "PiPL resource is required for Illustrator to load the plugin")
@@ -575,8 +576,6 @@ with open(output_path, "wb") as f:
             COMMENT "Compiling ${PROJECT_NAME}.rsrc with Rez"
             VERBATIM
         )
-        add_custom_target(generate_rsrc DEPENDS "${RSRC_FILE}")
-        add_dependencies(${PROJECT_NAME} generate_rsrc)
     elseif(NOT EXISTS "${RSRC_FILE}")
         # Fallback: generate an empty macOS resource fork
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gen_rsrc.py" [=[
@@ -602,13 +601,11 @@ open(sys.argv[1], 'wb').write(out)
             endif()
         endif()
     endif()
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${RSRC_FILE}"
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
-        COMMENT "Copying .rsrc to bundle (required by Illustrator)"
+    set_source_files_properties("${RSRC_FILE}" PROPERTIES
+        GENERATED TRUE
+        MACOSX_PACKAGE_LOCATION "Resources"
     )
+    target_sources(${PROJECT_NAME} PRIVATE "${RSRC_FILE}")
 
     # -------------------------------------------------------------------------
     # IDToFile.txt — Resource ID mapping file expected by Illustrator
@@ -617,29 +614,23 @@ open(sys.argv[1], 'wb').write(out)
     if(NOT EXISTS "${IDTOFILE}")
         file(WRITE "${IDTOFILE}" "\n")
     endif()
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/txt"
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${IDTOFILE}"
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/txt/IDToFile.txt"
-        COMMENT "Copying IDToFile.txt to bundle"
+    set_source_files_properties("${IDTOFILE}" PROPERTIES
+        GENERATED TRUE
+        MACOSX_PACKAGE_LOCATION "Resources/txt"
     )
+    target_sources(${PROJECT_NAME} PRIVATE "${IDTOFILE}")
 
     # -------------------------------------------------------------------------
     # PkgInfo — Required for macOS to recognize the .aip as a proper bundle
     # -------------------------------------------------------------------------
     # Without PkgInfo, Finder shows the .aip as a plain folder instead of a
     # plugin bundle icon. Content is CFBundlePackageType + CFBundleSignature.
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "ARPIART5")
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo"
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/PkgInfo"
-        COMMENT "Copying PkgInfo to bundle"
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "BNDLART5")
+    set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" PROPERTIES
+        GENERATED TRUE
+        MACOSX_PACKAGE_LOCATION "."
     )
+    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo")
 
     # -------------------------------------------------------------------------
     # macOS Compile Definitions

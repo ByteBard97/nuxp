@@ -150,8 +150,6 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
     if (notifierErr == kNoErr) {
       sAINotifier = const_cast<AINotifierSuite *>(
           static_cast<const AINotifierSuite *>(suite));
-    } else {
-      sAINotifier = nullptr;
     }
   }
 
