@@ -153,18 +153,15 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
     return error;
   }
 
-  // Acquire Notifier suite
+  // Acquire Notifier suite (non-fatal — plugin still works without notifications)
   {
     const void *suite = nullptr;
-    error = sSPBasic->AcquireSuite(kAINotifierSuite, kAINotifierSuiteVersion,
-                                   &suite);
-    sAINotifier = const_cast<AINotifierSuite *>(
-        static_cast<const AINotifierSuite *>(suite));
-  }
-  if (error != kNoErr) {
-    sSPBasic->ReleaseSuite(kAITimerSuite, kAITimerSuiteVersion);
-    sAITimer = nullptr;
-    return error;
+    ASErr notifierErr = sSPBasic->AcquireSuite(
+        kAINotifierSuite, kAINotifierSuiteVersion, &suite);
+    if (notifierErr == kNoErr) {
+      sAINotifier = const_cast<AINotifierSuite *>(
+          static_cast<const AINotifierSuite *>(suite));
+    }
   }
 
   // Create timer for main thread dispatch
@@ -181,62 +178,63 @@ ASErr StartupPlugin(SPInterfaceMessage *message) {
 
   // Register notifiers for document/art changes
   // These invalidate handles when the document state changes
+  if (sAINotifier) {
+    // Art selection changed
+    error = sAINotifier->AddNotifier(
+        gPluginRef, NUXP_NOTIFIER_NAME " Art Selection",
+        kAIArtSelectionChangedNotifier, &gArtSelectionChangedNotifier);
+    if (error != kNoErr) {
+      // Non-fatal - continue without this notifier
+      gArtSelectionChangedNotifier = nullptr;
+    }
 
-  // Art selection changed
-  error = sAINotifier->AddNotifier(
-      gPluginRef, NUXP_NOTIFIER_NAME " Art Selection",
-      kAIArtSelectionChangedNotifier, &gArtSelectionChangedNotifier);
-  if (error != kNoErr) {
-    // Non-fatal - continue without this notifier
-    gArtSelectionChangedNotifier = nullptr;
-  }
+    // Art properties changed (fill, stroke, etc.)
+    error = sAINotifier->AddNotifier(
+        gPluginRef, NUXP_NOTIFIER_NAME " Art Properties",
+        kAIArtPropertiesChangedNotifier, &gArtPropertiesChangedNotifier);
+    if (error != kNoErr) {
+      gArtPropertiesChangedNotifier = nullptr;
+    }
 
-  // Art properties changed (fill, stroke, etc.)
-  error = sAINotifier->AddNotifier(
-      gPluginRef, NUXP_NOTIFIER_NAME " Art Properties",
-      kAIArtPropertiesChangedNotifier, &gArtPropertiesChangedNotifier);
-  if (error != kNoErr) {
-    gArtPropertiesChangedNotifier = nullptr;
-  }
+    // Document changed
+    error = sAINotifier->AddNotifier(
+        gPluginRef, NUXP_NOTIFIER_NAME " Document Changed",
+        kAIDocumentChangedNotifier, &gDocumentChangedNotifier);
+    if (error != kNoErr) {
+      gDocumentChangedNotifier = nullptr;
+    }
 
-  // Document changed
-  error = sAINotifier->AddNotifier(
-      gPluginRef, NUXP_NOTIFIER_NAME " Document Changed",
-      kAIDocumentChangedNotifier, &gDocumentChangedNotifier);
-  if (error != kNoErr) {
-    gDocumentChangedNotifier = nullptr;
-  }
+    // Document closed
+    error = sAINotifier->AddNotifier(
+        gPluginRef, NUXP_NOTIFIER_NAME " Document Closed",
+        kAIDocumentClosedNotifier, &gDocumentClosedNotifier);
+    if (error != kNoErr) {
+      gDocumentClosedNotifier = nullptr;
+    }
 
-  // Document closed
-  error = sAINotifier->AddNotifier(
-      gPluginRef, NUXP_NOTIFIER_NAME " Document Closed",
-      kAIDocumentClosedNotifier, &gDocumentClosedNotifier);
-  if (error != kNoErr) {
-    gDocumentClosedNotifier = nullptr;
-  }
+    // Document opened
+    error = sAINotifier->AddNotifier(
+        gPluginRef, NUXP_NOTIFIER_NAME " Document Opened",
+        kAIDocumentOpenedNotifier, &gDocumentOpenedNotifier);
+    if (error != kNoErr) {
+      gDocumentOpenedNotifier = nullptr;
+    }
 
-  // Document opened
-  error = sAINotifier->AddNotifier(
-      gPluginRef, NUXP_NOTIFIER_NAME " Document Opened",
-      kAIDocumentOpenedNotifier, &gDocumentOpenedNotifier);
-  if (error != kNoErr) {
-    gDocumentOpenedNotifier = nullptr;
-  }
+    // Document new (created from scratch, not opened from file)
+    error = sAINotifier->AddNotifier(
+        gPluginRef, NUXP_NOTIFIER_NAME " Document New",
+        kAIDocumentNewNotifier, &gDocumentNewNotifier);
+    if (error != kNoErr) {
+      gDocumentNewNotifier = nullptr;
+    }
 
-  // Document new (created from scratch, not opened from file)
-  error = sAINotifier->AddNotifier(
-      gPluginRef, NUXP_NOTIFIER_NAME " Document New",
-      kAIDocumentNewNotifier, &gDocumentNewNotifier);
-  if (error != kNoErr) {
-    gDocumentNewNotifier = nullptr;
-  }
-
-  // Layer list changed
-  error = sAINotifier->AddNotifier(
-      gPluginRef, NUXP_NOTIFIER_NAME " Layer List",
-      kAILayerListChangedNotifier, &gLayerListChangedNotifier);
-  if (error != kNoErr) {
-    gLayerListChangedNotifier = nullptr;
+    // Layer list changed
+    error = sAINotifier->AddNotifier(
+        gPluginRef, NUXP_NOTIFIER_NAME " Layer List",
+        kAILayerListChangedNotifier, &gLayerListChangedNotifier);
+    if (error != kNoErr) {
+      gLayerListChangedNotifier = nullptr;
+    }
   }
 
   // Acquire SDK suites for use throughout the plugin

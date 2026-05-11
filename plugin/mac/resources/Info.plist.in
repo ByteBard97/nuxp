@@ -17,7 +17,7 @@
 	<key>CFBundleName</key>
 	<string>@PLUGIN_DISPLAY_NAME@</string>
 	<key>CFBundlePackageType</key>
-	<string>ARPI</string>
+	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>@PLUGIN_VERSION@</string>
 	<key>CFBundleSignature</key>

@@ -29,6 +29,12 @@ set(PLUGIN_BUNDLE_ID "com.nuxp.illustrator.plugin" CACHE STRING "Bundle identifi
 set(PLUGIN_AUTHOR "" CACHE STRING "Plugin author name")
 set(PLUGIN_DESCRIPTION "Adobe Illustrator Plugin with HTTP/JSON Bridge" CACHE STRING "Plugin description")
 
+# macOS deployment target must be established before project() so modern Xcode
+# toolchains do not default the bundle to the host SDK version.
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND (NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET OR CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL ""))
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum macOS version")
+endif()
+
 # HTTP Server Configuration
 set(NUXP_DEFAULT_PORT 8080 CACHE STRING "Default HTTP server port (1024-65535)")
 
@@ -394,12 +400,9 @@ if(APPLE)
     # macOS Bundle Configuration
     # -------------------------------------------------------------------------
     # Adobe Illustrator plugins are loadable bundles (.aip) with:
-    # - Compiled PiPL (Plugin Property List) resource
-    # - Info.plist with CFBundlePackageType = "ARPI"
+    # - Rez-compiled .rsrc bundle resource
+    # - Info.plist with CFBundlePackageType = "BNDL"
     # - Universal binary (arm64 + x86_64)
-
-    # Deployment target for modern macOS features
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS version")
 
     # Build Universal Binary (Apple Silicon + Intel)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS")
@@ -448,100 +451,36 @@ if(APPLE)
     )
 
     # -------------------------------------------------------------------------
-    # PiPL Generation (New Python-based method)
+    # .rsrc — Single macOS plugin resource path
     # -------------------------------------------------------------------------
-    # The PiPL (Plugin Property List) tells Illustrator how to load the plugin.
-    # Since Illustrator 2022, Adobe recommends using create_pipl.py instead of Rez.
-    # The generated plugin.pipl goes in Contents/Resources/pipl/
+    # Verified on-disk bundles load in Illustrator 2025 and 2026 with Rez-only
+    # resources, so package the .rsrc bundle resource directly.
+    set(RSRC_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rsrc")
 
-    find_program(PYTHON_EXECUTABLE python3
-        HINTS /opt/homebrew/bin /usr/local/bin /usr/bin
+    find_program(REZ_EXECUTABLE NAMES Rez
+        HINTS /usr/bin /Applications/Xcode.app/Contents/Developer/usr/bin
     )
+    set(PIPL_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources")
 
-    # Path to Adobe's PIPL tool (check project first, then SDK)
-    set(PIPL_TOOL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools/pipl")
-    if(NOT EXISTS "${PIPL_TOOL_DIR}/create_pipl.py")
-        # Fallback: check in SDK installation
-        set(PIPL_TOOL_DIR "${AI_SDK_PATH}/../tools/pipl")
-    endif()
-
-    if(PYTHON_EXECUTABLE AND EXISTS "${PIPL_TOOL_DIR}/create_pipl.py")
-        message(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
-        message(STATUS "PiPL tool dir: ${PIPL_TOOL_DIR}")
-
-        # Generate plugin.pipl in build directory (pre-build)
-        set(PIPL_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/plugin.pipl")
+    if(REZ_EXECUTABLE AND EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
         add_custom_command(
-            OUTPUT "${PIPL_OUTPUT}"
-            COMMAND ${PYTHON_EXECUTABLE} "${PIPL_TOOL_DIR}/create_pipl.py"
-                -input "[{\"name\":\"${PLUGIN_NAME}\", \"entry_point\":\"PluginMain\"}]"
-            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            COMMENT "Generating PiPL with Python tool"
+            OUTPUT "${RSRC_FILE}"
+            COMMAND "${REZ_EXECUTABLE}"
+                "-d" "PIPL_PLUGIN_NAME=\"${PLUGIN_NAME}\""
+                "-d" "TargetOS_Mac=1"
+                "-i" "${PIPL_RESOURCES_DIR}"
+                "-i" "${AI_SDK_PATH}"
+                "-useDF"
+                "-o" "${RSRC_FILE}"
+                "${PIPL_RESOURCES_DIR}/Plugin.r"
+            DEPENDS
+                "${PIPL_RESOURCES_DIR}/Plugin.r"
+                "${PIPL_RESOURCES_DIR}/PiPL.r"
+            COMMENT "Compiling ${PROJECT_NAME}.rsrc with Rez"
             VERBATIM
         )
-
-        # Add as dependency to ensure it's generated before build
-        add_custom_target(generate_pipl DEPENDS "${PIPL_OUTPUT}")
-        add_dependencies(${PROJECT_NAME} generate_pipl)
-
-        # Copy plugin.pipl to bundle after build
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory
-                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/pipl"
-            COMMAND ${CMAKE_COMMAND} -E copy
-                "${PIPL_OUTPUT}"
-                "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/pipl/plugin.pipl"
-            COMMENT "Copying plugin.pipl to bundle"
-        )
-    else()
-        # Fallback to old Rez method if Python tool not available
-        find_program(REZ_EXECUTABLE Rez
-            HINTS /usr/bin /Applications/Xcode.app/Contents/Developer/usr/bin
-        )
-        set(PIPL_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mac/resources")
-
-        if(REZ_EXECUTABLE AND EXISTS "${PIPL_RESOURCES_DIR}/Plugin.r")
-            message(STATUS "Using legacy Rez method for PiPL")
-            message(STATUS "Found Rez compiler: ${REZ_EXECUTABLE}")
-
-            add_custom_command(
-                TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory
-                    "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources"
-                COMMAND ${REZ_EXECUTABLE}
-                    "-d" "PIPL_PLUGIN_NAME=\"${PLUGIN_NAME}\""
-                    "-d" "TargetOS_Mac=1"
-                    "-i" "${PIPL_RESOURCES_DIR}"
-                    "-i" "${AI_SDK_PATH}"
-                    "-useDF"
-                    "-o" "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
-                    "${PIPL_RESOURCES_DIR}/Plugin.r"
-                COMMENT "Compiling PiPL resource with Rez (legacy)"
-                VERBATIM
-            )
-        else()
-            message(WARNING "Neither Python PIPL tool nor Rez compiler found")
-            message(WARNING "PiPL resource is required for Illustrator to load the plugin")
-            message(WARNING "Copy Adobe SDK tools/pipl directory to ${CMAKE_CURRENT_SOURCE_DIR}/tools/")
-        endif()
-    endif()
-
-    # -------------------------------------------------------------------------
-    # .rsrc — Empty resource fork required by Illustrator's plugin loader
-    # -------------------------------------------------------------------------
-    # Illustrator checks for a .rsrc file at Contents/Resources/<name>.rsrc
-    # during plugin initialization. Without it, the plugin silently fails to
-    # load with a "Plugin issues detected" error. The file can be empty (just
-    # a valid resource fork header) — the actual PiPL data lives in plugin.pipl.
-    #
-    # This was the root cause of hours of debugging: CMake-built plugins were
-    # structurally identical to working ones but missing this file.
-    set(RSRC_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.rsrc")
-    if(NOT EXISTS "${RSRC_FILE}")
-        # Generate an empty macOS resource fork (286 bytes)
-        # Header: version=1, dataOffset=256, mapOffset=256, dataLength=0, mapLength=30
-        # Followed by 240 zero bytes, then repeated header + map trailer
+    elseif(NOT EXISTS "${RSRC_FILE}")
+        # Fallback: generate an empty macOS resource fork
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gen_rsrc.py" [=[
 import struct, sys
 hdr = struct.pack('>IIII', 0x100, 0x100, 0, 0x1e)
@@ -565,13 +504,11 @@ open(sys.argv[1], 'wb').write(out)
             endif()
         endif()
     endif()
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${RSRC_FILE}"
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/${PROJECT_NAME}.rsrc"
-        COMMENT "Copying .rsrc to bundle (required by Illustrator)"
+    set_source_files_properties("${RSRC_FILE}" PROPERTIES
+        GENERATED TRUE
+        MACOSX_PACKAGE_LOCATION "Resources"
     )
+    target_sources(${PROJECT_NAME} PRIVATE "${RSRC_FILE}")
 
     # -------------------------------------------------------------------------
     # IDToFile.txt — Resource ID mapping file expected by Illustrator
@@ -580,29 +517,23 @@ open(sys.argv[1], 'wb').write(out)
     if(NOT EXISTS "${IDTOFILE}")
         file(WRITE "${IDTOFILE}" "\n")
     endif()
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/txt"
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${IDTOFILE}"
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/Resources/txt/IDToFile.txt"
-        COMMENT "Copying IDToFile.txt to bundle"
+    set_source_files_properties("${IDTOFILE}" PROPERTIES
+        GENERATED TRUE
+        MACOSX_PACKAGE_LOCATION "Resources/txt"
     )
+    target_sources(${PROJECT_NAME} PRIVATE "${IDTOFILE}")
 
     # -------------------------------------------------------------------------
     # PkgInfo — Required for macOS to recognize the .aip as a proper bundle
     # -------------------------------------------------------------------------
     # Without PkgInfo, Finder shows the .aip as a plain folder instead of a
     # plugin bundle icon. Content is CFBundlePackageType + CFBundleSignature.
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "ARPIART5")
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo"
-            "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_NAME}>/PkgInfo"
-        COMMENT "Copying PkgInfo to bundle"
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" "BNDLART5")
+    set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/PkgInfo" PROPERTIES
+        GENERATED TRUE
+        MACOSX_PACKAGE_LOCATION "."
     )
+    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/PkgInfo")
 
     # -------------------------------------------------------------------------
     # macOS Compile Definitions
@@ -831,7 +762,7 @@ message(STATUS "  Deployment Target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
 if(REZ_EXECUTABLE)
 message(STATUS "  Rez Compiler:     ${REZ_EXECUTABLE}")
 else()
-message(STATUS "  Rez Compiler:     NOT FOUND (PiPL will not be compiled)")
+message(STATUS "  Rez Compiler:     NOT FOUND (.rsrc will not be compiled)")
 endif()
 endif()
 message(STATUS "")

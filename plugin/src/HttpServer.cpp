@@ -171,7 +171,7 @@ int HttpServer::GetPort() { return port_; }
  ******************************************************************************/
 
 std::string HttpServer::GetBaseUrl() {
-  return "http://localhost:" + std::to_string(port_);
+  return "http://127.0.0.1:" + std::to_string(port_);
 }
 
 /*******************************************************************************
@@ -596,7 +596,7 @@ void HttpServer::ServerThread() {
     for (int attempt = 0; attempt < MAX_PORT_RETRIES; ++attempt) {
       int tryPort = port_ + attempt;
       if (tryPort > ConfigManager::MAX_PORT) break;
-      if (gServer->bind_to_port("localhost", tryPort)) {
+      if (gServer->bind_to_port("127.0.0.1", tryPort)) {
         if (attempt > 0) {
           port_ = tryPort;  // Update to the port we actually bound to
         }
